@@ -3,7 +3,6 @@ import express, { Request, Response } from "express";
 import server from "./serve/index";
 import cors from "cors";
 import "dotenv/config";
-import { ComfyClient } from "./ws";
 
 const app = express();
 app.use(express.json());
@@ -16,8 +15,6 @@ app.use(express.json());
 //   })
 // );
 app.use(cors());
-
-connectWebSocket();
 
 /**
  * @METHOD
@@ -89,44 +86,3 @@ app.listen(port, () => {
   console.log(`✅ MCP HTTP Server is running on ${ip}:${port}`);
   console.log(`📮 MCP 服务端点: ${ip}:${port}/mcp`);
 });
-
-/**
- * @METHOD
- * @description TODO 初始化WebSocket
- * @author LaiFQZzr
- * @date 2026/01/13 17:57
- */
-async function connectWebSocket() {
-  // 0，此处为提供给ComfyUI 工作流运行的API JSON内容
-  const workflow = "API JSON";
-
-  // 1. 初始化
-  const client = new ComfyClient();
-
-  try {
-    // 2. 连接 WebSocket
-    await client.connect();
-
-    // 3. TODO 此处可修改 workflow 参数 (例如修改 KSampler 的 seed 或 Checkpoint)
-    // 假设 Node ID '3' 是 KSampler
-    // if (workflow["3"]) {
-    //   workflow["3"].inputs.seed = Math.floor(Math.random() * 10000000);
-    // }
-
-    // 4. 发送任务并等待结果 (同步写法，非常直观)
-    // console.log("Sending prompt...");
-    // const result = await client.queuePrompt(workflow);
-
-    // 5. 获取结果
-    // console.log("🎉 Generation Complete!");
-    // console.log("Images:", result.images);
-
-    // 6，拼接结果
-    // 可以在这里拼接图片下载地址
-    // http://192.168.0.171:8188/view?filename=...&subfolder=...&type=...
-  } catch (err) {
-    console.error("Main Error:", err);
-  } finally {
-    client.close();
-  }
-}
