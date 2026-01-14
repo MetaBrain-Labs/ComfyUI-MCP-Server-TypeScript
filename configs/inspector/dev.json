@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "default-server": {
+      "command": "npx",
+      "args": ["tsx","../src/index.ts"],
+      "type": "streamable-http",
+      "url": "http://192.168.0.192:8189/mcp",
+      "note": "For Streamable HTTP connections, add this URL directly in your MCP Client"
+    }
+  }
+}

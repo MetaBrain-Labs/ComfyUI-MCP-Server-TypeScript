@@ -1,0 +1,35 @@
+{
+  "name": "mcp-quickstart-ts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsx ./src/index.ts",
+    "inspector": "npx @modelcontextprotocol/inspector --config ./configs/inspector/dev.json --server default-server",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.19.3",
+    "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.0.17",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "ws": "^8.19.0"
+  }
+}
