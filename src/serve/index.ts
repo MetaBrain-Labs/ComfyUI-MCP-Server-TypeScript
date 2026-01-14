@@ -20,6 +20,8 @@ import {
   ForecastResponse,
   PointsResponse,
 } from "../interface/common";
+import { collectAndSaveWorkflow } from "../workflow";
+import { resultToMcpResponse } from "../mcp/adapter";
 
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
@@ -241,6 +243,41 @@ server.registerTool(
         },
       ],
     };
+  }
+);
+
+server.registerTool(
+  "collect_workflow",
+  {
+    title: "查询 ComfyUI 工作流历史任务",
+    description:
+      "从 ComfyUI 中获取工作流历史任务，根据情况可以设置获取数量和偏移量",
+    inputSchema: {
+      maxItems: z
+        .number()
+        .min(1)
+        .max(10)
+        .optional()
+        .default(3)
+        .describe("单次获取最多历史任务条数"),
+      offset: z
+        .number()
+        .min(0)
+        .optional()
+        .default(0)
+        .describe("分页获取偏移量"),
+    },
+  },
+  async ({ maxItems, offset }) => {
+    const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
+
+    const result = await collectAndSaveWorkflow({
+      baseUrl: BASE_URL,
+      maxItems: maxItems ?? 3,
+      offset: offset ?? 0,
+    });
+
+    return resultToMcpResponse(result);
   }
 );
 
