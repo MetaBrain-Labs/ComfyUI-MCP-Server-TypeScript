@@ -1,16 +1,5 @@
-/*
-  MCP Server 的核心运行依赖
-    管理：
-      tool 注册
-      请求分发
-      响应封装 
-*/
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import "@modelcontextprotocol/sdk/client/streamableHttp";
-
-/* 
-  工具输入的 schema 定义
-*/
 import { z } from "zod";
 import "dotenv/config";
 
@@ -56,25 +45,22 @@ server.registerTool(
         .optional()
         .default(0)
         .describe("分页获取偏移量"),
+      append: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("历史任务是否追加到现有文件"),
     },
   },
-  async ({ maxItems, offset }) => {
+  async ({ maxItems, offset, append }) => {
     const result = await collectAndSaveWorkflow({
       baseUrl: BASE_URL,
       maxItems: maxItems,
       offset: offset,
+      append: append,
     });
 
-    return {
-      content: [
-        {
-          type: "text",
-          text:
-            "### ComfyUI 工作流收集结果\n" + JSON.stringify(result, null, 2),
-        },
-      ],
-    };
-    // return resultToMcpResponse(result);
+    return resultToMcpResponse(result, "ComfyUI 工作流收集结果");
   },
 );
 

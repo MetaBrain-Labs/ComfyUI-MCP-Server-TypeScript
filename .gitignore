@@ -29,3 +29,4 @@ dist-ssr
 docs/.vitepress/cache/*
 
 .vitepress/*
+workflow.json
