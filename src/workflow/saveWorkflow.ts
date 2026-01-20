@@ -6,9 +6,15 @@ export interface SaveWorkflowOptions {
   fileName?: string;
 }
 
+/**
+ * @METHOD
+ * @description 保存历史任务到本地
+ * @author LaiFQZzr
+ * @date 2026/01/20 11:51
+ */
 export async function saveWorkflow(
   data: unknown,
-  options: SaveWorkflowOptions = {}
+  options: SaveWorkflowOptions = {},
 ): Promise<{ filePath: string }> {
   const {
     dir = path.resolve(process.cwd(), "workflow"),
