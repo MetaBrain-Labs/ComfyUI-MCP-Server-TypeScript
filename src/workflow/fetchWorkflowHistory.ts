@@ -6,8 +6,14 @@ export interface FetchWorkflowOptions {
   offset?: number;
 }
 
+/**
+ * @METHOD
+ * @description 获取历史任务（支持分页）
+ * @author LaiFQZzr
+ * @date 2026/01/20 11:50
+ */
 export async function fetchWorkflowHistory(
-  options: FetchWorkflowOptions
+  options: FetchWorkflowOptions,
 ): Promise<Record<string, any>> {
   const { baseUrl, maxItems = 3, offset = 0 } = options;
 

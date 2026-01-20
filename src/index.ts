@@ -7,13 +7,6 @@ import "dotenv/config";
 const app = express();
 app.use(express.json());
 
-// app.use(
-//   cors({
-//     origin: "*",
-//     exposedHeaders: ["Mcp-Session-Id"],
-//     allowedHeaders: ["Content-Type", "mcp-session-id"],
-//   })
-// );
 app.use(cors());
 
 /**
