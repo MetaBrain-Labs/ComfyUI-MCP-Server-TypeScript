@@ -13,10 +13,11 @@ export async function collectAndSaveWorkflow(params: {
   baseUrl: string;
   maxItems?: number;
   offset?: number;
+  append?: boolean;
 }) {
   const data = await fetchWorkflowHistory(params);
 
-  const result = await saveWorkflow(data);
+  const result = await saveWorkflow(data, { append: params?.append });
 
   return ok<CollectWorkflowResult>({
     savedPath: result.filePath,
