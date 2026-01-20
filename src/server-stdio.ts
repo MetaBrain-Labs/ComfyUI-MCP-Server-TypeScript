@@ -1,5 +1,5 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import server from ".";
+import server from "./serve";
 
 /**
  * @METHOD
