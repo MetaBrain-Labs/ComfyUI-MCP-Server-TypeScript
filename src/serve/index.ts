@@ -4,7 +4,7 @@ import { z } from "zod";
 import "dotenv/config";
 
 import { collectAndSaveWorkflow } from "../workflow";
-import { resultToMcpResponse } from "../mcp/adapter";
+import { resultToMcpResponse } from "../tools/adapter";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
 
