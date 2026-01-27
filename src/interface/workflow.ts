@@ -1,4 +1,13 @@
-export interface CollectWorkflowResult {
+export interface WorkflowCollectionData {
   savedPath: string;
-  count: number;
+  itemsRequested: number;
+  itemsCollected: number;
+  offset: number;
+  pagination: {
+    hasNextPage: boolean;
+    nextOffset: number | null;
+    currentOffset: number;
+    requestedItems: number;
+    returnedItems: number;
+  };
 }
