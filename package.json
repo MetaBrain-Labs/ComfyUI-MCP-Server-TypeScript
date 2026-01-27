@@ -4,13 +4,14 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsx ./src/index.ts",
+    "dev:stdio": "npx tsx ./src/server-stdio.ts",
     "inspector": "npx @modelcontextprotocol/inspector --config ./configs/inspector/dev.json --server default-server",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["mcp", "comfyui"],
+  "author": "LaiFQZzr",
   "license": "ISC",
   "description": "",
   "devDependencies": {
