@@ -2,6 +2,8 @@ import { ok } from "../interface/result";
 import { WorkflowCollectionData } from "../interface/workflow";
 import { fetchWorkflowHistory } from "./fetchWorkflowHistory";
 import { saveWorkflow } from "./saveWorkflow";
+import { t } from "../i18n";
+import "../i18n/locales";
 
 /**
  * @METHOD
@@ -23,8 +25,15 @@ export async function collectAndSaveWorkflow(params: {
 
   const executionTime = Date.now() - startTime;
 
+  const message = t(
+    "workflow.collected",
+    params.offset,
+    params.maxItems,
+    params.append ? "追加" : "覆盖",
+  );
+
   return ok<WorkflowCollectionData>(
-    `已从偏移量 ${params.offset} 处收集并保存 ${params.maxItems} 条工作流，模式：${params.append ? "追加" : "覆盖"}`,
+    message,
     {
       savedPath: result.filePath,
       itemsRequested: params.maxItems,

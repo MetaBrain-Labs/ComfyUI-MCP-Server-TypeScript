@@ -2,6 +2,8 @@ import "@modelcontextprotocol/sdk/client/streamableHttp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import "dotenv/config";
 import { z } from "zod";
+import { t } from "../i18n";
+import "../i18n/locales";
 
 import {
   ResultToMcpResponse,
@@ -36,9 +38,8 @@ const server = new McpServer({
 server.registerTool(
   "collect_workflow",
   {
-    title: "查询 ComfyUI 工作流历史任务",
-    description:
-      "从 ComfyUI 中获取工作流历史任务，根据情况可以设置获取数量和偏移量",
+    title: t("workflow.collectedContent.title"),
+    description: t("workflow.collectedContent.description"),
     inputSchema: {
       maxItems: z
         .number()
@@ -46,24 +47,18 @@ server.registerTool(
         .max(10)
         .optional()
         .default(3)
-        .describe(
-          "单次获取的最大历史任务条数。建议值: 小批量用 2 - 3,完整获取用 10",
-        ),
+        .describe(t("workflow.collectedContent.maxItems")),
       offset: z
         .number()
         .min(0)
         .optional()
         .default(0)
-        .describe(
-          "分页偏移量,从0开始。例如: offset = 0 获取前 N 条,offset = N 获取接下来的 N 条",
-        ),
+        .describe(t("workflow.collectedContent.offset")),
       append: z
         .boolean()
         .optional()
         .default(true)
-        .describe(
-          "存储模式。true = 追加到现有数据(累积), false = 覆盖现有数据(重置)",
-        ),
+        .describe(t("workflow.collectedContent.append")),
     },
   },
   withMcpErrorHandling(async ({ maxItems, offset, append }) => {
