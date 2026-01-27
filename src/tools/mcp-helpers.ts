@@ -15,7 +15,6 @@ export function withMcpErrorHandling<T extends any[], R>(
     try {
       const result = await handler(...args);
 
-      // 如果结果已经是 CallToolResult 格式，直接返回
       if (result && typeof result === "object" && "content" in result) {
         return result as CallToolResult;
       }
@@ -30,12 +29,10 @@ export function withMcpErrorHandling<T extends any[], R>(
         ],
       };
     } catch (error) {
-      // 如果已经是 McpError，直接抛出
       if (error instanceof McpError) {
         throw error;
       }
 
-      // 否则包装成 McpError
       throw new McpError(
         ErrorCode.InternalError,
         error instanceof Error ? error.message : String(error),
@@ -65,7 +62,7 @@ export function ResultToMcpResponse(result: Result): CallToolResult {
       content: [
         {
           type: "text",
-          text: `错误: ${result || "未知错误"}`,
+          text: `Error: ${result || "Unknown error"}`,
         },
       ],
       isError: true,
