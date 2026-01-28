@@ -11,7 +11,7 @@ async function run() {
     append: true,
   });
 
-  console.log("结果为：", result);
+  console.error("结果为：", result);
 }
 
 run();

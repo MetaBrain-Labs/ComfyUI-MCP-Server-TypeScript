@@ -54,7 +54,7 @@ setInterval(() => {
   });
 
   expiredSessions.forEach((sessionId) => {
-    console.log(`清理过期会话: ${sessionId}`);
+    console.error(`清理过期会话: ${sessionId}`);
     const session = sessions.get(sessionId);
     if (session) {
       session.transport.close().catch(console.error);
@@ -63,7 +63,7 @@ setInterval(() => {
   });
 
   if (expiredSessions.length > 0) {
-    console.log(
+    console.error(
       `清理了 ${expiredSessions.length} 个过期会话, 当前活跃会话: ${sessions.size}`,
     );
   }
@@ -87,7 +87,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
       const session = sessions.get(sessionId)!;
       transport = session.transport;
       session.lastAccessedAt = Date.now();
-      console.log(`复用会话: ${sessionId}`);
+      console.error(`复用会话: ${sessionId}`);
     }
     // 2，新会话初始化
     else if (!sessionId && isInitializeRequest(req.body)) {
@@ -97,7 +97,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => newSessionId,
         onsessioninitialized: (sid) => {
-          console.log(`会话已初始化: ${sid}`);
+          console.error(`会话已初始化: ${sid}`);
           const now = Date.now();
           sessions.set(sid, {
             transport,
@@ -109,7 +109,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
 
       // 监听transport关闭事件
       transport.onclose = () => {
-        console.log(`Transport关闭,清理会话: ${transport.sessionId}`);
+        console.error(`Transport关闭,清理会话: ${transport.sessionId}`);
         if (transport.sessionId) {
           sessions.delete(transport.sessionId);
         }
@@ -117,7 +117,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
 
       // 连接到MCP server
       await server.connect(transport);
-      console.log(`创建新会话: ${newSessionId}`);
+      console.error(`创建新会话: ${newSessionId}`);
     }
     // 3，错误请求
     else {
@@ -125,7 +125,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
         ? `会话不存在或已过期: ${sessionId}`
         : "缺少会话ID,且非initialize请求";
 
-      console.warn(errorMsg);
+      console.error(errorMsg);
       res.status(400).json({
         jsonrpc: "2.0",
         error: {
@@ -139,7 +139,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
     await transport.handleRequest(req, res, req.body);
 
     if (isNewSession) {
-      console.log(`当前活跃会话数: ${sessions.size}`);
+      console.error(`当前活跃会话数: ${sessions.size}`);
     }
   } catch (error) {
     console.error("MCP请求处理错误:", error);
@@ -195,7 +195,7 @@ const handleSessionRequest = async (req: Request, res: Response) => {
 
     // DELETE请求后清理会话
     if (req.method === "DELETE") {
-      console.log(`手动关闭会话: ${sessionId}`);
+      console.error(`手动关闭会话: ${sessionId}`);
       session.transport.close().catch(console.error);
       sessions.delete(sessionId);
     }
@@ -244,7 +244,7 @@ process.on("SIGTERM", async () => {
   await Promise.all(closePromises);
   sessions.clear();
 
-  console.log("所有会话已关闭");
+  console.error("所有会话已关闭");
   process.exit(0);
 });
 
@@ -252,6 +252,6 @@ const ip = process.env.MCP_SERVER_IP || "http://127.0.0.1";
 const port = process.env.MCP_SERVER_PORT || 8189;
 
 app.listen(port, () => {
-  console.log(`MCP服务器运行在 http://${ip}:${port}/mcp`);
-  console.log(`健康检查: http://${ip}:${port}/health`);
+  console.error(`MCP服务器运行在 http://${ip}:${port}/mcp`);
+  console.error(`健康检查: http://${ip}:${port}/health`);
 });

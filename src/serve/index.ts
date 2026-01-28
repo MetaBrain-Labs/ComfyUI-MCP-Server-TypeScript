@@ -73,4 +73,42 @@ server.registerTool(
   }),
 );
 
+server.registerTool(
+  "cui_execute_workflow_original_task",
+  {
+    title: t("workflow.collectedContent.title"),
+    description: t("workflow.collectedContent.description"),
+    inputSchema: {
+      maxItems: z
+        .number()
+        .min(1)
+        .max(10)
+        .optional()
+        .default(3)
+        .describe(t("workflow.collectedContent.maxItems")),
+      offset: z
+        .number()
+        .min(0)
+        .optional()
+        .default(0)
+        .describe(t("workflow.collectedContent.offset")),
+      append: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe(t("workflow.collectedContent.append")),
+    },
+  },
+  withMcpErrorHandling(async ({ maxItems, offset, append }) => {
+    const result = await collectAndSaveWorkflow({
+      baseUrl: BASE_URL,
+      maxItems: maxItems,
+      offset: offset,
+      append: append,
+    });
+
+    return ResultToMcpResponse(result);
+  }),
+);
+
 export default server;

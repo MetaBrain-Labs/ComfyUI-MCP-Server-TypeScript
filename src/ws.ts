@@ -23,13 +23,13 @@ export class ComfyClient {
     const clientId = randomUUID().replace(/-/g, "");
 
     const wsUrl = `ws://${serverAddress}/ws?clientId=${clientId}`;
-    console.log(`🔌 Connecting to ComfyUI: ${wsUrl}`);
+    console.error(`🔌 Connecting to ComfyUI: ${wsUrl}`);
 
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on("open", () => {
-        console.log("✅ Connected to ComfyUI WebSocket");
+        console.error("✅ Connected to ComfyUI WebSocket");
         resolve();
       });
 
@@ -44,7 +44,7 @@ export class ComfyClient {
       });
 
       this.ws.on("close", () => {
-        console.log("⚠️ Disconnected from ComfyUI");
+        console.error("⚠️ Disconnected from ComfyUI");
       });
     });
   }
@@ -59,9 +59,9 @@ export class ComfyClient {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       const jsonString = JSON.stringify(data);
       this.ws.send(jsonString);
-      console.log("📤 Message sent:", data);
+      console.error("📤 Message sent:", data);
     } else {
-      console.warn("⚠️ Cannot send message: WebSocket is not open");
+      console.error("⚠️ Cannot send message: WebSocket is not open");
     }
   }
 
@@ -88,7 +88,7 @@ export class ComfyClient {
       const msgString = rawData.toString();
       const msg = JSON.parse(msgString);
 
-      console.log("接收到的msg", msg);
+      console.error("接收到的msg", msg);
 
       // msg 结构通常是: { type: string, data: any }
       const { type, data } = msg;
