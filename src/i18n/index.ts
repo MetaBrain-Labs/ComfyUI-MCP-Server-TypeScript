@@ -57,11 +57,11 @@ class I18n {
     const envLocale = process.env.LOCALE?.toLowerCase();
 
     if (envLocale === "zh" || envLocale === "en") {
-      console.warn(`Locale loaded from .env: ${envLocale}`);
+      console.error(`Locale loaded from .env: ${envLocale}`);
       return envLocale;
     }
 
-    console.warn("Locale not set in .env, using default: zh");
+    console.error("Locale not set in .env, using default: zh");
     return "zh";
   }
 
@@ -81,7 +81,7 @@ class I18n {
       this.getNestedValue(this.messages[this.fallbackLocale], key);
 
     if (!message) {
-      console.warn(
+      console.error(
         `Translation key "${key}" not found for locale "${this.locale}"`,
       );
       return key;
@@ -92,7 +92,7 @@ class I18n {
     }
 
     if (typeof message === "object") {
-      console.warn(
+      console.error(
         `Translation key "${key}" points to an object, not a string`,
       );
       return key;

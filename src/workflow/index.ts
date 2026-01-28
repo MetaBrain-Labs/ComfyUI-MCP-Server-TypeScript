@@ -1,4 +1,4 @@
-import { ok } from "../interface/result";
+import { ok, Result } from "../interface/result";
 import { WorkflowCollectionData } from "../interface/workflow";
 import { fetchWorkflowHistory } from "./fetchWorkflowHistory";
 import { saveWorkflow } from "./saveWorkflow";
@@ -16,7 +16,7 @@ export async function collectAndSaveWorkflow(params: {
   maxItems: number;
   offset: number;
   append: boolean;
-}) {
+}): Promise<Result<WorkflowCollectionData>> {
   const startTime = Date.now();
 
   const data = await fetchWorkflowHistory(params);
@@ -29,7 +29,7 @@ export async function collectAndSaveWorkflow(params: {
     "workflow.collected",
     params.offset,
     params.maxItems,
-    params.append ? "追加" : "覆盖",
+    params.append,
   );
 
   return ok<WorkflowCollectionData>(

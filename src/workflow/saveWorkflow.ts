@@ -49,7 +49,7 @@ export async function saveWorkflow(
         if (Array.isArray(existingData)) {
           finalData = existingData.flat(Infinity);
         } else {
-          console.warn("现有文件格式不是数组，将被覆盖");
+          console.error("现有文件格式不是数组，将被覆盖");
         }
       } catch (error: any) {
         // 如果文件不存在且系统发错中断信号则抛出异常
