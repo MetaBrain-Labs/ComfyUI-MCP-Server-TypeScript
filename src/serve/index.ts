@@ -10,6 +10,7 @@ import {
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
 import { collectAndSaveWorkflow } from "../workflow";
+import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
 
@@ -74,10 +75,11 @@ server.registerTool(
 );
 
 server.registerTool(
-  "cui_execute_workflow_original_task",
+  "cui_init_workflow",
   {
-    title: t("workflow.collectedContent.title"),
-    description: t("workflow.collectedContent.description"),
+    title: "初始化工作流",
+    description:
+      "连接ComfyUI的WebSocket服务器，并且获取ComfyUI中现有的节点信息",
     inputSchema: {
       maxItems: z
         .number()
@@ -100,6 +102,19 @@ server.registerTool(
     },
   },
   withMcpErrorHandling(async ({ maxItems, offset, append }) => {
+    const client = new ComfyClient();
+
+    await client.connect();
+
+    // 主动向ComfyUI WebSocket服务器发送feature信号
+    client.sendJson({
+      type: "feature_flags",
+      data: {
+        supports_preview_metadata: true,
+        supports_manager_v4_ui: true,
+      },
+    });
+
     const result = await collectAndSaveWorkflow({
       baseUrl: BASE_URL,
       maxItems: maxItems,
@@ -110,5 +125,29 @@ server.registerTool(
     return ResultToMcpResponse(result);
   }),
 );
+
+// server.registerTool(
+//   "cui_execute_workflow_original_task",
+//   {
+//     title: t("workflow.executeWorkflowOriginalTask.title"),
+//     description: t("workflow.executeWorkflowOriginalTask.description"),
+//     inputSchema: {
+//       promptId: z.string().describe(t("workflow.promptId")),
+//     },
+//   },
+//   withMcpErrorHandling(async ({ promptId }) => {
+//     const client = new ComfyClient();
+
+//     await client.connect();
+
+//     client.sendJson({
+//       type: "feature_flags",
+//       data: {
+//         supports_preview_metadata: true,
+//         supports_manager_v4_ui: true,
+//       },
+//     });
+//   }),
+// );
 
 export default server;

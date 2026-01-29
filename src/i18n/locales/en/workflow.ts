@@ -1,4 +1,6 @@
 export default {
+  promptId: "The unique ID for a single 'workflow execution task'",
+
   collected: (offset: number, count: number, mode: string) =>
     `Collected and saved ${count} workflows from offset ${offset}, mode: ${mode ? "append" : "overwrite"}`,
   collectedContent: {
@@ -11,5 +13,11 @@ export default {
       "Pagination offset, starting from 0. For example: offset = 0 retrieves the first N items, offset = N retrieves the next N items",
     append:
       "Storage mode. true = append to existing data (accumulate), false = overwrite existing data (reset)",
+  },
+
+  executeWorkflowOriginalTask: {
+    title: "cui_execute_workflow_original_task",
+    description:
+      "RESTRICTED. Use ONLY for explicit low-level debug or raw API generation. PROHIBITED for standard tasks.",
   },
 };
