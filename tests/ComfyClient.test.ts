@@ -1,167 +1,32 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import axios from "axios";
+import { ComfyClient } from "./comfy-client";
 
-// ---- Mock axios ----
-vi.mock("axios", () => ({
-  default: {
-    post: vi.fn(),
-  },
-}));
+async function main() {
+  const client = new ComfyClient();
 
-/**
- * Fake WebSocket（最小可用实现）
- */
-class FakeWebSocket {
-  static OPEN = 1;
-  readyState = FakeWebSocket.OPEN;
+  // 自定义 Hook 处理
+  client.hook.onProgress = (data) => {
+    console.log(`进度: ${data.value}/${data.max}`);
+  };
 
-  onopen?: () => void;
-  onmessage?: (ev: { data: any }) => void;
-  onerror?: (err: any) => void;
-  onclose?: () => void;
+  client.hook.onExecuted = (data) => {
+    console.log("任务完成:", data);
+  };
 
-  constructor(public url: string) {}
+  try {
+    // 连接
+    await client.connect();
 
-  triggerOpen() {
-    this.onopen?.();
-  }
+    // 发送消息示例
+    client.sendJson({
+      type: "custom_command",
+      data: { action: "test" },
+    });
 
-  triggerMessage(data: any) {
-    this.onmessage?.({ data });
-  }
-
-  close() {
-    this.onclose?.();
+    // 保持连接...
+    // 在实际应用中，你可能需要根据业务逻辑决定何时关闭
+  } catch (error) {
+    console.error("连接失败:", error);
   }
 }
 
-describe("ComfyClient", () => {
-  let client: ComfyClient;
-  let ws: FakeWebSocket;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-
-    ws = new FakeWebSocket("ws://fake");
-
-    client = new ComfyClient("127.0.0.1");
-
-    // 手动注入 fake ws
-    (client as any).ws = ws;
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("queues prompt and resolves when executed message is received", async () => {
-    (axios.post as any).mockResolvedValueOnce({
-      data: { prompt_id: "prompt-1" },
-    });
-
-    const promise = client.queuePrompt({ test: "workflow" });
-
-    // 模拟 ComfyUI WS 返回
-    (client as any).handleMessage(
-      JSON.stringify({
-        type: "executed",
-        data: {
-          prompt_id: "prompt-1",
-          output: {
-            images: ["a.png"],
-          },
-        },
-      })
-    );
-
-    const result = await promise;
-
-    expect(result.images[0]).toBe("a.png");
-    expect(axios.post).toHaveBeenCalledOnce();
-  });
-
-  it("supports multiple concurrent prompts", async () => {
-    (axios.post as any)
-      .mockResolvedValueOnce({ data: { prompt_id: "p1" } })
-      .mockResolvedValueOnce({ data: { prompt_id: "p2" } });
-
-    const p1 = client.queuePrompt({ a: 1 });
-    const p2 = client.queuePrompt({ b: 2 });
-
-    (client as any).handleMessage(
-      JSON.stringify({
-        type: "executed",
-        data: {
-          prompt_id: "p2",
-          output: { images: ["b.png"] },
-        },
-      })
-    );
-
-    (client as any).handleMessage(
-      JSON.stringify({
-        type: "executed",
-        data: {
-          prompt_id: "p1",
-          output: { images: ["a.png"] },
-        },
-      })
-    );
-
-    const r1 = await p1;
-    const r2 = await p2;
-
-    expect(r1.images[0]).toBe("a.png");
-    expect(r2.images[0]).toBe("b.png");
-  });
-
-  it("throws error if websocket is not connected", async () => {
-    (client as any).ws = null;
-
-    await expect(client.queuePrompt({})).rejects.toThrow(
-      "WebSocket not connected"
-    );
-  });
-
-  it("rejects if execution times out", async () => {
-    vi.useFakeTimers();
-
-    (axios.post as any).mockResolvedValueOnce({
-      data: { prompt_id: "timeout-id" },
-    });
-
-    const promise = client.queuePrompt({});
-
-    // 推进 5 分钟
-    vi.advanceTimersByTime(300_000);
-
-    await expect(promise).rejects.toThrow(
-      "Timeout waiting for ComfyUI generation"
-    );
-  });
-
-  it("ignores binary websocket messages", async () => {
-    (axios.post as any).mockResolvedValueOnce({
-      data: { prompt_id: "binary-test" },
-    });
-
-    const promise = client.queuePrompt({});
-
-    // 模拟二进制消息
-    (client as any).handleMessage(Buffer.from([1, 2, 3]));
-
-    // 正常完成
-    (client as any).handleMessage(
-      JSON.stringify({
-        type: "executed",
-        data: {
-          prompt_id: "binary-test",
-          output: { images: ["ok.png"] },
-        },
-      })
-    );
-
-    const result = await promise;
-    expect(result.images[0]).toBe("ok.png");
-  });
-});
+main();

@@ -4,14 +4,45 @@ import { fetchWorkflowHistory } from "./fetchWorkflowHistory";
 import { saveWorkflow } from "./saveWorkflow";
 import { t } from "../i18n";
 import "../i18n/locales";
+import { formatTask } from "../tools/format";
+import { ComfyTaskResponse } from "../interface/task";
 
 /**
  * @METHOD
- * @description 提供给server调用，用于收集和保存工作流数据
+ * @description 提供给server调用，用于收集工作流数据
  * @author LaiFQZzr
  * @date 2026/01/20 11:50
  */
 export async function collectAndSaveWorkflow(params: {
+  baseUrl: string;
+  maxItems: number;
+  offset: number;
+  append: boolean;
+}): Promise<Result<ComfyTaskResponse>> {
+  const startTime = Date.now();
+
+  const data = await fetchWorkflowHistory(params);
+
+  const executionTime = Date.now() - startTime;
+
+  return ok(
+    t("workflow.collected", params.offset, params.maxItems, params.append),
+    data,
+    {
+      action: "collect_workflow",
+      mode: params.append ? "append" : "overwrite",
+    },
+    executionTime,
+  );
+}
+
+/**
+ * @METHOD
+ * @description 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
+ * @author LaiFQZzr
+ * @date 2026/01/20 11:50
+ */
+export async function collectAndSaveFormatTask(params: {
   baseUrl: string;
   maxItems: number;
   offset: number;
@@ -21,19 +52,16 @@ export async function collectAndSaveWorkflow(params: {
 
   const data = await fetchWorkflowHistory(params);
 
-  const result = await saveWorkflow(data, { append: params?.append });
+  const formatData = formatTask(data);
+
+  const result = await saveWorkflow(formatData.workflows, {
+    append: params?.append,
+  });
 
   const executionTime = Date.now() - startTime;
 
-  const message = t(
-    "workflow.collected",
-    params.offset,
-    params.maxItems,
-    params.append,
-  );
-
   return ok<WorkflowCollectionData>(
-    message,
+    t("workflow.collected", params.offset, params.maxItems, params.append),
     {
       savedPath: result.filePath,
       itemsRequested: params.maxItems,

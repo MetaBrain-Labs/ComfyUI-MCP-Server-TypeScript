@@ -5,11 +5,13 @@ import { z } from "zod";
 import { t } from "../i18n";
 import "../i18n/locales";
 
+import { readFile } from "fs/promises";
+import { COMMON } from "../constants";
 import {
   ResultToMcpResponse,
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
-import { collectAndSaveWorkflow } from "../workflow";
+import { collectAndSaveFormatTask, collectAndSaveWorkflow } from "../workflow";
 import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
@@ -20,13 +22,34 @@ const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
  * @author LaiFQZzr
  * @date 2026/01/09 12:02
  */
-const server = new McpServer({
-  name: "comfy-ui-advanced",
-  version: "1.0.0",
-});
+const server = new McpServer(
+  {
+    name: "comfy-ui-advanced",
+    version: "1.0.0",
+  },
+  {
+    capabilities: {
+      tools: {},
+      resources: {},
+    },
+  },
+);
+// const server = new McpServer(
+//   {
+//     name: "comfy-ui-advanced",
+//     version: "1.0.0",
+//   },
+//   {
+//     capabilities: {
+//       tools: {},
+//       resources: {},
+//     },
+//     instructions: t("workflow.instructions").trim(),
+//   },
+// );
 
 /**
- * @METHOD
+ * @METHOD 
  * @description 扫描读取ComfyUI运行历史，提取工作流的API文件，保存至项目下的工作流文件夹中。
                 1. 按时间间隔（可配置，单位ms）对任务运行历史发起一次扫描。 
                 2. 历史记录为空的情况下，扫描ComfyUI下的所有工作流，获取其中带有标记的工作流的API文件，并发布绘图任务检查可用性（实现思路：通过/prompt发布绘图任务，通过/ws监听是否可用）。
@@ -37,7 +60,7 @@ const server = new McpServer({
  * @date 2026/01/15 15:44
  */
 server.registerTool(
-  "collect_workflow",
+  "cui_collect_workflow",
   {
     title: t("workflow.collectedContent.title"),
     description: t("workflow.collectedContent.description"),
@@ -74,12 +97,18 @@ server.registerTool(
   }),
 );
 
+/**
+ * @METHOD
+ * @description 格式化并保存工作流任务信息，格式化后投喂给AGENT
+ * @author LaiFQZzr
+ * @date 2026/01/30 10:16
+ */
 server.registerTool(
   "cui_init_workflow",
   {
     title: "初始化工作流",
     description:
-      "连接ComfyUI的WebSocket服务器，并且获取ComfyUI中现有的节点信息",
+      "连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中",
     inputSchema: {
       maxItems: z
         .number()
@@ -106,7 +135,6 @@ server.registerTool(
 
     await client.connect();
 
-    // 主动向ComfyUI WebSocket服务器发送feature信号
     client.sendJson({
       type: "feature_flags",
       data: {
@@ -115,7 +143,7 @@ server.registerTool(
       },
     });
 
-    const result = await collectAndSaveWorkflow({
+    const result = await collectAndSaveFormatTask({
       baseUrl: BASE_URL,
       maxItems: maxItems,
       offset: offset,
@@ -136,6 +164,12 @@ server.registerTool(
 //     },
 //   },
 //   withMcpErrorHandling(async ({ promptId }) => {
+//     // 连接上WebSocket
+
+//     // 根据promptId执行工作流
+
+//     //
+
 //     const client = new ComfyClient();
 
 //     await client.connect();
@@ -149,5 +183,46 @@ server.registerTool(
 //     });
 //   }),
 // );
+
+// 启动阶段
+
+server.registerResource(
+  "workflow_file",
+  COMMON.WORKFLOW_RESOURCE_URI,
+  {
+    title: "本地 Workflow 文件",
+    description: "AGENT 生成并保存的工作流文件",
+    mimeType: "application/json",
+  },
+  async () => {
+    try {
+      const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
+
+      return {
+        contents: [
+          {
+            uri: COMMON.WORKFLOW_RESOURCE_URI,
+            mimeType: "application/json",
+            text: content,
+          },
+        ],
+      };
+    } catch (err: any) {
+      if (err.code === "ENOENT") {
+        return {
+          contents: [
+            {
+              uri: COMMON.WORKFLOW_RESOURCE_URI,
+              mimeType: "application/json",
+              text: "[]",
+            },
+          ],
+        };
+      }
+
+      throw err;
+    }
+  },
+);
 
 export default server;
