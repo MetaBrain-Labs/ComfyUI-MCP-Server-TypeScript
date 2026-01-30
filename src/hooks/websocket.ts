@@ -1,65 +1,97 @@
+import {
+  ComfyExecutedData,
+  ComfyExecutingData,
+  ComfyExecutionCachedData,
+  ComfyExecutionStartData,
+  ComfyExecutionSuccessData,
+  ComfyFeatureFlagsData,
+  ComfyProgressStateData,
+  ComfyStatusData,
+} from "../interface/ws";
+
 export class ComfyClientHook {
   /**
-   * 当收到服务器的功能标志时 (通常在连接初期)
+   * 处理状态消息
    */
-  public handleFeatureFlags(data: any) {
-    console.error("[Hook] Server Feature Flags:", data);
+  onStatus(data: ComfyStatusData): void {
+    console.error("Status update:", data);
+    // 实现你的业务逻辑
   }
 
   /**
-   * 当一个 Prompt 开始被处理时
+   * 执行开始
    */
-  public onExecutionStart(data: { prompt_id: string }) {
-    console.error(`[Hook] Execution Started: ${data.prompt_id}`);
+  onExecutionStart(data: ComfyExecutionStartData): void {
+    console.error("Execution started:", data);
   }
 
   /**
-   * 当节点命中缓存时（未重新计算）
+   * 缓存执行
    */
-  public onExecutionCached(data: { nodes: string[]; prompt_id: string }) {
-    // console.error(`[Hook] Cached Nodes: ${data.nodes.length}`);
+  onExecutionCached(data: ComfyExecutionCachedData): void {
+    console.error("Execution cached:", data);
   }
 
   /**
-   * 当某个节点开始执行时
-   * data: { node: string, prompt_id: string }
+   * 节点执行中
    */
-  public onNodeExecuting(data: { node: string | null; prompt_id: string }) {
-    if (data.node === null) {
-      console.error(`[Hook] Workflow Execution Finished (Internal)`);
-    } else {
-      console.error(`[Hook] Node Executing: ${data.node}`);
-    }
+  onNodeExecuting(data: ComfyExecutingData): void {
+    console.error("Node executing:", data);
   }
 
   /**
-   * 进度条更新 (ComfyUI 可能不发送 type: 'progress'，而是通过 socket.io 协议，
-   * 但原生 WS 有时也会收到 progress 类型的消息)
+   * 进度更新
    */
-  public onProgress(data: { value: number; max: number }) {
-    console.error(`[Hook] Progress: ${data.value}/${data.max}`);
+  onProgressState(data: ComfyProgressStateData): void {
+    console.error("ProgressState:", data);
   }
 
   /**
-   * 任务彻底完成（包含输出结果，如图片）
+   * 节点执行完成
    */
-  public onExecuted(data: { prompt_id: string; output: any }) {
-    console.error(`[Hook] Executed. Output keys: ${Object.keys(data.output)}`);
+  onExecuted(data: ComfyExecutedData): void {
+    console.error("Node executed:", data);
   }
 
   /**
-   * 队列状态更新
+   * 节点执行完成
    */
-  public onStatus(data: {
-    status: { exec_info: { queue_remaining: number } };
-  }) {
-    // console.error(`[Hook] Queue Remaining: ${data.status.exec_info.queue_remaining}`);
+  onExecutionSuccess(data: ComfyExecutionSuccessData): void {
+    console.error("Node executed success:", data);
   }
 
   /**
-   * 未知消息类型的兜底处理
+   * 执行错误
    */
-  public onUnhandledMessage(type: string, data: any) {
-    console.error(`[Hook] Unhandled message type: ${type}`);
+  onExecutionError(data: any): void {
+    console.error("Execution error:", data);
+  }
+
+  /**
+   * 执行中断
+   */
+  onExecutionInterrupted(data: any): void {
+    console.error("Execution interrupted:", data);
+  }
+
+  /**
+   * 功能标志
+   */
+  handleFeatureFlags(data: ComfyFeatureFlagsData): void {
+    console.error("Feature flags:", data);
+  }
+
+  /**
+   * 二进制数据 (如预览图片)
+   */
+  onBinaryData(data: Buffer): void {
+    console.error("Binary data received, size:", data.length);
+  }
+
+  /**
+   * 未处理的消息
+   */
+  onUnhandledMessage(type: string, data: any): void {
+    console.error("Unhandled message type:", type, data);
   }
 }

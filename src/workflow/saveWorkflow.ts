@@ -1,8 +1,8 @@
-import { mkdir, writeFile, readFile } from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { mkdir, readFile, writeFile } from "fs/promises";
+import { COMMON } from "../constants";
+import server from "../serve";
+import { registerFileAsResource } from "../tools/mcp-register";
 
 export interface SaveWorkflowOptions {
   dir?: string;
@@ -15,28 +15,28 @@ export interface WorkflowData {
   [key: string]: any;
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+/**
+ * @METHOD
+ * @description 保存工作流任务信息到本地
+ * @author LaiFQZzr
+ * @date 2026/01/30 11:09
+ */
 export async function saveWorkflow(
   data: any,
   options: SaveWorkflowOptions = {},
 ): Promise<{ filePath: string; itemsCollected: number }> {
   try {
-    const projectRoot = path.resolve(__dirname, "..", "..");
-
     const {
-      dir = path.join(projectRoot, "workflow"),
-      fileName = "workflow.json",
+      dir = COMMON.WORKFLOW_DIR,
+      fileName = COMMON.WORKFLOW_FILE,
       append = true,
     } = options;
 
     const itemsCollected = Object.keys(data).length;
 
-    // 创建目录
     await mkdir(dir, { recursive: true });
 
-    const filePath = path.join(dir, fileName);
+    const filePath = COMMON.WORKFLOW_PATH;
 
     let finalData: WorkflowData[] = [];
 
@@ -52,7 +52,6 @@ export async function saveWorkflow(
           console.error("现有文件格式不是数组，将被覆盖");
         }
       } catch (error: any) {
-        // 如果文件不存在且系统发错中断信号则抛出异常
         if (error.code !== "ENOENT") {
           throw new McpError(
             ErrorCode.InternalError,
@@ -81,6 +80,12 @@ export async function saveWorkflow(
 
     // 写入文件
     await writeFile(filePath, JSON.stringify(filteredData, null, 2), "utf-8");
+
+    // 注册该文件成为资源
+    // const resourceUri = await registerFileAsResource(fileName, filePath);
+
+    // 通知 AGENT 资源变更
+    server.sendResourceListChanged();
 
     return { filePath, itemsCollected };
   } catch (error) {

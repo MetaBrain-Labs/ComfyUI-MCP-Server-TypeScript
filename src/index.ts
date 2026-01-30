@@ -252,6 +252,6 @@ const ip = process.env.MCP_SERVER_IP || "http://127.0.0.1";
 const port = process.env.MCP_SERVER_PORT || 8189;
 
 app.listen(port, () => {
-  console.error(`MCP服务器运行在 http://${ip}:${port}/mcp`);
-  console.error(`健康检查: http://${ip}:${port}/health`);
+  console.error(`MCP服务器运行在 ${ip}:${port}/mcp`);
+  console.error(`健康检查: ${ip}:${port}/health`);
 });
