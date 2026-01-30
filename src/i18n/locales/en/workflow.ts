@@ -1,4 +1,25 @@
 export default {
+  instructions: `
+    ComfyUI MCP Server - AI Image Generation Workflows
+
+    📚 IMPORTANT - Read Skills First:
+    This server provides skills (best practice guides) as resources.
+    Before using any tool, please read the relevant skill resource to understand:
+    - Recommended workflows
+    - Common patterns
+    - Error handling
+    - Best practices
+
+    Available Skills:
+    - skill://comfyui-workflow-agent - Main workflow orchestration guide
+
+    Recommended Usage Pattern:
+    1. User requests image generation
+    2. Read skill://comfyui-workflow-agent
+    3. Follow the Discovery-Mount-Execute pattern from the skill
+    4. Use tools according to skill guidelines
+  `,
+
   promptId: "The unique ID for a single 'workflow execution task'",
 
   collected: (offset: number, count: number, mode: string) =>
