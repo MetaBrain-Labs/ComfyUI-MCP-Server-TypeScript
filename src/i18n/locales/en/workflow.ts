@@ -1,3 +1,5 @@
+import { COMMON } from "../../../constants";
+
 export default {
   instructions: `
     ComfyUI MCP Server - AI Image Generation Workflows
@@ -23,7 +25,12 @@ export default {
   promptId: "The unique ID for a single 'workflow execution task'",
 
   collected: (offset: number, count: number, mode: string) =>
-    `Collected and saved ${count} workflows from offset ${offset}, mode: ${mode ? "append" : "overwrite"}`,
+    `Collected and saved ${count} workflows from offset ${offset}, mode: ${mode ? "append" : "overwrite"}
+      IMPORTANT:
+        To read the contents of this file, first verify whether the MCP resource channel is available. Do not attempt to read the disk path directly.
+        Please read the resource URI: ${COMMON.WORKFLOW_RESOURCE_URI}
+        If MCP cannot be used for reading, use the 'cui_get_workflow_tasks' tool to obtain the corresponding resource information.
+    `,
   collectedContent: {
     title: "Query ComfyUI workflow history tasks",
     description:
