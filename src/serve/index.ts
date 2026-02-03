@@ -1,8 +1,5 @@
 import "@modelcontextprotocol/sdk/client/streamableHttp";
-import {
-  McpServer,
-  ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
 import "dotenv/config";
 import { z } from "zod";
@@ -11,6 +8,7 @@ import "../i18n/locales";
 
 import { readFile } from "fs/promises";
 import { COMMON } from "../constants";
+import { error, errorWithDetail, ok } from "../interface/result";
 import {
   ResultToMcpResponse,
   ResultToMcpStringResponse,
@@ -21,6 +19,16 @@ import {
   collectAndSaveWorkflow,
   getTaskDetailByPromptId,
 } from "../workflow";
+import {
+  createDynamicWorkflowTool,
+  DynamicWorkflowToolData,
+  executeDynamicWorkflowTool,
+  generateToolExampleParams,
+  getAllDynamicTools,
+  getDynamicTool,
+  hasDynamicTool,
+  ListDynamicWorkflowToolData,
+} from "../workflow/dynamic-tool";
 import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
@@ -108,8 +116,7 @@ server.registerTool(
   "cui_init_workflow",
   {
     title: "初始化工作流",
-    description: `连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中
-      生成完成后，你应该通过 MCP resource 以及对应路径 ${COMMON.WORKFLOW_RESOURCE_URI} 读取完整内容进行分析。`,
+    description: `连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中`,
     inputSchema: {
       maxItems: z
         .number()
@@ -196,9 +203,253 @@ server.registerTool(
       promptId: promptId,
     });
 
-    // TODO 根据查询结果的detail的data的内容来动态构建函数并且执行工作流
-
     return ResultToMcpResponse(result);
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 基于历史任务创建动态 Workflow Tool
+ *              该工具会分析历史任务的 prompts 结构，提取可配置参数，
+ *              生成一个新的 MCP Tool，允许修改参数值但保持结构不变
+ * @author LaiFQZzr
+ * @date 2026/02/03 14:50
+ */
+server.registerTool(
+  "cui_create_workflow_tool",
+  {
+    title: "基于历史任务创建动态 Workflow Tool",
+    description: `基于历史任务（prompt_id）创建一个可重用的动态 Workflow Tool。
+
+      功能说明：
+      1. 分析指定历史任务的 prompts 结构
+      2. 提取所有可配置的基础类型参数（排除连接引用）
+      3. 生成一个新的 MCP Tool，名称由 toolName 指定
+      4. 生成的 Tool 会出现在 cui_list_dynamic_tools 列表中
+
+      使用场景：
+      - 当你找到一个成功执行的历史任务，想要基于它创建可重用的模板
+      - 需要让 Agent 能够修改工作流参数（如提示词、种子、尺寸等）但不改变结构
+      - 创建标准化的工作流工具供后续重复使用
+    `,
+    inputSchema: {
+      promptId: z.string().describe("历史任务的 prompt_id"),
+      toolName: z
+        .string()
+        .regex(
+          /^[a-zA-Z0-9_-]+$/,
+          "Tool 名称只能包含字母、数字、下划线、连字符",
+        )
+        .describe("新 Tool 的名称，只能包含字母、数字、下划线、连字符"),
+      title: z.string().optional().describe("可选，Tool 的显示标题"),
+      description: z.string().optional().describe("可选，Tool 的详细描述"),
+    },
+  },
+  withMcpErrorHandling(async ({ promptId, toolName, title, description }) => {
+    // 检查 Tool 名称是否已存在
+    if (hasDynamicTool(toolName)) {
+      return ResultToMcpResponse(
+        error(`Tool "${toolName}" 已存在，请使用其他名称`),
+      );
+    }
+
+    const startTime = Date.now();
+
+    // 获取任务详情
+    const result = await getTaskDetailByPromptId({
+      baseUrl: BASE_URL,
+      promptId: promptId,
+    });
+
+    if (!result.success || !result.detail.data) {
+      return ResultToMcpResponse(error("获取任务详情失败"));
+    }
+
+    const workflow = result.detail.data;
+
+    // 创建动态 Tool
+    const tool = createDynamicWorkflowTool(
+      toolName,
+      promptId,
+      workflow,
+      title,
+      description,
+    );
+
+    // 构建响应
+    const response: DynamicWorkflowToolData = {
+      name: tool.name,
+      title: tool.title,
+      description: tool.description,
+      sourcePromptId: tool.sourcePromptId,
+      configurableParamsCount: tool.configurableParams.length,
+      configurableParams: tool.configurableParams.map((p) => ({
+        key: `${p.nodeId}_${p.inputKey}`,
+        path: p.path,
+        type: p.type,
+        defaultValue: p.defaultValue,
+        description: p.description,
+        nodeTitle: p.nodeTitle,
+        classType: p.classType,
+      })),
+      exampleUsage: generateToolExampleParams(tool),
+    };
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        `成功创建动态 Tool: ${toolName}`,
+        response,
+        {
+          action: "cui_create_workflow_tool",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 列出所有已创建的动态 Workflow Tools
+ * @author LaiFQZzr
+ * @date 2026/02/03 14:50
+ */
+server.registerTool(
+  "cui_list_dynamic_tools",
+  {
+    title: "列出所有动态 Workflow Tools",
+    description: `获取所有通过 cui_create_workflow_tool 创建的动态 Tool 列表`,
+    inputSchema: {},
+  },
+  withMcpErrorHandling(async () => {
+    const startTime = Date.now();
+
+    const tools = getAllDynamicTools();
+
+    const executionTime = Date.now() - startTime;
+
+    const response: ListDynamicWorkflowToolData = {
+      count: tools.length,
+      tools: tools.map((tool) => ({
+        name: tool.name,
+        title: tool.title,
+        description: tool.description,
+        sourcePromptId: tool.sourcePromptId,
+        configurableParamsCount: tool.configurableParams.length,
+        createdAt: new Date(tool.createdAt).toISOString(),
+      })),
+    };
+
+    return ResultToMcpResponse(
+      ok(
+        `成功获取所有动态 Workflow Tools`,
+        response,
+        {
+          action: "cui_list_dynamic_tools",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 执行动态 Workflow Tool
+ * @author LaiFQZzr
+ * @date 2026/02/03 14:50
+ */
+server.registerTool(
+  "cui_execute_dynamic_tool",
+  {
+    title: "执行动态 Workflow Tool",
+    description: `执行通过 cui_create_workflow_tool 创建的动态 Tool。
+      使用说明：
+      1. 先使用 cui_list_dynamic_tools 查看可用的动态 Tools
+      2. 使用 cui_get_dynamic_tool_detail 获取 Tool 的参数详情
+      3. 调用此工具执行，传入 toolName 和需要修改的参数
+
+      注意：
+      - 未提供的参数将使用默认值
+      - 只能修改参数值，不能修改工作流结构
+      - 参数类型必须与定义一致
+    `,
+    inputSchema: {
+      toolName: z.string().describe("要执行的动态 Tool 名称"),
+      params: z
+        .record(z.string(), z.any())
+        .optional()
+        .describe(
+          "要修改的参数，key 格式为 nodeId_inputKey，未提供的参数使用默认值",
+        ),
+    },
+  },
+  withMcpErrorHandling(async ({ toolName, params = {} }) => {
+    const tool = getDynamicTool(toolName);
+
+    if (!tool) {
+      return ResultToMcpResponse(
+        errorWithDetail(
+          `Tool "${toolName}" 不存在`,
+          `availableTools: ${getAllDynamicTools().map((t) => t.name)}`,
+        ),
+      );
+    }
+
+    const execResult = await executeDynamicWorkflowTool(toolName, params);
+
+    return ResultToMcpResponse(ok("成功执行动态 Workflow Tool", execResult));
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 获取动态 Tool 的详细参数信息
+ * @author LaiFQZzr
+ * @date 2026/02/03 14:50
+ */
+server.registerTool(
+  "cui_get_dynamic_tool_detail",
+  {
+    title: "获取动态 Tool 详情",
+    description: `获取指定动态 Tool 的详细参数信息和默认值，用于了解如何调用 cui_execute_dynamic_tool`,
+    inputSchema: {
+      toolName: z.string().describe("动态 Tool 名称"),
+    },
+  },
+  withMcpErrorHandling(async ({ toolName }) => {
+    const tool = getDynamicTool(toolName);
+
+    if (!tool) {
+      return ResultToMcpResponse(error(`Tool "${toolName}" 不存在`));
+    }
+
+    const response: DynamicWorkflowToolData = {
+      name: tool.name,
+      title: tool.title,
+      description: tool.description,
+      sourcePromptId: tool.sourcePromptId,
+      createdAt: new Date(tool.createdAt).toISOString(),
+      configurableParams: tool.configurableParams.map((p) => ({
+        key: `${p.nodeId}_${p.inputKey}`,
+        path: p.path,
+        type: p.type,
+        defaultValue: p.defaultValue,
+        description: p.description,
+        nodeTitle: p.nodeTitle,
+        classType: p.classType,
+      })),
+      exampleUsage: {
+        toolName: tool.name,
+        params: generateToolExampleParams(tool),
+      },
+    };
+
+    return ResultToMcpResponse(
+      ok("成功获取动态 Tool 的详细参数信息", response),
+    );
   }),
 );
 

@@ -63,7 +63,7 @@ export function ResultToMcpResponse(result: Result): CallToolResult {
       content: [
         {
           type: "text",
-          text: `Error: ${result || "Unknown error"}`,
+          text: JSON.stringify(result, null, 2),
         },
       ],
       isError: true,
@@ -85,21 +85,5 @@ export function ResultToMcpStringResponse(result: string): CallToolResult {
         text: JSON.stringify(result, null, 2),
       },
     ],
-  };
-}
-
-export function promptsToSchema(prompts: ComfyPromptConfig) {
-  const properties = {};
-  const required = [];
-
-  for (const p of prompts) {
-    properties[p.name] = { type: p.type };
-    if (p.required) required.push(p.name);
-  }
-
-  return {
-    type: "object",
-    properties,
-    required,
   };
 }

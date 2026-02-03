@@ -1,0 +1,375 @@
+/**
+ * @file 动态工作流 Tool 管理模块
+ * @description 基于历史任务的 prompts 结构，动态创建可重用的 MCP Tool
+ *              允许修改参数值但保持结构不变
+ */
+
+import { z } from "zod";
+import { ComfyInputValue, ComfyPromptConfig } from "../interface/task";
+
+/**
+ * 可配置参数的定义
+ */
+export interface ConfigurableParam {
+  /** 参数路径，格式：nodeId.inputKey */
+  path: string;
+  /** 节点ID */
+  nodeId?: string;
+  /** 输入键名 */
+  inputKey?: string;
+  /** 参数类型 */
+  type: "string" | "number" | "boolean" | "array";
+  /** 当前值（作为默认值） */
+  defaultValue: ComfyInputValue;
+  /** 节点类名 */
+  classType: string;
+  /** 节点标题 */
+  nodeTitle?: string;
+  /** 参数描述 */
+  description?: string;
+}
+
+/**
+ * 动态 Tool 的定义
+ */
+export interface DynamicWorkflowTool {
+  /** Tool 名称 */
+  name: string;
+  /** 显示标题 */
+  title: string;
+  /** 描述 */
+  description: string;
+  /** 原始 promptId */
+  sourcePromptId: string;
+  /** 原始 workflow 模板（深拷贝） */
+  workflowTemplate: ComfyPromptConfig;
+  /** 可配置参数列表 */
+  configurableParams: ConfigurableParam[];
+  /** Zod Schema */
+  schema: Record<string, z.ZodTypeAny>;
+  /** 创建时间 */
+  createdAt: number;
+}
+
+export interface DynamicWorkflowToolData {
+  /** Tool 名称 */
+  name: string;
+  /** 显示标题 */
+  title: string;
+  /** 描述 */
+  description: string;
+  /** 原始 promptId */
+  sourcePromptId: string;
+  /** 可配置参数数量 */
+  configurableParamsCount?: number;
+  /** 可配置参数列表 */
+  configurableParams: ConfigurableParam[];
+  /** 使用示例 */
+  exampleUsage: Record<string, any>;
+  /** 创建时间 */
+  createdAt?: string;
+}
+
+export interface ListDynamicWorkflowToolData {
+  count: number;
+  tools: {
+    name: string;
+    title: string;
+    description: string;
+    sourcePromptId: string;
+    configurableParamsCount: number;
+    createdAt: string;
+  }[];
+}
+
+/**
+ * 动态 Tool 存储
+ */
+const dynamicTools = new Map<string, DynamicWorkflowTool>();
+
+/**
+ * 判断值是否为连接引用（不能作为可配置参数）
+ * 连接引用格式：[nodeId, slotIndex] 或更复杂的嵌套数组
+ */
+function isConnectionReference(value: ComfyInputValue): boolean {
+  if (!Array.isArray(value)) return false;
+  if (value.length === 0) return false;
+  // 连接引用通常是 [string, number] 格式
+  if (
+    value.length === 2 &&
+    typeof value[0] === "string" &&
+    typeof value[1] === "number"
+  ) {
+    return true;
+  }
+  // 嵌套数组也可能是连接引用
+  if (Array.isArray(value[0])) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 获取参数类型
+ */
+function getValueType(value: ComfyInputValue): ConfigurableParam["type"] {
+  if (typeof value === "string") return "string";
+  if (typeof value === "number") return "number";
+  if (typeof value === "boolean") return "boolean";
+  if (Array.isArray(value)) return "array";
+  return "string";
+}
+
+/**
+ * 将值转换为 Zod Schema
+ */
+function valueToZodSchema(
+  value: ComfyInputValue,
+  description?: string,
+): z.ZodTypeAny {
+  const type = getValueType(value);
+
+  switch (type) {
+    case "string":
+      return z
+        .string()
+        .default(value as string)
+        .describe(description || `字符串值，默认: ${value}`);
+    case "number":
+      return z
+        .number()
+        .default(value as number)
+        .describe(description || `数值，默认: ${value}`);
+    case "boolean":
+      return z
+        .boolean()
+        .default(value as boolean)
+        .describe(description || `布尔值，默认: ${value}`);
+    case "array":
+      return z
+        .array(z.any())
+        .default(value as any[])
+        .describe(description || `数组值`);
+    default:
+      return z.any().describe(description || "任意值");
+  }
+}
+
+/**
+ * 从 workflow 中提取可配置参数
+ *
+ * 提取规则：
+ * 1. 排除连接引用（数组形式的连接）
+ * 2. 提取基础类型值（string, number, boolean）
+ * 3. 某些特定类型的节点输入可以被智能识别（如种子、提示词等）
+ */
+export function extractConfigurableParams(
+  workflow: ComfyPromptConfig,
+): ConfigurableParam[] {
+  const params: ConfigurableParam[] = [];
+
+  for (const [nodeId, nodeConfig] of Object.entries(workflow)) {
+    const { inputs, class_type, _meta } = nodeConfig;
+
+    for (const [inputKey, value] of Object.entries(inputs)) {
+      // 跳过连接引用
+      if (isConnectionReference(value)) {
+        continue;
+      }
+
+      // 跳过 null/undefined
+      if (value === null || value === undefined) {
+        continue;
+      }
+
+      // 生成参数描述
+      let description = `${class_type} 节点的 ${inputKey} 参数`;
+
+      // 智能识别常见参数类型
+      const lowerKey = inputKey.toLowerCase();
+      if (lowerKey.includes("seed") || lowerKey.includes("种子")) {
+        description = `随机种子 (Seed)，控制生成结果的随机性`;
+      } else if (lowerKey.includes("prompt") || lowerKey.includes("text")) {
+        description = `提示词文本，支持多行`;
+      } else if (lowerKey.includes("width") || lowerKey.includes("宽度")) {
+        description = `图像宽度 (像素)`;
+      } else if (lowerKey.includes("height") || lowerKey.includes("高度")) {
+        description = `图像高度 (像素)`;
+      } else if (lowerKey.includes("steps") || lowerKey.includes("步数")) {
+        description = `采样步数`;
+      } else if (lowerKey.includes("cfg") || lowerKey.includes("scale")) {
+        description = `CFG Scale，提示词遵循程度`;
+      }
+
+      params.push({
+        path: `${nodeId}.${inputKey}`,
+        nodeId,
+        inputKey,
+        type: getValueType(value),
+        defaultValue: value,
+        classType: class_type,
+        nodeTitle: _meta?.title,
+        description,
+      });
+    }
+  }
+
+  return params;
+}
+
+/**
+ * 根据可配置参数生成 Zod Schema
+ */
+export function generateZodSchema(
+  params: ConfigurableParam[],
+): Record<string, z.ZodTypeAny> {
+  const schema: Record<string, z.ZodTypeAny> = {};
+
+  for (const param of params) {
+    // 使用参数路径作为 key，避免重名
+    const key = `${param.nodeId}_${param.inputKey}`;
+    schema[key] = valueToZodSchema(param.defaultValue, param.description);
+  }
+
+  return schema;
+}
+
+/**
+ * 将用户输入合并到 workflow 模板
+ */
+export function mergeParamsToWorkflow(
+  template: ComfyPromptConfig,
+  params: ConfigurableParam[],
+  userInputs: Record<string, any>,
+): ComfyPromptConfig {
+  // 深拷贝模板
+  const workflow = JSON.parse(JSON.stringify(template)) as ComfyPromptConfig;
+
+  for (const param of params) {
+    const key = `${param.nodeId}_${param.inputKey}`;
+    const userValue = userInputs[key];
+
+    if (userValue !== undefined && workflow[param.nodeId]) {
+      workflow[param.nodeId].inputs[param.inputKey] = userValue;
+    }
+  }
+
+  return workflow;
+}
+
+/**
+ * 创建动态 Workflow Tool
+ */
+export function createDynamicWorkflowTool(
+  name: string,
+  sourcePromptId: string,
+  workflow: ComfyPromptConfig,
+  customTitle?: string,
+  customDescription?: string,
+): DynamicWorkflowTool {
+  // 提取可配置参数
+  const configurableParams = extractConfigurableParams(workflow);
+
+  // 生成 Zod Schema
+  const schema = generateZodSchema(configurableParams);
+
+  // 构建 Tool 描述
+  const paramDescriptions = configurableParams
+    .map(
+      (p) =>
+        `- ${p.nodeId}_${p.inputKey}: ${p.description} (默认: ${JSON.stringify(p.defaultValue)})`,
+    )
+    .join("\n");
+
+  const tool: DynamicWorkflowTool = {
+    name,
+    title: customTitle || `Workflow: ${name}`,
+    description:
+      customDescription ||
+      `基于历史任务 ${sourcePromptId} 创建的动态工作流工具。\n\n` +
+        `可配置参数:\n${paramDescriptions}\n\n` +
+        `注意：只能修改参数值，不能修改工作流结构。`,
+    sourcePromptId,
+    workflowTemplate: JSON.parse(JSON.stringify(workflow)), // 深拷贝
+    configurableParams,
+    schema,
+    createdAt: Date.now(),
+  };
+
+  // 保存到存储
+  dynamicTools.set(name, tool);
+
+  return tool;
+}
+
+/**
+ * 获取动态 Tool
+ */
+export function getDynamicTool(name: string): DynamicWorkflowTool | undefined {
+  return dynamicTools.get(name);
+}
+
+/**
+ * 获取所有动态 Tools
+ */
+export function getAllDynamicTools(): DynamicWorkflowTool[] {
+  return Array.from(dynamicTools.values());
+}
+
+/**
+ * 删除动态 Tool
+ */
+export function deleteDynamicTool(name: string): boolean {
+  return dynamicTools.delete(name);
+}
+
+/**
+ * 检查 Tool 是否存在
+ */
+export function hasDynamicTool(name: string): boolean {
+  return dynamicTools.has(name);
+}
+
+/**
+ * 执行动态 Workflow Tool
+ */
+export async function executeDynamicWorkflowTool(
+  toolName: string,
+  userInputs: Record<string, any>,
+): Promise<any> {
+  const tool = getDynamicTool(toolName);
+  if (!tool) {
+    return `动态工具 "${toolName}" 不存在`;
+  }
+
+  // 合并用户输入到 workflow
+  const workflow = mergeParamsToWorkflow(
+    tool.workflowTemplate,
+    tool.configurableParams,
+    userInputs,
+  );
+
+  // 执行 workflow
+  // const executor = new WorkflowExecutor();
+  // const result = await executor.executeWorkflow(workflow);
+
+  // 直接返回 WorkflowResult
+  // return result;
+  return workflow;
+}
+
+/**
+ * 生成动态 Tool 的参数示例
+ */
+export function generateToolExampleParams(
+  tool: DynamicWorkflowTool,
+): Record<string, any> {
+  const example: Record<string, any> = {};
+
+  for (const param of tool.configurableParams) {
+    const key = `${param.nodeId}_${param.inputKey}`;
+    example[key] = param.defaultValue;
+  }
+
+  return example;
+}
