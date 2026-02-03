@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { Result } from "../interface/result";
+import { ComfyPromptConfig } from "../interface/task";
 
 /**
  * @METHOD
@@ -84,5 +85,21 @@ export function ResultToMcpStringResponse(result: string): CallToolResult {
         text: JSON.stringify(result, null, 2),
       },
     ],
+  };
+}
+
+export function promptsToSchema(prompts: ComfyPromptConfig) {
+  const properties = {};
+  const required = [];
+
+  for (const p of prompts) {
+    properties[p.name] = { type: p.type };
+    if (p.required) required.push(p.name);
+  }
+
+  return {
+    type: "object",
+    properties,
+    required,
   };
 }

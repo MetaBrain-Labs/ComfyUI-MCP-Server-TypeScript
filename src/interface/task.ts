@@ -1,6 +1,14 @@
 // 顶层结构：以 UUID 为键的映射
 export type ComfyTaskResponse = Record<string, ComfyTaskItem>;
 
+export type PromptType = [
+  number,
+  string,
+  ComfyPromptConfig,
+  ComfyExtraInfo,
+  string[],
+];
+
 // 单个历史记录项
 export interface ComfyTaskItem {
   /**
@@ -11,7 +19,7 @@ export interface ComfyTaskItem {
    * [3]: 额外信息 (ExtraInfo)
    * [4]: 输出节点ID列表 (string[])
    */
-  prompt: [number, string, ComfyPromptConfig, ComfyExtraInfo, string[]];
+  prompt: PromptType;
 
   /** 执行结果输出 */
   outputs: Record<string, ComfyNodeOutput>;

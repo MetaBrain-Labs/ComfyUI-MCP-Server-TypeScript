@@ -16,7 +16,11 @@ import {
   ResultToMcpStringResponse,
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
-import { collectAndSaveFormatTask, collectAndSaveWorkflow } from "../workflow";
+import {
+  collectAndSaveFormatTask,
+  collectAndSaveWorkflow,
+  getTaskDetailByPromptId,
+} from "../workflow";
 import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
@@ -168,6 +172,33 @@ server.registerTool(
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
     return ResultToMcpStringResponse(content);
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 根据prompt_id获取任务详情
+ * @author LaiFQZzr
+ * @date 2026/02/03 10:31
+ */
+server.registerTool(
+  "cui_get_task_detail",
+  {
+    title: "根据prompt_id获取任务详情",
+    description: `根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容`,
+    inputSchema: {
+      promptId: z.string().describe(t("workflow.promptId")),
+    },
+  },
+  withMcpErrorHandling(async ({ promptId }) => {
+    const result = await getTaskDetailByPromptId({
+      baseUrl: BASE_URL,
+      promptId: promptId,
+    });
+
+    // TODO 根据查询结果的detail的data的内容来动态构建函数并且执行工作流
+
+    return ResultToMcpResponse(result);
   }),
 );
 
