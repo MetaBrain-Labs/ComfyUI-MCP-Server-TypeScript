@@ -21,15 +21,17 @@ import {
 } from "../workflow";
 import {
   createDynamicWorkflowTool,
-  DynamicWorkflowToolData,
   executeDynamicWorkflowTool,
   generateToolExampleParams,
   getAllDynamicTools,
   getDynamicTool,
   hasDynamicTool,
-  ListDynamicWorkflowToolData,
 } from "../workflow/dynamic-tool";
 import { ComfyClient } from "../ws";
+import {
+  DynamicWorkflowToolData,
+  ListDynamicWorkflowToolData,
+} from "../interface/dynamic-tool";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
 
