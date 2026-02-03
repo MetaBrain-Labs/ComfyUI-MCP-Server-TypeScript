@@ -2,7 +2,6 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { COMMON } from "../constants";
 import server from "../serve";
-import { registerFileAsResource } from "../tools/mcp-register";
 
 export interface SaveWorkflowOptions {
   dir?: string;
@@ -80,10 +79,6 @@ export async function saveWorkflow(
 
     // 写入文件
     await writeFile(filePath, JSON.stringify(filteredData, null, 2), "utf-8");
-
-    // 注册该文件成为资源
-    // const resourceUri = await registerFileAsResource(fileName, filePath);
-
     // 通知 AGENT 资源变更
     server.sendResourceListChanged();
 

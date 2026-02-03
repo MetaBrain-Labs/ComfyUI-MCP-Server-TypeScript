@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { Result } from "../interface/result";
+import { ComfyPromptConfig } from "../interface/task";
 
 /**
  * @METHOD
@@ -62,7 +63,7 @@ export function ResultToMcpResponse(result: Result): CallToolResult {
       content: [
         {
           type: "text",
-          text: `Error: ${result || "Unknown error"}`,
+          text: JSON.stringify(result, null, 2),
         },
       ],
       isError: true,

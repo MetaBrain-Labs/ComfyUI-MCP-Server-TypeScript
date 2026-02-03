@@ -1,7 +1,5 @@
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
 import { CollectFormatTaskResult } from "../interface/common";
 import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
-import { COMMON } from "../constants";
 
 /**
  * @METHOD
@@ -21,17 +19,21 @@ export const formatTask = (
     const promptConfig: ComfyPromptConfig = item.prompt[2];
     const parameters: string[] = [];
     let description: string | null = null;
+    let name: string | null = null;
 
     for (const [nodeId, nodeConfig] of Object.entries(promptConfig)) {
-      if (nodeConfig._meta && nodeConfig._meta.title === COMMON.CUI_DESC) {
+      const isDesc = nodeConfig._meta?.title?.match(/==(.+?)==/);
+      if (isDesc) {
         description =
           (nodeConfig.inputs["value"] as string) || "无工作流描述内容";
+        name = isDesc[1] || "无工作流名称";
       }
       parameters.push(nodeConfig.class_type);
     }
 
     result.workflows.push({
-      name: uuid,
+      name: name,
+      id: uuid,
       description: description,
       parameters: parameters,
       last_updated: Date.now(),

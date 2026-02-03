@@ -1,11 +1,11 @@
-import { ok, Result } from "../interface/result";
-import { WorkflowCollectionData } from "../interface/workflow";
-import { fetchWorkflowHistory } from "./fetchWorkflowHistory";
-import { saveWorkflow } from "./saveWorkflow";
 import { t } from "../i18n";
 import "../i18n/locales";
+import { ok, Result } from "../interface/result";
+import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
+import { WorkflowCollectionData } from "../interface/workflow";
 import { formatTask } from "../tools/format";
-import { ComfyTaskResponse } from "../interface/task";
+import { saveWorkflow } from "./saveWorkflow";
+import { fetchHistoryTasks, fetchTaskByPromptId } from "./tasks";
 
 /**
  * @METHOD
@@ -21,7 +21,7 @@ export async function collectAndSaveWorkflow(params: {
 }): Promise<Result<ComfyTaskResponse>> {
   const startTime = Date.now();
 
-  const data = await fetchWorkflowHistory(params);
+  const data = await fetchHistoryTasks(params);
 
   const executionTime = Date.now() - startTime;
 
@@ -50,7 +50,7 @@ export async function collectAndSaveFormatTask(params: {
 }): Promise<Result<WorkflowCollectionData>> {
   const startTime = Date.now();
 
-  const data = await fetchWorkflowHistory(params);
+  const data = await fetchHistoryTasks(params);
 
   const formatData = formatTask(data);
 
@@ -81,6 +81,32 @@ export async function collectAndSaveFormatTask(params: {
     {
       action: "collect_workflow",
       mode: params.append ? "append" : "overwrite",
+    },
+    executionTime,
+  );
+}
+
+/**
+ * @METHOD
+ * @description 提供给server调用，用于根据prompt_id获取Tasks详细信息
+ * @author LaiFQZzr
+ * @date 2026/02/03 11:30
+ */
+export async function getTaskDetailByPromptId(params: {
+  baseUrl: string;
+  promptId: string;
+}): Promise<Result<ComfyPromptConfig>> {
+  const startTime = Date.now();
+
+  const data = await fetchTaskByPromptId(params);
+
+  const executionTime = Date.now() - startTime;
+
+  return ok<ComfyPromptConfig>(
+    "根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容",
+    data,
+    {
+      action: "cui_get_task_detail",
     },
     executionTime,
   );

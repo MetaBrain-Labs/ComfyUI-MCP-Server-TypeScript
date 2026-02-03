@@ -18,9 +18,9 @@ export interface Result<T = any> {
   message: string;
   detail: ResultDetail<T>;
   error?: {
-    code?: string;
+    code?: number;
     message?: string;
-    details?: string;
+    details?: any;
     retryable?: boolean;
   };
   metadata?: {
@@ -75,5 +75,33 @@ export function error<T>(
       ...(executionTime !== undefined && { executionTime }),
     },
     error: errorDetails,
+  };
+}
+
+/**
+ * @METHOD
+ * @description 带非结构化详细错误的错误返回
+ * @author LaiFQZzr
+ * @date 2026/02/03 15:37
+ */
+export function errorWithDetail<T>(
+  message: string,
+  errorDetails?: string,
+  code: number = ResultCode.FORBIDDEN,
+  executionTime?: number,
+): Result<T> {
+  return {
+    success: false,
+    message,
+    detail: {
+      code,
+      timestamp: Date.now(),
+      ...(executionTime !== undefined && { executionTime }),
+    },
+    error: {
+      message,
+      details: errorDetails,
+      code,
+    },
   };
 }

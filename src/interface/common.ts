@@ -4,7 +4,8 @@ export interface CollectFormatTaskResult {
 }
 
 export interface CollectFormatTaskWorkflow {
-  name: string;
+  name: string | null;
+  id: string;
   description: string | null;
   parameters: string[];
   last_updated: number;
