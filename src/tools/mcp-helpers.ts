@@ -43,7 +43,7 @@ export function withMcpErrorHandling<T extends any[], R>(
 
 /**
  * @METHOD
- * @description 将结果转换为 MCP 响应格式
+ * @description 将结构化结果转换为 MCP 响应格式
  * @author LaiFQZzr
  * @date 2026/01/27 11:39
  */
@@ -68,4 +68,21 @@ export function ResultToMcpResponse(result: Result): CallToolResult {
       isError: true,
     };
   }
+}
+
+/**
+ * @METHOD
+ * @description 将文本结果转换为 MCP 响应格式
+ * @author LaiFQZzr
+ * @date 2026/02/02 09:34
+ */
+export function ResultToMcpStringResponse(result: string): CallToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(result, null, 2),
+      },
+    ],
+  };
 }

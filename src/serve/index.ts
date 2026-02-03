@@ -1,5 +1,9 @@
 import "@modelcontextprotocol/sdk/client/streamableHttp";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
 import "dotenv/config";
 import { z } from "zod";
 import { t } from "../i18n";
@@ -9,6 +13,7 @@ import { readFile } from "fs/promises";
 import { COMMON } from "../constants";
 import {
   ResultToMcpResponse,
+  ResultToMcpStringResponse,
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
 import { collectAndSaveFormatTask, collectAndSaveWorkflow } from "../workflow";
@@ -29,24 +34,16 @@ const server = new McpServer(
   },
   {
     capabilities: {
-      tools: {},
-      resources: {},
+      tools: {
+        listChanged: true,
+      },
+      resources: {
+        listChanged: true,
+        subscribe: true,
+      },
     },
   },
 );
-// const server = new McpServer(
-//   {
-//     name: "comfy-ui-advanced",
-//     version: "1.0.0",
-//   },
-//   {
-//     capabilities: {
-//       tools: {},
-//       resources: {},
-//     },
-//     instructions: t("workflow.instructions").trim(),
-//   },
-// );
 
 /**
  * @METHOD 
@@ -107,8 +104,8 @@ server.registerTool(
   "cui_init_workflow",
   {
     title: "初始化工作流",
-    description:
-      "连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中",
+    description: `连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中
+      生成完成后，你应该通过 MCP resource 以及对应路径 ${COMMON.WORKFLOW_RESOURCE_URI} 读取完整内容进行分析。`,
     inputSchema: {
       maxItems: z
         .number()
@@ -154,54 +151,48 @@ server.registerTool(
   }),
 );
 
-// server.registerTool(
-//   "cui_execute_workflow_original_task",
-//   {
-//     title: t("workflow.executeWorkflowOriginalTask.title"),
-//     description: t("workflow.executeWorkflowOriginalTask.description"),
-//     inputSchema: {
-//       promptId: z.string().describe(t("workflow.promptId")),
-//     },
-//   },
-//   withMcpErrorHandling(async ({ promptId }) => {
-//     // 连接上WebSocket
+/**
+ * @METHOD
+ * @description 获取缓存工作流格式化任务 —— 为防止AGENT不支持 Resources 情况下，使用此接口获取缓存工作流格式化任务
+ * @author LaiFQZzr
+ * @date 2026/02/02 09:30
+ */
+server.registerTool(
+  "cui_get_workflow_tasks",
+  {
+    title: "获取工作流任务",
+    description: `在初始化工作流或其他 Tool 执行获取工作流任务后，通过路径获取保存工作流任务信息的文件，并读取内容`,
+    inputSchema: {},
+  },
+  withMcpErrorHandling(async ({}) => {
+    const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
-//     // 根据promptId执行工作流
+    return ResultToMcpStringResponse(content);
+  }),
+);
 
-//     //
-
-//     const client = new ComfyClient();
-
-//     await client.connect();
-
-//     client.sendJson({
-//       type: "feature_flags",
-//       data: {
-//         supports_preview_metadata: true,
-//         supports_manager_v4_ui: true,
-//       },
-//     });
-//   }),
-// );
-
-// 启动阶段
-
+/**
+ * @METHOD
+ * @description 将工作流格式化任务注册为 AGENT 可见资源
+ * @author LaiFQZzr
+ * @date 2026/02/02 09:36
+ */
 server.registerResource(
-  "workflow_file",
+  "workflow_tasks",
   COMMON.WORKFLOW_RESOURCE_URI,
   {
     title: "本地 Workflow 文件",
     description: "AGENT 生成并保存的工作流文件",
     mimeType: "application/json",
   },
-  async () => {
+  async (uri): Promise<ReadResourceResult> => {
     try {
       const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
       return {
         contents: [
           {
-            uri: COMMON.WORKFLOW_RESOURCE_URI,
+            uri: uri.href,
             mimeType: "application/json",
             text: content,
           },
@@ -212,7 +203,7 @@ server.registerResource(
         return {
           contents: [
             {
-              uri: COMMON.WORKFLOW_RESOURCE_URI,
+              uri: uri.href,
               mimeType: "application/json",
               text: "[]",
             },

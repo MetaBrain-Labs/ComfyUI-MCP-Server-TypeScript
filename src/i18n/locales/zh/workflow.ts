@@ -1,3 +1,5 @@
+import { COMMON } from "../../../constants";
+
 export default {
   instructions: `
     这是一个 ComfyUI 工作流服务器。
@@ -18,7 +20,12 @@ export default {
   promptId: "一次 “工作流执行任务” 的唯一 ID",
 
   collected: (offset: number, count: number, mode: string) =>
-    `已从偏移量 ${offset} 处收集并保存 ${count} 条工作流，模式：${mode ? "追加" : "覆盖"}`,
+    `已从偏移量 ${offset} 处收集并保存 ${count} 条工作流，模式：${mode ? "追加" : "覆盖"}
+      IMPORTANT: 
+        要读取此文件内容，首先确定是否可使用 MCP 资源通道，不要尝试直接读取磁盘路径。
+        请读取资源 URI: ${COMMON.WORKFLOW_RESOURCE_URI}
+        如果无法使用 MCP 读取，请使用cui_get_workflow_tasks工具获取对应资源信息。
+    `,
   collectedContent: {
     title: "查询 ComfyUI 工作流历史任务",
     description:
