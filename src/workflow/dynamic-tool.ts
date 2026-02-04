@@ -1,86 +1,9 @@
-/**
- * @file 动态工作流 Tool 管理模块
- * @description 基于历史任务的 prompts 结构，动态创建可重用的 MCP Tool
- *              允许修改参数值但保持结构不变
- */
-
 import { z } from "zod";
+import {
+  ConfigurableParam,
+  DynamicWorkflowTool,
+} from "../interface/dynamic-tool";
 import { ComfyInputValue, ComfyPromptConfig } from "../interface/task";
-
-/**
- * 可配置参数的定义
- */
-export interface ConfigurableParam {
-  /** 参数路径，格式：nodeId.inputKey */
-  path: string;
-  /** 节点ID */
-  nodeId?: string;
-  /** 输入键名 */
-  inputKey?: string;
-  /** 参数类型 */
-  type: "string" | "number" | "boolean" | "array";
-  /** 当前值（作为默认值） */
-  defaultValue: ComfyInputValue;
-  /** 节点类名 */
-  classType: string;
-  /** 节点标题 */
-  nodeTitle?: string;
-  /** 参数描述 */
-  description?: string;
-}
-
-/**
- * 动态 Tool 的定义
- */
-export interface DynamicWorkflowTool {
-  /** Tool 名称 */
-  name: string;
-  /** 显示标题 */
-  title: string;
-  /** 描述 */
-  description: string;
-  /** 原始 promptId */
-  sourcePromptId: string;
-  /** 原始 workflow 模板（深拷贝） */
-  workflowTemplate: ComfyPromptConfig;
-  /** 可配置参数列表 */
-  configurableParams: ConfigurableParam[];
-  /** Zod Schema */
-  schema: Record<string, z.ZodTypeAny>;
-  /** 创建时间 */
-  createdAt: number;
-}
-
-export interface DynamicWorkflowToolData {
-  /** Tool 名称 */
-  name: string;
-  /** 显示标题 */
-  title: string;
-  /** 描述 */
-  description: string;
-  /** 原始 promptId */
-  sourcePromptId: string;
-  /** 可配置参数数量 */
-  configurableParamsCount?: number;
-  /** 可配置参数列表 */
-  configurableParams: ConfigurableParam[];
-  /** 使用示例 */
-  exampleUsage: Record<string, any>;
-  /** 创建时间 */
-  createdAt?: string;
-}
-
-export interface ListDynamicWorkflowToolData {
-  count: number;
-  tools: {
-    name: string;
-    title: string;
-    description: string;
-    sourcePromptId: string;
-    configurableParamsCount: number;
-    createdAt: string;
-  }[];
-}
 
 /**
  * 动态 Tool 存储
@@ -88,8 +11,50 @@ export interface ListDynamicWorkflowToolData {
 const dynamicTools = new Map<string, DynamicWorkflowTool>();
 
 /**
- * 判断值是否为连接引用（不能作为可配置参数）
- * 连接引用格式：[nodeId, slotIndex] 或更复杂的嵌套数组
+ * @METHOD
+ * @description 获取动态 Tool
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:26
+ */
+export function getDynamicTool(name: string): DynamicWorkflowTool | undefined {
+  return dynamicTools.get(name);
+}
+
+/**
+ * @METHOD
+ * @description 获取所有动态 Tools
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:26
+ */
+export function getAllDynamicTools(): DynamicWorkflowTool[] {
+  return Array.from(dynamicTools.values());
+}
+
+/**
+ * @METHOD
+ * @description 删除动态 Tool
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:26
+ */
+export function deleteDynamicTool(name: string): boolean {
+  return dynamicTools.delete(name);
+}
+
+/**
+ * @METHOD
+ * @description 检查 Tool 是否存在
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:27
+ */
+export function hasDynamicTool(name: string): boolean {
+  return dynamicTools.has(name);
+}
+
+/**
+ * @METHOD
+ * @description 判断值是否为连接引用（不能作为可配置参数） —— 连接引用格式：[nodeId, slotIndex] 或更复杂的嵌套数组
+ * @author LaiFQZzr
+ * @date 2026/02/03 16:53
  */
 function isConnectionReference(value: ComfyInputValue): boolean {
   if (!Array.isArray(value)) return false;
@@ -110,7 +75,10 @@ function isConnectionReference(value: ComfyInputValue): boolean {
 }
 
 /**
- * 获取参数类型
+ * @METHOD
+ * @description 获取参数类型
+ * @author LaiFQZzr
+ * @date 2026/02/03 16:59
  */
 function getValueType(value: ComfyInputValue): ConfigurableParam["type"] {
   if (typeof value === "string") return "string";
@@ -121,7 +89,10 @@ function getValueType(value: ComfyInputValue): ConfigurableParam["type"] {
 }
 
 /**
- * 将值转换为 Zod Schema
+ * @METHOD
+ * @description 将值转换为 Zod Schema
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:00
  */
 function valueToZodSchema(
   value: ComfyInputValue,
@@ -156,13 +127,15 @@ function valueToZodSchema(
 }
 
 /**
- * 从 workflow 中提取可配置参数
- *
- * 提取规则：
- * 1. 排除连接引用（数组形式的连接）
- * 2. 提取基础类型值（string, number, boolean）
- * 3. 某些特定类型的节点输入可以被智能识别（如种子、提示词等）
- */
+* @METHOD
+* @description 从 workflow 中提取可配置参数
+                提取规则：
+                  1. 排除连接引用（数组形式的连接）
+                  2. 提取基础类型值（string, number, boolean）
+                  3. 某些特定类型的节点输入可以被智能识别（如种子、提示词等）
+* @author LaiFQZzr
+* @date 2026/02/03 17:09
+*/
 export function extractConfigurableParams(
   workflow: ComfyPromptConfig,
 ): ConfigurableParam[] {
@@ -172,33 +145,44 @@ export function extractConfigurableParams(
     const { inputs, class_type, _meta } = nodeConfig;
 
     for (const [inputKey, value] of Object.entries(inputs)) {
-      // 跳过连接引用
       if (isConnectionReference(value)) {
         continue;
       }
 
-      // 跳过 null/undefined
       if (value === null || value === undefined) {
         continue;
       }
 
-      // 生成参数描述
-      let description = `${class_type} 节点的 ${inputKey} 参数`;
+      // 检测节点标题是否以 "=>" 开头 - 表示 AGENT 必须填充
+      const nodeTitle = _meta?.title || "";
+      const isRequired = nodeTitle.startsWith("=>");
 
-      // 智能识别常见参数类型
+      let description = "";
+
+      if (isRequired) {
+        description = `【必须填充】`;
+      }
+
+      description += `${class_type} 节点的 ${inputKey} 参数`;
+
       const lowerKey = inputKey.toLowerCase();
       if (lowerKey.includes("seed") || lowerKey.includes("种子")) {
-        description = `随机种子 (Seed)，控制生成结果的随机性`;
+        description += `随机种子 (Seed)，控制生成结果的随机性`;
       } else if (lowerKey.includes("prompt") || lowerKey.includes("text")) {
-        description = `提示词文本，支持多行`;
+        description += `提示词文本，支持多行`;
       } else if (lowerKey.includes("width") || lowerKey.includes("宽度")) {
-        description = `图像宽度 (像素)`;
+        description += `图像宽度 (像素)`;
       } else if (lowerKey.includes("height") || lowerKey.includes("高度")) {
-        description = `图像高度 (像素)`;
+        description += `图像高度 (像素)`;
       } else if (lowerKey.includes("steps") || lowerKey.includes("步数")) {
-        description = `采样步数`;
+        description += `采样步数`;
       } else if (lowerKey.includes("cfg") || lowerKey.includes("scale")) {
-        description = `CFG Scale，提示词遵循程度`;
+        description += `CFG Scale，提示词遵循程度`;
+      }
+
+      // 如果是必须填充的节点，添加额外说明
+      if (isRequired) {
+        description += ` (原值: ${JSON.stringify(value)})`;
       }
 
       params.push({
@@ -208,8 +192,9 @@ export function extractConfigurableParams(
         type: getValueType(value),
         defaultValue: value,
         classType: class_type,
-        nodeTitle: _meta?.title,
+        nodeTitle,
         description,
+        required: isRequired,
       });
     }
   }
@@ -218,7 +203,10 @@ export function extractConfigurableParams(
 }
 
 /**
- * 根据可配置参数生成 Zod Schema
+ * @METHOD
+ * @description 根据可配置参数生成 Zod Schema
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:14
  */
 export function generateZodSchema(
   params: ConfigurableParam[],
@@ -226,7 +214,6 @@ export function generateZodSchema(
   const schema: Record<string, z.ZodTypeAny> = {};
 
   for (const param of params) {
-    // 使用参数路径作为 key，避免重名
     const key = `${param.nodeId}_${param.inputKey}`;
     schema[key] = valueToZodSchema(param.defaultValue, param.description);
   }
@@ -235,22 +222,24 @@ export function generateZodSchema(
 }
 
 /**
- * 将用户输入合并到 workflow 模板
+ * @METHOD
+ * @description 将AGENT修改的输入合并到 workflow 模板
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:16
  */
 export function mergeParamsToWorkflow(
   template: ComfyPromptConfig,
   params: ConfigurableParam[],
   userInputs: Record<string, any>,
 ): ComfyPromptConfig {
-  // 深拷贝模板
   const workflow = JSON.parse(JSON.stringify(template)) as ComfyPromptConfig;
 
   for (const param of params) {
     const key = `${param.nodeId}_${param.inputKey}`;
     const userValue = userInputs[key];
 
-    if (userValue !== undefined && workflow[param.nodeId]) {
-      workflow[param.nodeId].inputs[param.inputKey] = userValue;
+    if (userValue !== undefined && workflow[param.nodeId!]) {
+      workflow[param.nodeId!].inputs[param.inputKey!] = userValue;
     }
   }
 
@@ -258,7 +247,10 @@ export function mergeParamsToWorkflow(
 }
 
 /**
- * 创建动态 Workflow Tool
+ * @METHOD
+ * @description 创建动态 Workflow Tool
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:18
  */
 export function createDynamicWorkflowTool(
   name: string,
@@ -267,13 +259,10 @@ export function createDynamicWorkflowTool(
   customTitle?: string,
   customDescription?: string,
 ): DynamicWorkflowTool {
-  // 提取可配置参数
   const configurableParams = extractConfigurableParams(workflow);
 
-  // 生成 Zod Schema
   const schema = generateZodSchema(configurableParams);
 
-  // 构建 Tool 描述
   const paramDescriptions = configurableParams
     .map(
       (p) =>
@@ -290,48 +279,22 @@ export function createDynamicWorkflowTool(
         `可配置参数:\n${paramDescriptions}\n\n` +
         `注意：只能修改参数值，不能修改工作流结构。`,
     sourcePromptId,
-    workflowTemplate: JSON.parse(JSON.stringify(workflow)), // 深拷贝
+    workflowTemplate: JSON.parse(JSON.stringify(workflow)),
     configurableParams,
     schema,
     createdAt: Date.now(),
   };
 
-  // 保存到存储
   dynamicTools.set(name, tool);
 
   return tool;
 }
 
 /**
- * 获取动态 Tool
- */
-export function getDynamicTool(name: string): DynamicWorkflowTool | undefined {
-  return dynamicTools.get(name);
-}
-
-/**
- * 获取所有动态 Tools
- */
-export function getAllDynamicTools(): DynamicWorkflowTool[] {
-  return Array.from(dynamicTools.values());
-}
-
-/**
- * 删除动态 Tool
- */
-export function deleteDynamicTool(name: string): boolean {
-  return dynamicTools.delete(name);
-}
-
-/**
- * 检查 Tool 是否存在
- */
-export function hasDynamicTool(name: string): boolean {
-  return dynamicTools.has(name);
-}
-
-/**
- * 执行动态 Workflow Tool
+ * @METHOD
+ * @description 执行动态 Workflow Tool
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:27
  */
 export async function executeDynamicWorkflowTool(
   toolName: string,
@@ -359,7 +322,10 @@ export async function executeDynamicWorkflowTool(
 }
 
 /**
- * 生成动态 Tool 的参数示例
+ * @METHOD
+ * @description 生成动态 Tool 的参数示例
+ * @author LaiFQZzr
+ * @date 2026/02/03 17:24
  */
 export function generateToolExampleParams(
   tool: DynamicWorkflowTool,
