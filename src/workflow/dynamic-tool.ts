@@ -153,23 +153,36 @@ export function extractConfigurableParams(
         continue;
       }
 
+      // 检测节点标题是否以 "=>" 开头 - 表示 AGENT 必须填充
+      const nodeTitle = _meta?.title || "";
+      const isRequired = nodeTitle.startsWith("=>");
+
       let description = "";
+
+      if (isRequired) {
+        description = `【必须填充】`;
+      }
+
+      description += `${class_type} 节点的 ${inputKey} 参数`;
 
       const lowerKey = inputKey.toLowerCase();
       if (lowerKey.includes("seed") || lowerKey.includes("种子")) {
-        description = `随机种子 (Seed)，控制生成结果的随机性`;
+        description += `随机种子 (Seed)，控制生成结果的随机性`;
       } else if (lowerKey.includes("prompt") || lowerKey.includes("text")) {
-        description = `提示词文本，支持多行`;
+        description += `提示词文本，支持多行`;
       } else if (lowerKey.includes("width") || lowerKey.includes("宽度")) {
-        description = `图像宽度 (像素)`;
+        description += `图像宽度 (像素)`;
       } else if (lowerKey.includes("height") || lowerKey.includes("高度")) {
-        description = `图像高度 (像素)`;
+        description += `图像高度 (像素)`;
       } else if (lowerKey.includes("steps") || lowerKey.includes("步数")) {
-        description = `采样步数`;
+        description += `采样步数`;
       } else if (lowerKey.includes("cfg") || lowerKey.includes("scale")) {
-        description = `CFG Scale，提示词遵循程度`;
-      } else {
-        description = `${class_type} 节点的 ${inputKey} 参数`;
+        description += `CFG Scale，提示词遵循程度`;
+      }
+
+      // 如果是必须填充的节点，添加额外说明
+      if (isRequired) {
+        description += ` (原值: ${JSON.stringify(value)})`;
       }
 
       params.push({
@@ -179,8 +192,9 @@ export function extractConfigurableParams(
         type: getValueType(value),
         defaultValue: value,
         classType: class_type,
-        nodeTitle: _meta?.title,
+        nodeTitle,
         description,
+        required: isRequired,
       });
     }
   }

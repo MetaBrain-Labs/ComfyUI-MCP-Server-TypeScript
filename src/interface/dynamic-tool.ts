@@ -21,6 +21,12 @@ export interface ConfigurableParam {
   nodeTitle?: string;
   /** 参数描述 */
   description?: string;
+  /**
+   * 是否必须填充
+   * - true: 节点标题以 "=>" 开头，AGENT 必须填充
+   * - false: AGENT 根据判断决定是否修改
+   */
+  required?: boolean;
 }
 
 /**
@@ -58,6 +64,8 @@ export interface DynamicWorkflowToolData {
   configurableParamsCount?: number;
   /** 可配置参数列表 */
   configurableParams: ConfigurableParam[];
+  /** 必须填充的参数 key 列表 */
+  requiredParams?: string[];
   /** 使用示例 */
   exampleUsage: Record<string, any>;
   /** 创建时间 */

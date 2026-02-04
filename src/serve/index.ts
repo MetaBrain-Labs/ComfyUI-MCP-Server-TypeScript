@@ -293,7 +293,11 @@ server.registerTool(
         description: p.description,
         nodeTitle: p.nodeTitle,
         classType: p.classType,
+        required: p.required,
       })),
+      requiredParams: tool.configurableParams
+        .filter((p) => p.required)
+        .map((p) => `${p.nodeId}_${p.inputKey}`),
       exampleUsage: generateToolExampleParams(tool),
     };
 
@@ -389,6 +393,8 @@ server.registerTool(
     },
   },
   withMcpErrorHandling(async ({ toolName, params = {} }) => {
+    const startTime = Date.now();
+
     const tool = getDynamicTool(toolName);
 
     if (!tool) {
@@ -402,7 +408,18 @@ server.registerTool(
 
     const execResult = await executeDynamicWorkflowTool(toolName, params);
 
-    return ResultToMcpResponse(ok("成功执行动态 Workflow Tool", execResult));
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        "成功执行动态 Workflow Tool",
+        execResult,
+        {
+          action: "cui_execute_dynamic_tool",
+        },
+        executionTime,
+      ),
+    );
   }),
 );
 
@@ -422,6 +439,8 @@ server.registerTool(
     },
   },
   withMcpErrorHandling(async ({ toolName }) => {
+    const startTime = Date.now();
+
     const tool = getDynamicTool(toolName);
 
     if (!tool) {
@@ -442,15 +461,28 @@ server.registerTool(
         description: p.description,
         nodeTitle: p.nodeTitle,
         classType: p.classType,
+        required: p.required,
       })),
+      requiredParams: tool.configurableParams
+        .filter((p) => p.required)
+        .map((p) => `${p.nodeId}_${p.inputKey}`),
       exampleUsage: {
         toolName: tool.name,
         params: generateToolExampleParams(tool),
       },
     };
 
+    const executionTime = Date.now() - startTime;
+
     return ResultToMcpResponse(
-      ok("成功获取动态 Tool 的详细参数信息", response),
+      ok(
+        "成功获取动态 Tool 的详细参数信息",
+        response,
+        {
+          action: "cui_get_dynamic_tool_detail",
+        },
+        executionTime,
+      ),
     );
   }),
 );
