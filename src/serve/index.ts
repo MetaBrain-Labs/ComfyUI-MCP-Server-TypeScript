@@ -1,6 +1,10 @@
 import "@modelcontextprotocol/sdk/client/streamableHttp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
+import {
+  ErrorCode,
+  McpError,
+  type ReadResourceResult,
+} from "@modelcontextprotocol/sdk/types.js";
 import "dotenv/config";
 import { z } from "zod";
 import { t } from "../i18n";
@@ -8,8 +12,13 @@ import "../i18n/locales";
 
 import { readFile } from "fs/promises";
 import { COMMON } from "../constants";
+import {
+  DynamicWorkflowToolData,
+  ListDynamicWorkflowToolData,
+} from "../interface/dynamic-tool";
 import { error, errorWithDetail, ok } from "../interface/result";
 import {
+  buildComfyViewUrls,
   ResultToMcpResponse,
   ResultToMcpStringResponse,
   withMcpErrorHandling,
@@ -27,13 +36,17 @@ import {
   getDynamicTool,
   hasDynamicTool,
 } from "../workflow/dynamic-tool";
-import { ComfyClient } from "../ws";
 import {
-  DynamicWorkflowToolData,
-  ListDynamicWorkflowToolData,
-} from "../interface/dynamic-tool";
+  executeWorkflowTaskByPrompts,
+  waitForExecutionCompletion,
+} from "../workflow/tasks";
+import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
+
+const client = new ComfyClient();
+
+await client.connect();
 
 /**
  * @METHOD
@@ -141,10 +154,6 @@ server.registerTool(
     },
   },
   withMcpErrorHandling(async ({ maxItems, offset, append }) => {
-    const client = new ComfyClient();
-
-    await client.connect();
-
     client.sendJson({
       type: "feature_flags",
       data: {
@@ -406,14 +415,59 @@ server.registerTool(
       );
     }
 
-    const execResult = await executeDynamicWorkflowTool(toolName, params);
+    if (!client.isConnected()) {
+      await client.connect();
+    }
+
+    if (!client.isConnected()) {
+      throw new McpError(ErrorCode.InternalError, "WebSocket服务器未连接");
+    }
+
+    // 获取拼接AGENT修改参数后的Prompt
+    const execResult = await executeDynamicWorkflowTool(
+      toolName,
+      params,
+      client,
+    );
+
+    // 根据拼接后的Prompt执行工作流
+    const clientId = client.getClientId();
+    console.error(`[工作流提交] Client ID: ${clientId}`);
+
+    const submitResult = await executeWorkflowTaskByPrompts({
+      baseUrl: BASE_URL,
+      prompts: execResult,
+      clientId: clientId, // 传递 clientId 以关联 WebSocket 消息
+    });
+
+    console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
+
+    const executionResult = await waitForExecutionCompletion({
+      client,
+      promptId: submitResult.prompt_id,
+      timeout: 10 * 60 * 1000,
+    });
+
+    if (!executionResult.success) {
+      return ResultToMcpResponse(
+        errorWithDetail(
+          `工作流执行失败: ${executionResult.error}`,
+          `Prompt ID: ${submitResult.prompt_id}`,
+        ),
+      );
+    }
 
     const executionTime = Date.now() - startTime;
 
     return ResultToMcpResponse(
       ok(
         "成功执行动态 Workflow Tool",
-        execResult,
+        {
+          promptId: submitResult.prompt_id,
+          img: buildComfyViewUrls(executionResult, BASE_URL),
+          outputs: executionResult.outputs,
+          executionTime,
+        },
         {
           action: "cui_execute_dynamic_tool",
         },

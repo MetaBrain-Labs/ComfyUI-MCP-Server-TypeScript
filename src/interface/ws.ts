@@ -39,6 +39,13 @@ export interface ComfyProgressStateData {
   nodes: Record<string, ComfyNodeProgressState>;
 }
 
+export interface ComfyProgressData {
+  prompt_id: string;
+  value: number;
+  max: number;
+  node: string;
+}
+
 export interface ComfyExecutingData {
   node: string | null;
   display_node: string;
