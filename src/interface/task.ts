@@ -118,7 +118,15 @@ export interface ComfyImage {
 export interface ComfyExecutionStatus {
   status_str: "success" | "error" | string;
   completed: boolean;
-  messages: Array<[string, any]>;
+  messages: ExecutionMessage[];
+}
+
+type ExecutionMessage = [string, ExecutionMessagePayload];
+
+interface ExecutionMessagePayload {
+  prompt_id: string;
+  timestamp: number;
+  nodes?: string[];
 }
 //#endregion
 

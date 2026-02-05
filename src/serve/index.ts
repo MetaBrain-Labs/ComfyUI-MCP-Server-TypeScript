@@ -107,9 +107,14 @@ server.registerTool(
         .optional()
         .default(true)
         .describe(t("workflow.collectedContent.append")),
+      // token
     },
   },
   withMcpErrorHandling(async ({ maxItems, offset, append }) => {
+    // 1，判断
+
+    // 2，校验
+
     const result = await collectAndSaveWorkflow({
       baseUrl: BASE_URL,
       maxItems: maxItems,
@@ -175,18 +180,39 @@ server.registerTool(
 
 /**
  * @METHOD
- * @description 获取缓存工作流格式化任务 —— 为防止AGENT不支持 Resources 情况下，使用此接口获取缓存工作流格式化任务
+ * @description 获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT
  * @author LaiFQZzr
  * @date 2026/02/02 09:30
  */
 server.registerTool(
   "cui_get_workflow_tasks",
   {
-    title: "获取工作流任务",
-    description: `在初始化工作流或其他 Tool 执行获取工作流任务后，通过路径获取保存工作流任务信息的文件，并读取内容`,
-    inputSchema: {},
+    title: "获取工作流任务目录",
+    description: `获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT。AGENT 可通过分析该信息最终选择更符合用户请求的生成任务`,
+    inputSchema: {
+      maxItems: z
+        .number()
+        .min(1)
+        .max(10)
+        .optional()
+        .default(10)
+        .describe(t("workflow.collectedContent.maxItems")),
+    },
   },
-  withMcpErrorHandling(async ({}) => {
+  withMcpErrorHandling(async ({ maxItems }) => {
+    let hasMore: boolean = true;
+
+    for (let i = 0; hasMore; i++) {
+      const result = await collectAndSaveFormatTask({
+        baseUrl: BASE_URL,
+        maxItems,
+        offset: i * maxItems,
+        append: i === 0 ? false : true,
+      });
+
+      hasMore = result.detail.data?.pagination?.hasNextPage || false;
+    }
+
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
     return ResultToMcpStringResponse(content);

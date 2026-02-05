@@ -3,6 +3,7 @@ export interface WorkflowCollectionData {
   itemsRequested: number;
   itemsCollected: number;
   offset: number;
+  failedTasks: number;
   pagination: {
     hasNextPage: boolean;
     nextOffset: number | null;

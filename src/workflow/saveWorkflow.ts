@@ -2,6 +2,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { COMMON } from "../constants";
 import server from "../serve";
+import { CollectFormatTaskWorkflow } from "../interface/common";
 
 export interface SaveWorkflowOptions {
   dir?: string;
@@ -21,7 +22,7 @@ export interface WorkflowData {
  * @date 2026/01/30 11:09
  */
 export async function saveWorkflow(
-  data: any,
+  data: CollectFormatTaskWorkflow[],
   options: SaveWorkflowOptions = {},
 ): Promise<{ filePath: string; itemsCollected: number }> {
   try {
@@ -37,9 +38,8 @@ export async function saveWorkflow(
 
     const filePath = COMMON.WORKFLOW_PATH;
 
-    let finalData: WorkflowData[] = [];
+    let finalData: CollectFormatTaskWorkflow[] = [];
 
-    // 如果是追加模式，读取现有文件
     if (append) {
       try {
         const existingContent = await readFile(filePath, "utf-8");
@@ -60,10 +60,8 @@ export async function saveWorkflow(
       }
     }
 
-    // 处理新数据
-    const newData = normalizeData(data);
+    const newData = data.flat(Infinity);
 
-    // 合并数据
     finalData = [...finalData, ...newData];
 
     // 去重
@@ -79,6 +77,7 @@ export async function saveWorkflow(
 
     // 写入文件
     await writeFile(filePath, JSON.stringify(filteredData, null, 2), "utf-8");
+
     // 通知 AGENT 资源变更
     server.sendResourceListChanged();
 
@@ -97,50 +96,22 @@ export async function saveWorkflow(
 
 /**
  * @METHOD
- * @description 将各种格式的数据标准化为数组
- * @author LaiFQZzr
- * @date 2026/01/27 11:57
- */
-function normalizeData(data: unknown): WorkflowData[] {
-  if (Array.isArray(data)) {
-    return data.flat(Infinity);
-  }
-
-  if (typeof data === "object" && data !== null) {
-    if (!Array.isArray(data)) {
-      return Object.entries(data).map(([promptId, workflow]) => {
-        if (typeof workflow === "object" && workflow !== null) {
-          return {
-            prompt_id: promptId,
-            ...(workflow as object),
-          };
-        }
-        return { prompt_id: promptId, data: workflow };
-      });
-    }
-  }
-
-  return [data as WorkflowData];
-}
-
-/**
- * @METHOD
- * @description 根据 prompt_id 去重，保留最新的
+ * @description 根据 last_updated 去重，保留最新的项
  * @author LaiFQZzr
  * @date 2026/01/27 11:55
  */
-function deduplicateWorkflows(workflows: WorkflowData[]): WorkflowData[] {
-  const map = new Map<string, WorkflowData>();
+function deduplicateWorkflows(
+  workflows: CollectFormatTaskWorkflow[],
+): CollectFormatTaskWorkflow[] {
+  const map = new Map<string, CollectFormatTaskWorkflow>();
 
-  workflows.forEach((workflow) => {
-    if (workflow.prompt_id) {
-      map.set(workflow.prompt_id, workflow);
-    } else {
-      // 没有 prompt_id 的项目直接保留
-      const key = JSON.stringify(workflow);
-      map.set(key, workflow);
+  for (const workflow of workflows) {
+    const existing = map.get(workflow.name);
+
+    if (!existing || workflow.last_updated > existing.last_updated) {
+      map.set(workflow.name, workflow);
     }
-  });
+  }
 
   return Array.from(map.values());
 }
