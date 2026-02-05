@@ -107,9 +107,14 @@ server.registerTool(
         .optional()
         .default(true)
         .describe(t("workflow.collectedContent.append")),
+      // token
     },
   },
   withMcpErrorHandling(async ({ maxItems, offset, append }) => {
+    // 1，判断
+
+    // 2，校验
+
     const result = await collectAndSaveWorkflow({
       baseUrl: BASE_URL,
       maxItems: maxItems,
