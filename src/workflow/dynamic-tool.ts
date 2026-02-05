@@ -4,6 +4,7 @@ import {
   DynamicWorkflowTool,
 } from "../interface/dynamic-tool";
 import { ComfyInputValue, ComfyPromptConfig } from "../interface/task";
+import { ComfyClient } from "../ws";
 
 /**
  * 动态 Tool 存储
@@ -299,6 +300,7 @@ export function createDynamicWorkflowTool(
 export async function executeDynamicWorkflowTool(
   toolName: string,
   userInputs: Record<string, any>,
+  client: ComfyClient,
 ): Promise<any> {
   const tool = getDynamicTool(toolName);
   if (!tool) {
@@ -312,12 +314,6 @@ export async function executeDynamicWorkflowTool(
     userInputs,
   );
 
-  // 执行 workflow
-  // const executor = new WorkflowExecutor();
-  // const result = await executor.executeWorkflow(workflow);
-
-  // 直接返回 WorkflowResult
-  // return result;
   return workflow;
 }
 

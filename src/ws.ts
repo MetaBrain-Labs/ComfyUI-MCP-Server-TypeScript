@@ -126,6 +126,9 @@ export class ComfyClient {
       case "progress_state":
         this.hook.onProgressState(data);
         break;
+      case "progress":
+        this.hook.onProgress(data);
+        break;
       case "executed":
         this.hook.onExecuted(data);
         break;

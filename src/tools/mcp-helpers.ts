@@ -1,7 +1,7 @@
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import { ExecutionResult } from "../interface/execute";
 import { Result } from "../interface/result";
-import { ComfyPromptConfig } from "../interface/task";
 
 /**
  * @METHOD
@@ -86,4 +86,33 @@ export function ResultToMcpStringResponse(result: string): CallToolResult {
       },
     ],
   };
+}
+
+/**
+ * @METHOD
+ * @description 拼接生成资源路径
+ * @author LaiFQZzr
+ * @date 2026/02/04 17:58
+ */
+export function buildComfyViewUrls(
+  result: ExecutionResult,
+  baseURL: string,
+): string[] {
+  if (!result.outputs) return [];
+
+  const urls: string[] = [];
+
+  for (const nodeOutput of Object.values(result.outputs)) {
+    for (const img of nodeOutput.images ?? []) {
+      const params = new URLSearchParams({
+        filename: img.filename,
+        type: img.type,
+        subfolder: img.subfolder ?? "",
+      });
+
+      urls.push(`${baseURL}/view?${params.toString()}`);
+    }
+  }
+
+  return urls;
 }

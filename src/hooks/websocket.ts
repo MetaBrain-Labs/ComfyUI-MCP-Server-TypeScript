@@ -5,6 +5,7 @@ import {
   ComfyExecutionStartData,
   ComfyExecutionSuccessData,
   ComfyFeatureFlagsData,
+  ComfyProgressData,
   ComfyProgressStateData,
   ComfyStatusData,
 } from "../interface/ws";
@@ -40,10 +41,121 @@ export class ComfyClientHook {
   }
 
   /**
-   * 进度更新
+   * @METHOD
+   * @description 整体进度更新
+   * 处理措施：不应打印相关信息
+   * @author LaiFQZzr
+   * @date 2026/02/04 16:24
    */
   onProgressState(data: ComfyProgressStateData): void {
-    console.error("ProgressState:", data);
+    /*
+      {
+        prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+        nodes: {
+          '1': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '1',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '1',
+            parent_node_id: null,
+            real_node_id: '1'
+          },
+          '2': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '2',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '2',
+            parent_node_id: null,
+            real_node_id: '2'
+          },
+          '3': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '3',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '3',
+            parent_node_id: null,
+            real_node_id: '3'
+          },
+          '4': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '4',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '4',
+            parent_node_id: null,
+            real_node_id: '4'
+          },
+          '5': {
+            value: 50,
+            max: 50,
+            state: 'finished',
+            node_id: '5',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '5',
+            parent_node_id: null,
+            real_node_id: '5'
+          },
+          '6': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '6',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '6',
+            parent_node_id: null,
+            real_node_id: '6'
+          },
+          '7': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '7',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '7',
+            parent_node_id: null,
+            real_node_id: '7'
+          },
+          '8': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '8',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '8',
+            parent_node_id: null,
+            real_node_id: '8'
+          },
+          '10': {
+            value: 1,
+            max: 1,
+            state: 'finished',
+            node_id: '10',
+            prompt_id: '172da8ac-5737-49d2-9de5-706fd4a8b5c1',
+            display_node_id: '10',
+            parent_node_id: null,
+            real_node_id: '10'
+          }
+        }
+      }
+    */
+  }
+
+  /**
+   * @METHOD
+   * @description 获取特定结点的进度（例如：KSampler等）
+   * 处理措施：内容较少，可以考虑打印信息，监听特定结点进度
+   * @author LaiFQZzr
+   * @date 2026/02/04 16:26
+   */
+  onProgress(data: ComfyProgressData): void {
+    // console.error("ProgressState:", data);
   }
 
   /**
