@@ -27,7 +27,7 @@ export async function collectAndSaveWorkflow(params: {
 
   return ok(
     t("workflow.collected", params.offset, params.maxItems, params.append),
-    data,
+    data.successTasks,
     {
       action: "collect_workflow",
       mode: params.append ? "append" : "overwrite",
@@ -52,7 +52,7 @@ export async function collectAndSaveFormatTask(params: {
 
   const data = await fetchHistoryTasks(params);
 
-  const formatData = formatTask(data);
+  const formatData = formatTask(data.successTasks);
 
   const result = await saveWorkflow(formatData.workflows, {
     append: params?.append,
@@ -65,17 +65,18 @@ export async function collectAndSaveFormatTask(params: {
     {
       savedPath: result.filePath,
       itemsRequested: params.maxItems,
-      itemsCollected: result.itemsCollected,
+      itemsCollected: data.total,
+      failedTasks: data.fail,
       offset: params.offset,
       pagination: {
-        hasNextPage: result.itemsCollected === params.maxItems,
+        hasNextPage: data.total === params.maxItems,
         nextOffset:
-          result.itemsCollected === params.maxItems
+          data.total === params.maxItems
             ? params.offset + params.maxItems
             : null,
         currentOffset: params.offset,
         requestedItems: params.maxItems,
-        returnedItems: result.itemsCollected,
+        returnedItems: data.total,
       },
     },
     {

@@ -35,8 +35,8 @@ export interface WaitForExecutionOptions {
  */
 export async function fetchHistoryTasks(
   options: FetchTasksOptions,
-): Promise<ComfyTaskResponse> {
-  const { baseUrl, maxItems = 3, offset = 0 } = options;
+): Promise<{ successTasks: ComfyTaskResponse; total: number; fail: number }> {
+  const { baseUrl, maxItems, offset } = options;
 
   const url = `${baseUrl}/history?max_items=${maxItems}&offset=${offset}`;
 
@@ -49,13 +49,17 @@ export async function fetchHistoryTasks(
     );
   }
 
+  const total = Object.entries(res.data).length;
+
   const successTasks = Object.fromEntries(
     Object.entries(res.data).filter(
       ([uuid, item]) => item.status.status_str === "success",
     ),
   ) as ComfyTaskResponse;
 
-  return successTasks;
+  const fail = total - Object.entries(successTasks).length;
+
+  return { successTasks, total, fail };
 }
 
 /**

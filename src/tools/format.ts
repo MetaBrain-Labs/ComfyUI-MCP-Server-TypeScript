@@ -31,12 +31,25 @@ export const formatTask = (
       parameters.push(nodeConfig.class_type);
     }
 
+    // 如果name为null或者description为null的时候则不纳入列表
+    if (!name || !description) {
+      continue;
+    }
+
+    const timestamp = item.status.messages.find(
+      ([type]) => type === "execution_success",
+    )?.[1].timestamp;
+
+    if (!timestamp) {
+      continue;
+    }
+
     result.workflows.push({
       name: name,
       id: uuid,
       description: description,
       parameters: parameters,
-      last_updated: Date.now(),
+      last_updated: timestamp,
     });
   }
 
