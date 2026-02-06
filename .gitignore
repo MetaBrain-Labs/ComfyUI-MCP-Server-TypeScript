@@ -31,3 +31,5 @@ docs/.vitepress/cache/*
 .vitepress/*
 workflow.json
 build
+
+/skills/**.zip

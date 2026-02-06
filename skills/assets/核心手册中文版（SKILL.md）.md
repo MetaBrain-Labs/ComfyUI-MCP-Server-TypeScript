@@ -1,10 +1,6 @@
---- START OF FILE 核心手册（SKILL.md）.md ---
-
 ---
-
-name: comfyui-workflow-automation  
+name: comfyui-workflow-automation
 description: 管理 ComfyUI 生成任务的全生命周期，涵盖工作流发现、即时（JIT）工具挂载、执行监控、错误恢复策略以及系统健康检查。
-
 ---
 
 # ComfyUI 工作流自动化
