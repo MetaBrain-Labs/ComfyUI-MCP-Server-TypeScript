@@ -30,6 +30,7 @@ import {
 } from "../workflow";
 import {
   createDynamicWorkflowTool,
+  deleteDynamicTool,
   executeDynamicWorkflowTool,
   generateToolExampleParams,
   getAllDynamicTools,
@@ -73,108 +74,20 @@ const server = new McpServer(
 );
 
 /**
- * @METHOD 
- * @description 扫描读取ComfyUI运行历史，提取工作流的API文件，保存至项目下的工作流文件夹中。
-                1. 按时间间隔（可配置，单位ms）对任务运行历史发起一次扫描。 
-                2. 历史记录为空的情况下，扫描ComfyUI下的所有工作流，获取其中带有标记的工作流的API文件，并发布绘图任务检查可用性（实现思路：通过/prompt发布绘图任务，通过/ws监听是否可用）。
-                  a. 若在上述步骤中，ComfyUI出现程序性错误，则停止运行，并抛出错误。
-                3. 提取的工作流需为 运行成功 且 带工作流描述节点标记 的工作流。
-                4. API文件名称与工作流名称相同，保存同一个工作流的最新API文件时，以名称为主键，覆盖旧的文件。
- * @author LaiFQZzr
- * @date 2026/01/15 15:44
- */
-server.registerTool(
-  "cui_collect_workflow",
-  {
-    title: t("workflow.collectedContent.title"),
-    description: t("workflow.collectedContent.description"),
-    inputSchema: {
-      maxItems: z
-        .number()
-        .min(1)
-        .max(10)
-        .optional()
-        .default(3)
-        .describe(t("workflow.collectedContent.maxItems")),
-      offset: z
-        .number()
-        .min(0)
-        .optional()
-        .default(0)
-        .describe(t("workflow.collectedContent.offset")),
-      append: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe(t("workflow.collectedContent.append")),
-      // token
-    },
-  },
-  withMcpErrorHandling(async ({ maxItems, offset, append }) => {
-    // 1，判断
-
-    // 2，校验
-
-    const result = await collectAndSaveWorkflow({
-      baseUrl: BASE_URL,
-      maxItems: maxItems,
-      offset: offset,
-      append: append,
-    });
-
-    return ResultToMcpResponse(result);
-  }),
-);
-
-/**
  * @METHOD
- * @description 格式化并保存工作流任务信息，格式化后投喂给AGENT
+ * @description 获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT
  * @author LaiFQZzr
- * @date 2026/01/30 10:16
+ * @date 2026/02/02 09:30
  */
 server.registerTool(
-  "cui_init_workflow",
+  "cui_list_models",
   {
-    title: "初始化工作流",
-    description: `连接ComfyUI的WebSocket服务器，并且获取后ComfyUI中现有的节点信息，最后将这些信息格式化保存到本地文件中`,
-    inputSchema: {
-      maxItems: z
-        .number()
-        .min(1)
-        .max(10)
-        .optional()
-        .default(3)
-        .describe(t("workflow.collectedContent.maxItems")),
-      offset: z
-        .number()
-        .min(0)
-        .optional()
-        .default(0)
-        .describe(t("workflow.collectedContent.offset")),
-      append: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe(t("workflow.collectedContent.append")),
-    },
+    title: "获取模型列表",
+    description: `获取ComfyUI现有模型列表`,
+    inputSchema: {},
   },
-  withMcpErrorHandling(async ({ maxItems, offset, append }) => {
-    client.sendJson({
-      type: "feature_flags",
-      data: {
-        supports_preview_metadata: true,
-        supports_manager_v4_ui: true,
-      },
-    });
-
-    const result = await collectAndSaveFormatTask({
-      baseUrl: BASE_URL,
-      maxItems: maxItems,
-      offset: offset,
-      append: append,
-    });
-
-    return ResultToMcpResponse(result);
+  withMcpErrorHandling(async ({}) => {
+    return ResultToMcpStringResponse("这是模型结果");
   }),
 );
 
@@ -185,7 +98,7 @@ server.registerTool(
  * @date 2026/02/02 09:30
  */
 server.registerTool(
-  "cui_get_workflow_tasks",
+  "cui_get_workflows_catalog",
   {
     title: "获取工作流任务目录",
     description: `获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT。AGENT 可通过分析该信息最终选择更符合用户请求的生成任务`,
@@ -253,11 +166,10 @@ server.registerTool(
  * @date 2026/02/03 14:50
  */
 server.registerTool(
-  "cui_create_workflow_tool",
+  "cui_mount_dynamic_tool",
   {
     title: "基于历史任务创建动态 Workflow Tool",
     description: `基于历史任务（prompt_id）创建一个可重用的动态 Workflow Tool。
-
       功能说明：
       1. 分析指定历史任务的 prompts 结构
       2. 提取所有可配置的基础类型参数（排除连接引用）
@@ -343,7 +255,7 @@ server.registerTool(
         `成功创建动态 Tool: ${toolName}`,
         response,
         {
-          action: "cui_create_workflow_tool",
+          action: "cui_mount_dynamic_tool",
         },
         executionTime,
       ),
@@ -361,7 +273,7 @@ server.registerTool(
   "cui_list_dynamic_tools",
   {
     title: "列出所有动态 Workflow Tools",
-    description: `获取所有通过 cui_create_workflow_tool 创建的动态 Tool 列表`,
+    description: `获取所有通过 cui_mount_dynamic_tool 创建的动态 Tool 列表`,
     inputSchema: {},
   },
   withMcpErrorHandling(async () => {
@@ -406,11 +318,11 @@ server.registerTool(
   "cui_execute_dynamic_tool",
   {
     title: "执行动态 Workflow Tool",
-    description: `执行通过 cui_create_workflow_tool 创建的动态 Tool。
+    description: `执行通过 cui_mount_dynamic_tool 创建的动态 Tool。
       使用说明：
       1. 先使用 cui_list_dynamic_tools 查看可用的动态 Tools
-      2. 使用 cui_get_dynamic_tool_detail 获取 Tool 的参数详情
-      3. 调用此工具执行，传入 toolName 和需要修改的参数
+      2. 调用此工具执行，传入 toolName 和需要修改的参数
+      3. 分析用户意图，是否需要异步输出
 
       注意：
       - 未提供的参数将使用默认值
@@ -419,6 +331,7 @@ server.registerTool(
     `,
     inputSchema: {
       toolName: z.string().describe("要执行的动态 Tool 名称"),
+      isAsync: z.boolean().default(false).describe("是否异步执行"),
       params: z
         .record(z.string(), z.any())
         .optional()
@@ -427,7 +340,7 @@ server.registerTool(
         ),
     },
   },
-  withMcpErrorHandling(async ({ toolName, params = {} }) => {
+  withMcpErrorHandling(async ({ toolName, isAsync, params = {} }) => {
     const startTime = Date.now();
 
     const tool = getDynamicTool(toolName);
@@ -463,22 +376,43 @@ server.registerTool(
     const submitResult = await executeWorkflowTaskByPrompts({
       baseUrl: BASE_URL,
       prompts: execResult,
-      clientId: clientId, // 传递 clientId 以关联 WebSocket 消息
+      clientId: clientId,
     });
 
     console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
 
-    const executionResult = await waitForExecutionCompletion({
-      client,
-      promptId: submitResult.prompt_id,
-      timeout: 10 * 60 * 1000,
-    });
+    if (!isAsync) {
+      const executionResult = await waitForExecutionCompletion({
+        client,
+        promptId: submitResult.prompt_id,
+        timeout: 10 * 60 * 1000,
+      });
 
-    if (!executionResult.success) {
+      if (!executionResult.success) {
+        deleteDynamicTool(toolName);
+
+        return ResultToMcpResponse(
+          errorWithDetail(
+            `工作流执行失败: ${executionResult.error}`,
+            `Prompt ID: ${submitResult.prompt_id}`,
+          ),
+        );
+      }
+
+      const executionTime = Date.now() - startTime;
+
       return ResultToMcpResponse(
-        errorWithDetail(
-          `工作流执行失败: ${executionResult.error}`,
-          `Prompt ID: ${submitResult.prompt_id}`,
+        ok(
+          "成功执行动态 Workflow Tool",
+          {
+            promptId: submitResult.prompt_id,
+            img: buildComfyViewUrls(executionResult, BASE_URL),
+            outputs: executionResult.outputs,
+          },
+          {
+            action: "cui_execute_dynamic_tool",
+          },
+          executionTime,
         ),
       );
     }
@@ -490,76 +424,10 @@ server.registerTool(
         "成功执行动态 Workflow Tool",
         {
           promptId: submitResult.prompt_id,
-          img: buildComfyViewUrls(executionResult, BASE_URL),
-          outputs: executionResult.outputs,
-          executionTime,
+          description: "选择异步执行，请一段时间后访问ComfyUI查看结果",
         },
         {
           action: "cui_execute_dynamic_tool",
-        },
-        executionTime,
-      ),
-    );
-  }),
-);
-
-/**
- * @METHOD
- * @description 获取动态 Tool 的详细参数信息
- * @author LaiFQZzr
- * @date 2026/02/03 14:50
- */
-server.registerTool(
-  "cui_get_dynamic_tool_detail",
-  {
-    title: "获取动态 Tool 详情",
-    description: `获取指定动态 Tool 的详细参数信息和默认值，用于了解如何调用 cui_execute_dynamic_tool`,
-    inputSchema: {
-      toolName: z.string().describe("动态 Tool 名称"),
-    },
-  },
-  withMcpErrorHandling(async ({ toolName }) => {
-    const startTime = Date.now();
-
-    const tool = getDynamicTool(toolName);
-
-    if (!tool) {
-      return ResultToMcpResponse(error(`Tool "${toolName}" 不存在`));
-    }
-
-    const response: DynamicWorkflowToolData = {
-      name: tool.name,
-      title: tool.title,
-      description: tool.description,
-      sourcePromptId: tool.sourcePromptId,
-      createdAt: new Date(tool.createdAt).toISOString(),
-      configurableParams: tool.configurableParams.map((p) => ({
-        key: `${p.nodeId}_${p.inputKey}`,
-        path: p.path,
-        type: p.type,
-        defaultValue: p.defaultValue,
-        description: p.description,
-        nodeTitle: p.nodeTitle,
-        classType: p.classType,
-        required: p.required,
-      })),
-      requiredParams: tool.configurableParams
-        .filter((p) => p.required)
-        .map((p) => `${p.nodeId}_${p.inputKey}`),
-      exampleUsage: {
-        toolName: tool.name,
-        params: generateToolExampleParams(tool),
-      },
-    };
-
-    const executionTime = Date.now() - startTime;
-
-    return ResultToMcpResponse(
-      ok(
-        "成功获取动态 Tool 的详细参数信息",
-        response,
-        {
-          action: "cui_get_dynamic_tool_detail",
         },
         executionTime,
       ),
