@@ -57,6 +57,11 @@ _Only applicable for Mounted Tools._
 - **System Health**: Before heavy tasks (video/batch), check `cui_get_system_status`. Warn if VRAM < 2GB.
 - **Restricted API**: `cui_execute_custom_workflow` is **PROHIBITED** for standard tasks. Use only when the user explicitly requests low-level debugging or strictly requires a generated workflow structure that overrides the catalog.
 
+### NOTICE:
+
+1. Never re-execute the `cui_execute_dynamic_task_{workflow_name}` tool.
+2. It will either ultimately return an error or successfully retrieve the image URL.
+
 ## Examples
 
 ### Scenario: User asks "Generate a portrait using the Flux model"

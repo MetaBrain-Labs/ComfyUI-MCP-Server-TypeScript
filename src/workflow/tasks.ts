@@ -25,6 +25,25 @@ export interface WaitForExecutionOptions {
   client: ComfyClient;
   promptId: string;
   timeout?: number;
+  onProgress?: (progress: ExecutionProgress) => void;
+}
+
+/** 执行进度信息 */
+export interface ExecutionProgress {
+  /** 当前执行阶段 */
+  stage: "starting" | "executing" | "progress" | "completed" | "error";
+  /** 提示信息 */
+  message: string;
+  /** 当前进度 (0-100) */
+  percent?: number;
+  /** 当前执行的节点 ID */
+  nodeId?: string;
+  /** 当前值 (如采样步数当前值) */
+  current?: number;
+  /** 最大值 (如采样步数总步数) */
+  max?: number;
+  /** 已执行时间 (毫秒) */
+  elapsedTime?: number;
 }
 
 /**
@@ -138,10 +157,20 @@ export async function executeWorkflowTaskByPrompts(
 export async function waitForExecutionCompletion(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
-  const { client, promptId, timeout = 5 * 60 * 1000 } = options;
+  const { client, promptId, timeout = 5 * 60 * 1000, onProgress } = options;
   const startTime = Date.now();
 
   console.error(`[等待执行] 开始监听 Prompt ID: ${promptId}`);
+
+  // 发送进度报告的辅助函数
+  const reportProgress = (progress: ExecutionProgress) => {
+    if (onProgress) {
+      onProgress({
+        ...progress,
+        elapsedTime: Date.now() - startTime,
+      });
+    }
+  };
 
   return new Promise((resolve, reject) => {
     let isCompleted = false;
@@ -192,6 +221,11 @@ export async function waitForExecutionCompletion(
       originalHooks.onExecutionStart(data);
       if (data.prompt_id === promptId) {
         console.error(`[执行开始] Prompt ID: ${promptId}`);
+        reportProgress({
+          stage: "starting",
+          message: "工作流开始执行",
+          percent: 0,
+        });
       } else {
         console.error(
           `[执行开始] prompt_id 不匹配: 收到 ${data.prompt_id}, 期望 ${promptId}`,
@@ -204,6 +238,11 @@ export async function waitForExecutionCompletion(
       originalHooks.onNodeExecuting(data);
       if (data.prompt_id === promptId && data.node) {
         console.error(`[执行节点] Node: ${data.node}`);
+        reportProgress({
+          stage: "executing",
+          message: `正在执行节点: ${data.node}`,
+          nodeId: data.node,
+        });
       } else {
         console.error(
           `[执行节点] prompt_id 不匹配: 收到 ${data.prompt_id}, 期望 ${promptId}`,
@@ -214,8 +253,16 @@ export async function waitForExecutionCompletion(
     client.hook.onProgress = (data) => {
       originalHooks.onProgress(data);
       if (data.prompt_id === promptId) {
-        const percent = ((data.value / data.max) * 100).toFixed(1);
+        const percent = Math.round((data.value / data.max) * 100);
         console.error(`[进度更新] ${data.value}/${data.max} (${percent}%)`);
+        reportProgress({
+          stage: "progress",
+          message: `节点 ${data.node} 执行中: ${data.value}/${data.max}`,
+          percent,
+          nodeId: data.node,
+          current: data.value,
+          max: data.max,
+        });
       }
     };
 
@@ -242,6 +289,11 @@ export async function waitForExecutionCompletion(
         isCompleted = true;
         cleanup();
         console.error(`[执行成功] Prompt ID: ${promptId}`);
+        reportProgress({
+          stage: "completed",
+          message: "工作流执行完成",
+          percent: 100,
+        });
         resolve({
           success: true,
           promptId,
@@ -262,10 +314,15 @@ export async function waitForExecutionCompletion(
         isCompleted = true;
         cleanup();
         console.error(`[执行错误] Prompt ID: ${promptId}`, data);
+        const errorMsg = data.exception_message || data.error || JSON.stringify(data);
+        reportProgress({
+          stage: "error",
+          message: `执行出错: ${errorMsg}`,
+        });
         resolve({
           success: false,
           promptId,
-          error: data.exception_message || data.error || JSON.stringify(data),
+          error: errorMsg,
           executionTime: Date.now() - startTime,
         });
       } else if (data.prompt_id !== promptId) {
