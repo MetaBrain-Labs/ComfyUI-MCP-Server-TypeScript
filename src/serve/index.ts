@@ -40,6 +40,7 @@ import {
 import {
   executeWorkflowTaskByPrompts,
   waitForExecutionCompletion,
+  ExecutionProgress,
 } from "../workflow/tasks";
 import { ComfyClient } from "../ws";
 
@@ -340,7 +341,7 @@ server.registerTool(
         ),
     },
   },
-  withMcpErrorHandling(async ({ toolName, isAsync, params = {} }) => {
+  withMcpErrorHandling(async ({ toolName, isAsync, params = {} }, extra) => {
     const startTime = Date.now();
 
     const tool = getDynamicTool(toolName);
@@ -382,10 +383,61 @@ server.registerTool(
     console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
 
     if (!isAsync) {
+      // 获取 progressToken，用于发送进度通知
+      // 注意：AGENT 需要在调用工具时在 _meta.progressToken 中传入 token
+      const progressToken = extra?._meta?.progressToken as
+        | number
+        | string
+        | undefined;
+
+      if (progressToken) {
+        console.error(`[进度通知] 已启用，Token: ${progressToken}`);
+      } else {
+        console.error(`[进度通知] 未启用（AGENT 未传入 progressToken）`);
+      }
+
+      const progressInterval = 2000; // 最小进度通知间隔 (毫秒)
+      let lastProgressTime = 0;
+
+      // 进度回调函数
+      const onProgress = async (progress: ExecutionProgress) => {
+        const now = Date.now();
+        // 限制进度通知频率，避免过于频繁
+        if (progressToken && now - lastProgressTime >= progressInterval) {
+          lastProgressTime = now;
+          // 计算进度值 (0-1 之间)
+          const progressValue =
+            progress.percent !== undefined
+              ? progress.percent / 100
+              : progress.stage === "completed"
+                ? 1
+                : 0.5;
+
+          try {
+            // 发送进度通知到 AGENT
+            await extra?.sendNotification?.({
+              method: "notifications/progress",
+              params: {
+                progressToken,
+                progress: progressValue,
+                total: 1,
+                message: progress.message,
+              },
+            });
+            console.error(
+              `[进度通知] Token: ${progressToken}, Progress: ${(progressValue * 100).toFixed(1)}%`,
+            );
+          } catch (err) {
+            console.error(`[进度通知] 发送失败:`, err);
+          }
+        }
+      };
+
       const executionResult = await waitForExecutionCompletion({
         client,
         promptId: submitResult.prompt_id,
         timeout: 10 * 60 * 1000,
+        onProgress,
       });
 
       if (!executionResult.success) {

@@ -33,3 +33,4 @@ workflow.json
 build
 
 /skills/**.zip
+/skills/**.skill
