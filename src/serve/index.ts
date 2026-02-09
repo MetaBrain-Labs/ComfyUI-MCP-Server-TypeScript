@@ -23,11 +23,7 @@ import {
   ResultToMcpStringResponse,
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
-import {
-  collectAndSaveFormatTask,
-  collectAndSaveWorkflow,
-  getTaskDetailByPromptId,
-} from "../workflow";
+import { collectAndSaveFormatTask, getTaskDetailByPromptId } from "../workflow";
 import {
   createDynamicWorkflowTool,
   deleteDynamicTool,
@@ -39,9 +35,10 @@ import {
 } from "../workflow/dynamic-tool";
 import {
   executeWorkflowTaskByPrompts,
-  waitForExecutionCompletion,
   ExecutionProgress,
+  waitForExecutionCompletion,
 } from "../workflow/tasks";
+import { validateToken } from "../workflow/validateToken";
 import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
@@ -111,9 +108,21 @@ server.registerTool(
         .optional()
         .default(10)
         .describe(t("workflow.collectedContent.maxItems")),
+      token: z
+        .string()
+        .describe(
+          "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
+        ),
     },
   },
-  withMcpErrorHandling(async ({ maxItems }) => {
+  withMcpErrorHandling(async ({ maxItems, token }) => {
+    if (!validateToken(token)) {
+      // 将通用Prompts加载给AGENT
+      return ResultToMcpResponse(
+        error(`AGENT没有正确加载SKILL相关资源，请使用其他方式`),
+      );
+    }
+
     let hasMore: boolean = true;
 
     for (let i = 0; hasMore; i++) {

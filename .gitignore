@@ -30,6 +30,7 @@ docs/.vitepress/cache/*
 
 .vitepress/*
 workflow.json
+token.json
 build
 
 /skills/**.zip

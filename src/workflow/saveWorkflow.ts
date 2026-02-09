@@ -96,7 +96,7 @@ export async function saveWorkflow(
 
 /**
  * @METHOD
- * @description 根据 last_updated 去重，保留最新的项
+ * @description 根据 name 去重，保留最新的项
  * @author LaiFQZzr
  * @date 2026/01/27 11:55
  */

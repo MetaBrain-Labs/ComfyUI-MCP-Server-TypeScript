@@ -93,3 +93,26 @@ _仅适用于已挂载的工具。_
 1. 调用 `cui_get_task_result(job_id="job_123")`。
 2. **助手**：“这是您的结果：
    ![](...)"
+
+ComfyUI 工作流参数分级规则：
+
+1. 【必须填充】节点标题以 "=>" 开头
+   - 示例：=>CLIP文本编码(正向提示词)
+   - 行为：AGENT 必须根据用户需求填写，不能使用默认值如 "**prompt**"
+
+2. 【可选修改】普通节点
+   - 示例：K采样器、空Latent图像
+   - 行为：AGENT 根据常识和用户要求判断是否修改
+
+3. 【跳过】节点标题以 "== ==" 包裹
+   - 示例：==生成全图（带背景图）==
+   - 行为：用于工作流命名，不作为可配置参数
+
+API 返回示例：
+{
+"configurableParams": [
+{ "key": "3_text", "required": true, "description": "【必须填充】..." },
+{ "key": "5_seed", "required": false, "description": "随机种子..." }
+],
+"requiredParams": ["3_text", "4_text"] // 快速查看必填项
+}
