@@ -15,7 +15,6 @@ You must follow this strictly defined protocol to interact with the ComfyUI MCP 
 2. **Decision Point**:
    - **Match Found**: Select the target `workflow_name` and proceed to **Phase 2** (Tool Mounting).
    - **No Match**: If existing workflow names cannot fulfill the request, proceed to **Phase 1.5** (Custom Generation).
-3. **Verify Assets**: If the user specifies a model (e.g., "Flux") or LoRA, you **MUST NOT** guess the filename. Call `cui_list_models` (with `folder_name="checkpoints"` or `"loras"`) to retrieve the exact, case-sensitive filename from the server.
 
 ### Phase 1.5: Custom Workflow Generation (Fallback)
 
@@ -23,7 +22,6 @@ You must follow this strictly defined protocol to interact with the ComfyUI MCP 
 - **User Engagement**: If no suitable workflow is found, or if the user is unsatisfied with the generated results from existing workflows, remind the user that they can authorize the use of the `cui_execute_custom_workflow` tool to customize a workflow to meet their needs.
 - **Action**: **ONLY** upon explicit user request, construct a valid ComfyUI workflow JSON structure based on your knowledge of ComfyUI nodes.
 - **Execute**: Call `cui_execute_custom_workflow` with the generated JSON.
-- **Constraint**: You are fully responsible for node validity and connection logic. Ensure all model filenames used in the JSON are verified via `cui_list_models`.
 
 ### Phase 2: Tool Mounting (JIT Compilation)
 
@@ -33,14 +31,13 @@ _Only applicable if a Workflow Name was selected in Phase 1._
  _ `extension_name`: Generate a unique, short suffix (regex: `^[a-z][a-z0-9_]*$`). Example: `flux_p`.  
 5. **CRITICAL STOP SEQUENCE**: Immediately after calling `cui_mount_dynamic_tool`:  
  _ **Terminate generation**.  
- _ Do not output any further text or tool calls in this turn.  
- \* Wait for the Host to refresh the tool list (the new tool will act as a "virtual" function in the next turn).
+ _ Do not output any further text or tool calls in this turn.
 
 ### Phase 3: Execution
 
 _Only applicable for Mounted Tools._  
-6. **Resume & Inspect**: In the next conversation turn, the new tool `cui_execute_dynamic_task_{workflow_name}` will be available. If unsure about specific parameters, call `cui_get_workflow_definition` first.  
-7. **Invoke Tool**: Call `cui_execute_dynamic_task_{workflow_name}` mapping user intent to parameters.  
+6. **Resume & Inspect**: In the next conversation turn, the new tool `cui_execute_dynamic_task` will be available. If unsure about specific parameters, call `cui_get_workflow_definition` first.  
+7. **Invoke Tool**: Call `cui_execute_dynamic_task` mapping user intent to parameters.  
  \* **Multimodal Constraint**: Media inputs (images, audio, video, masks, references) **MUST** be public HTTP/HTTPS URLs. **REJECT** local paths or Base64 data.
 
 ### Phase 4: Monitoring & Delivery
@@ -59,41 +56,5 @@ _Only applicable for Mounted Tools._
 
 ### NOTICE:
 
-1. Never re-execute the `cui_execute_dynamic_task_{workflow_name}` tool.
+1. Never re-execute the `cui_execute_dynamic_task` tool.
 2. It will either ultimately return an error or successfully retrieve the image URL.
-
-## Examples
-
-### Scenario: User asks "Generate a portrait using the Flux model"
-
-**Turn 1: Discovery & Asset Verification**
-
-> **Thought**: The user wants to use a specific model ("Flux"). I need to find the workflow and verify the exact model filename on the server.
-
-1. Call `cui_get_workflows_catalog` -> Returns list of names including `flux_portrait_v2`.
-2. Call `cui_list_models(type_name="checkpoints")` -> Returns list including `flux1-dev-fp8.safetensors`.
-
-**Turn 2: Tool Mounting**
-
-> **Thought**: I have the workflow name (`flux_portrait_v2`) and the model name. Now I must mount the tool.
-
-1. Call `cui_mount_dynamic_tool(workflow_name="flux_portrait_v2", extension_name="flux_p")`.
-2. **[STOP GENERATION]**
-
-**Turn 3: Execution**
-
-> **Thought**: The tool `cui_execute_dynamic_task_flux_portrait_v2` is now available.
-
-1. Call `cui_execute_dynamic_task_flux_portrait_v2(prompt="A cinematic portrait", ckpt_name="flux1-dev-fp8.safetensors")`.
-
-**Turn 4: Monitoring**
-
-> **System Event**: `progress: step 10/20`  
-> **Assistant**: "Processing... Sampling step 10/20."
-
-**Turn 5: Delivery**
-
-> **System Event**: `execution_success`
-
-1. Call `cui_get_task_result(job_id="job_123")`.
-2. **Assistant**: "Here is your result:
