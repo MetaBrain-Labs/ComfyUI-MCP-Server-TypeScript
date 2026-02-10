@@ -16,7 +16,12 @@ import {
   DynamicWorkflowToolData,
   ListDynamicWorkflowToolData,
 } from "../interface/dynamic-tool";
-import { error, errorWithDetail, ok } from "../interface/result";
+import {
+  error,
+  errorWithDetail,
+  errorWithToken,
+  ok,
+} from "../interface/result";
 import {
   buildComfyViewUrls,
   ResultToMcpResponse,
@@ -38,7 +43,7 @@ import {
   ExecutionProgress,
   waitForExecutionCompletion,
 } from "../workflow/tasks";
-import { validateToken } from "../workflow/validateToken";
+import { deterministicRandom, validateToken } from "../workflow/validateToken";
 import { ComfyClient } from "../ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
@@ -110,16 +115,27 @@ server.registerTool(
         .describe(t("workflow.collectedContent.maxItems")),
       token: z
         .string()
+        .optional()
         .describe(
           "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
         ),
     },
   },
   withMcpErrorHandling(async ({ maxItems, token }) => {
-    if (!validateToken(token)) {
+    if (!token || !validateToken(token)) {
+      const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
+      const token = deterministicRandom({
+        seed: "my-seed",
+        referenceTime: Date.now(),
+      });
       // 将通用Prompts加载给AGENT
       return ResultToMcpResponse(
-        error(`AGENT没有正确加载SKILL相关资源，请使用其他方式`),
+        errorWithToken(
+          `AGENT没有正确加载 SKILL 相关资源，将提供默认 Prompt ，请使用token(${token})以及prompt继续进行生成操作
+          \n
+          ${defaultRule}`,
+          token,
+        ),
       );
     }
 
