@@ -1,10 +1,4 @@
 import crypto from "crypto";
-import { mkdir, readFile } from "fs/promises";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /**
  * @METHOD
@@ -24,10 +18,10 @@ export function validateToken(token: string): boolean {
   return false;
 }
 
-function deterministicRandom({
+export function deterministicRandom({
   seed = "my-seed",
   referenceTime = Date.now(),
-  timeWindow = 60_000,
+  timeWindow = 600_000,
   length = 16,
 }): string {
   const bucket = Math.floor(referenceTime / timeWindow);

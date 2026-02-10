@@ -9,7 +9,7 @@ import crypto from "crypto";
 export function deterministicRandom({
   seed,
   referenceTime,
-  timeWindow = 60_000,
+  timeWindow = 600_000,
   length = 16,
 }): string {
   const bucket = Math.floor(referenceTime / timeWindow);

@@ -26,6 +26,7 @@ export interface Result<T = any> {
   metadata?: {
     action?: string;
     mode?: "append" | "overwrite";
+    token?: string;
   };
 }
 
@@ -75,6 +76,34 @@ export function error<T>(
       ...(executionTime !== undefined && { executionTime }),
     },
     error: errorDetails,
+  };
+}
+
+/**
+ * @METHOD
+ * @description 携 TOKEN 错误返回
+ * @author LaiFQZzr
+ * @date 2026/01/27 14:00
+ */
+export function errorWithToken<T>(
+  message: string,
+  token: string,
+  errorDetails?: Result["error"],
+  code: number = ResultCode.FORBIDDEN,
+  executionTime?: number,
+): Result<T> {
+  return {
+    success: false,
+    message,
+    detail: {
+      code,
+      timestamp: Date.now(),
+      ...(executionTime !== undefined && { executionTime }),
+    },
+    error: errorDetails,
+    metadata: {
+      token: token,
+    },
   };
 }
 
