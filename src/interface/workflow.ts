@@ -40,14 +40,14 @@ export interface ComfyNode {
   flags: ComfyNodeFlags;
   order: number;
   mode: ComfyNodeMode; // 0: Always, 2: Mute, 4: Bypass 等
-  inputs?: ComfyNodeInput[];
+  inputs: ComfyNodeInput[];
   outputs?: ComfyNodeOutput[];
   properties: Record<string, any>;
   /**
    * 节点的具体参数值（按顺序对应 Widget）
    * 例如: [model_name, seed, steps, cfg, ...]
    */
-  widgets_values?: Array<string | number | boolean | null>;
+  widgets_values: Array<string | number | boolean | null>;
   title?: string;
   color?: string;
   bgcolor?: string;
@@ -56,7 +56,7 @@ export interface ComfyNode {
 export interface ComfyNodeInput {
   name: string;
   type: string;
-  link: number | null; // 连接的 link_id，未连接为 null
+  link: number | null;
   localized_name?: string;
   shape?: number;
   widget?: {
@@ -95,7 +95,7 @@ export interface ComfyNodeFlags {
 export enum ComfyNodeMode {
   Always = 0,
   OnEvent = 1,
-  Never = 2, // Mute
+  Never = 2,
   OnTrigger = 3,
   Bypass = 4,
 }

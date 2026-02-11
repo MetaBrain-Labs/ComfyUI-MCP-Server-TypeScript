@@ -8,6 +8,7 @@ import {
 } from "../interface/task";
 import { ComfyUIWorkflow } from "../interface/workflow";
 import { ComfyClient } from "../ws";
+import { WorkflowConverter } from "../tools/workflow-converter";
 
 export interface FetchTasksOptions {
   baseUrl: string;
@@ -104,44 +105,66 @@ export async function fetchUserWorkflow(baseUrl: string, clientId: string) {
     throw new McpError(ErrorCode.InternalError, "Not Exist Workflow response");
   }
 
-  for (const item of res.data) {
-    const workflowUrl = `${baseUrl}/userdata/workflows%2F${item.path}`;
-    const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
+  const workflowUrl = `${baseUrl}/userdata/workflows%2FpromptTest.json`;
+  const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
 
-    try {
-      const promptRes = await axios.post<ExecutePromptResult>(
-        `${baseUrl}/prompt`,
-        {
-          extra_pnginfo: {
-            workflow: workflowRes.data,
-          },
-          client_id: clientId,
-          prompt: {} as ComfyPromptConfig,
-        },
+  const converter = new WorkflowConverter(baseUrl);
+  await converter.init();
+  const output = converter.convert(workflowRes.data);
+
+  console.error("output", JSON.stringify(output, null, 2));
+
+  try {
+    const promptRes = await axios.post<ExecutePromptResult>(
+      `${baseUrl}/prompt`,
+      {
+        // extra_pnginfo: {
+        //   workflow: workflowRes.data,
+        // },
+        client_id: clientId,
+        prompt: output as ComfyPromptConfig,
+      },
+    );
+
+    availableWorkflow.push(promptRes.data.prompt_id);
+
+    console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
+  } catch (e) {
+    if (axios.isAxiosError(e) && e.response?.status === 400) {
+      console.error(
+        `Skip workflow video_wan2_2_5B_ti2v.json: bad request (400)`,
       );
-      availableWorkflow.push(promptRes.data.prompt_id);
-
-      console.log(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
-    } catch (e) {
-      // 工作流初始化校验失败
-      if (axios.isAxiosError(e) && e.response?.status === 400) {
-        console.warn(`Skip workflow ${item.path}: bad request (400)`);
-        continue;
-      }
+      console.error("e:", JSON.stringify(e.response.data, null, 2));
     }
   }
 
-  // const total = Object.entries(res.data).length;
+  // for (const item of res.data) {
+  //   const workflowUrl = `${baseUrl}/userdata/workflows%2F${item.path}`;
+  //   const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
 
-  // const successTasks = Object.fromEntries(
-  //   Object.entries(res.data).filter(
-  //     ([uuid, item]) => item.status.status_str === "success",
-  //   ),
-  // ) as ComfyTaskResponse;
+  //   try {
+  //     const promptRes = await axios.post<ExecutePromptResult>(
+  //       `${baseUrl}/prompt`,
+  //       {
+  //         extra_pnginfo: {
+  //           workflow: workflowRes.data,
+  //         },
+  //         client_id: clientId,
+  //         prompt: {} as ComfyPromptConfig,
+  //       },
+  //     );
+  //     availableWorkflow.push(promptRes.data.prompt_id);
 
-  // const fail = total - Object.entries(successTasks).length;
+  //     console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
+  //   } catch (e) {
+  //     // 工作流初始化校验失败
+  //     if (axios.isAxiosError(e) && e.response?.status === 400) {
+  //       console.error(`Skip workflow ${item.path}: bad request (400)`);
+  //       continue;
+  //     }
+  //   }
+  // }
 
-  // return { successTasks, total, fail };
   return availableWorkflow;
 }
 
