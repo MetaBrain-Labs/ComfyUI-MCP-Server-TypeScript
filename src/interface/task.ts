@@ -138,3 +138,10 @@ export interface ComfyNodeMeta {
   real_node_id: string;
 }
 //#endregion
+
+export interface WorkflowSimpleData {
+  path: string;
+  size: number;
+  modified: number;
+  created: number;
+}
