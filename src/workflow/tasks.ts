@@ -1,8 +1,14 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
 import axios from "axios";
 import { ExecutePromptResult, ExecutionResult } from "../interface/execute";
-import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
+import {
+  ComfyPromptConfig,
+  ComfyTaskResponse,
+  WorkflowSimpleData,
+} from "../interface/task";
+import { ComfyUIWorkflow } from "../interface/workflow";
 import { ComfyClient } from "../ws";
+import { WorkflowConverter } from "../tools/workflow-converter";
 
 export interface FetchTasksOptions {
   baseUrl: string;
@@ -79,6 +85,87 @@ export async function fetchHistoryTasks(
   const fail = total - Object.entries(successTasks).length;
 
   return { successTasks, total, fail };
+}
+
+/**
+ * @METHOD
+ * @description 从工作流列表中获取工作流
+ * @author LaiFQZzr
+ * @date 2026/01/20 11:50
+ */
+export async function fetchUserWorkflow(baseUrl: string, clientId: string) {
+  const availableWorkflow: string[] = [];
+
+  // 获取用户的工作流列表
+  const url = `${baseUrl}/userdata?dir=workflows&recurse=true&split=false&full_info=true`;
+
+  const res = await axios.get<WorkflowSimpleData[]>(url);
+
+  if (res.data === null) {
+    throw new McpError(ErrorCode.InternalError, "Not Exist Workflow response");
+  }
+
+  const workflowUrl = `${baseUrl}/userdata/workflows%2FpromptTest.json`;
+  const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
+
+  const converter = new WorkflowConverter(baseUrl);
+  await converter.init();
+  const output = converter.convert(workflowRes.data);
+
+  console.error("output", JSON.stringify(output, null, 2));
+
+  try {
+    const promptRes = await axios.post<ExecutePromptResult>(
+      `${baseUrl}/prompt`,
+      {
+        // extra_pnginfo: {
+        //   workflow: workflowRes.data,
+        // },
+        client_id: clientId,
+        prompt: output as ComfyPromptConfig,
+      },
+    );
+
+    availableWorkflow.push(promptRes.data.prompt_id);
+
+    console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
+  } catch (e) {
+    if (axios.isAxiosError(e) && e.response?.status === 400) {
+      console.error(
+        `Skip workflow video_wan2_2_5B_ti2v.json: bad request (400)`,
+      );
+      console.error("e:", JSON.stringify(e.response.data, null, 2));
+    }
+  }
+
+  // for (const item of res.data) {
+  //   const workflowUrl = `${baseUrl}/userdata/workflows%2F${item.path}`;
+  //   const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
+
+  //   try {
+  //     const promptRes = await axios.post<ExecutePromptResult>(
+  //       `${baseUrl}/prompt`,
+  //       {
+  //         extra_pnginfo: {
+  //           workflow: workflowRes.data,
+  //         },
+  //         client_id: clientId,
+  //         prompt: {} as ComfyPromptConfig,
+  //       },
+  //     );
+  //     availableWorkflow.push(promptRes.data.prompt_id);
+
+  //     console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
+  //   } catch (e) {
+  //     // 工作流初始化校验失败
+  //     if (axios.isAxiosError(e) && e.response?.status === 400) {
+  //       console.error(`Skip workflow ${item.path}: bad request (400)`);
+  //       continue;
+  //     }
+  //   }
+  // }
+
+  return availableWorkflow;
 }
 
 /**
@@ -314,7 +401,8 @@ export async function waitForExecutionCompletion(
         isCompleted = true;
         cleanup();
         console.error(`[执行错误] Prompt ID: ${promptId}`, data);
-        const errorMsg = data.exception_message || data.error || JSON.stringify(data);
+        const errorMsg =
+          data.exception_message || data.error || JSON.stringify(data);
         reportProgress({
           stage: "error",
           message: `执行出错: ${errorMsg}`,

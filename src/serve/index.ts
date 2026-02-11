@@ -28,7 +28,11 @@ import {
   ResultToMcpStringResponse,
   withMcpErrorHandling,
 } from "../tools/mcp-helpers";
-import { collectAndSaveFormatTask, getTaskDetailByPromptId } from "../workflow";
+import {
+  collectAndSaveFormatTask,
+  collectAndSaveFormatTaskFromWorkflows,
+  getTaskDetailByPromptId,
+} from "../workflow";
 import {
   createDynamicWorkflowTool,
   deleteDynamicTool,
@@ -119,9 +123,15 @@ server.registerTool(
         .describe(
           "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
         ),
+      enableWorkflow: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("是否获取用户的工作流信息"),
     },
   },
-  withMcpErrorHandling(async ({ maxItems, token }) => {
+  withMcpErrorHandling(async ({ maxItems, token, enableWorkflow }) => {
+    // token校验失败，启用默认Prompt
     if (!token || !validateToken(token)) {
       const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
       const token = deterministicRandom({
@@ -139,6 +149,10 @@ server.registerTool(
       );
     }
 
+    if (enableWorkflow) {
+      await collectAndSaveFormatTaskFromWorkflows(BASE_URL, client);
+    }
+
     let hasMore: boolean = true;
 
     for (let i = 0; hasMore; i++) {
@@ -151,6 +165,8 @@ server.registerTool(
 
       hasMore = result.detail.data?.pagination?.hasNextPage || false;
     }
+
+    // TODO 如果enableWorkflow为false，并且历史任务数量为0，那么强制调用一次从工作流中获取工作流
 
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 

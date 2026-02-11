@@ -55,7 +55,8 @@ export type ComfyInputValue =
   | number
   | boolean
   | [string, number]
-  | Array<string | number>;
+  | Array<string | number>
+  | null;
 //#endregion
 
 //#region --- 额外信息部分 (对应 prompt[3]) ---
@@ -138,3 +139,10 @@ export interface ComfyNodeMeta {
   real_node_id: string;
 }
 //#endregion
+
+export interface WorkflowSimpleData {
+  path: string;
+  size: number;
+  modified: number;
+  created: number;
+}

@@ -4,8 +4,13 @@ import { ok, Result } from "../interface/result";
 import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
 import { WorkflowCollectionData } from "../interface/workflow";
 import { formatTask } from "../tools/format";
+import { ComfyClient } from "../ws";
 import { saveWorkflow } from "./saveWorkflow";
-import { fetchHistoryTasks, fetchTaskByPromptId } from "./tasks";
+import {
+  fetchHistoryTasks,
+  fetchTaskByPromptId,
+  fetchUserWorkflow,
+} from "./tasks";
 
 /**
  * @METHOD
@@ -85,6 +90,59 @@ export async function collectAndSaveFormatTask(params: {
     },
     executionTime,
   );
+}
+
+/**
+ * @METHOD
+ * @description 从工作流中获取一遍工作流
+ * @author LaiFQZzr
+ * @date 2026/02/10 15:46
+ */
+export async function collectAndSaveFormatTaskFromWorkflows(
+  baseUrl: string,
+  client: ComfyClient,
+) {
+  const startTime = Date.now();
+
+  // 根据拼接后的Prompt执行工作流
+  const clientId = client.getClientId();
+  console.error(`[工作流提交] Client ID: ${clientId}`);
+
+  const data = await fetchUserWorkflow(baseUrl, clientId);
+
+  // const formatData = formatTask(data.successTasks);
+
+  // const result = await saveWorkflow(formatData.workflows, {
+  //   append: params?.append,
+  // });
+
+  const executionTime = Date.now() - startTime;
+
+  // return ok<WorkflowCollectionData>(
+  //   t("workflow.collected", params.offset, params.maxItems, params.append),
+  //   {
+  //     savedPath: result.filePath,
+  //     itemsRequested: params.maxItems,
+  //     itemsCollected: data.total,
+  //     failedTasks: data.fail,
+  //     offset: params.offset,
+  //     pagination: {
+  //       hasNextPage: data.total === params.maxItems,
+  //       nextOffset:
+  //         data.total === params.maxItems
+  //           ? params.offset + params.maxItems
+  //           : null,
+  //       currentOffset: params.offset,
+  //       requestedItems: params.maxItems,
+  //       returnedItems: data.total,
+  //     },
+  //   },
+  //   {
+  //     action: "collect_workflow",
+  //     mode: params.append ? "append" : "overwrite",
+  //   },
+  //   executionTime,
+  // );
 }
 
 /**

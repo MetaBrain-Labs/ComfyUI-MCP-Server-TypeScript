@@ -10,7 +10,10 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
-  "keywords": ["mcp", "comfyui"],
+  "keywords": [
+    "mcp",
+    "comfyui"
+  ],
   "author": "LaiFQZzr",
   "license": "ISC",
   "description": "",
