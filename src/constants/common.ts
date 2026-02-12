@@ -15,8 +15,6 @@ const DEFAULT_RULE_FILE = "comfyui.md";
 const DEFAULT_RULE_PATH = path.join(SKILLS_RULES_DIR, DEFAULT_RULE_FILE);
 
 export const COMMON = {
-  CUI_DESC: "=DESC=",
-
   PROJECT_ROOT,
   WORKFLOW_DIR,
   WORKFLOW_FILE,

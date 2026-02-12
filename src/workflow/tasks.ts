@@ -3,6 +3,7 @@ import axios from "axios";
 import { ExecutePromptResult, ExecutionResult } from "../interface/execute";
 import {
   ComfyPromptConfig,
+  ComfyTaskItem,
   ComfyTaskResponse,
   WorkflowSimpleData,
 } from "../interface/task";
@@ -89,83 +90,41 @@ export async function fetchHistoryTasks(
 
 /**
  * @METHOD
- * @description 从工作流列表中获取工作流
+ * @description 获取指定promptIds对应的历史任务信息
  * @author LaiFQZzr
- * @date 2026/01/20 11:50
+ * @date 2026/02/12 15:44
  */
-export async function fetchUserWorkflow(baseUrl: string, clientId: string) {
-  const availableWorkflow: string[] = [];
+export async function fetchUserWorkflow(
+  baseUrl: string,
+  availableWorkflow: string[],
+): Promise<ComfyTaskResponse> {
+  let historyTasks: [string, ComfyTaskItem][] = [];
 
-  // 获取用户的工作流列表
-  const url = `${baseUrl}/userdata?dir=workflows&recurse=true&split=false&full_info=true`;
+  for (const promptId of availableWorkflow) {
+    const url = `${baseUrl}/history/${promptId}`;
 
-  const res = await axios.get<WorkflowSimpleData[]>(url);
+    const res = await axios.get<ComfyTaskResponse>(url);
 
-  if (res.data === null) {
-    throw new McpError(ErrorCode.InternalError, "Not Exist Workflow response");
-  }
-
-  const workflowUrl = `${baseUrl}/userdata/workflows%2FpromptTest.json`;
-  const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
-
-  const converter = new WorkflowConverter(baseUrl);
-  await converter.init();
-  const output = converter.convert(workflowRes.data);
-
-  console.error("output", JSON.stringify(output, null, 2));
-
-  try {
-    const promptRes = await axios.post<ExecutePromptResult>(
-      `${baseUrl}/prompt`,
-      {
-        // extra_pnginfo: {
-        //   workflow: workflowRes.data,
-        // },
-        client_id: clientId,
-        prompt: output as ComfyPromptConfig,
-      },
-    );
-
-    availableWorkflow.push(promptRes.data.prompt_id);
-
-    console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
-  } catch (e) {
-    if (axios.isAxiosError(e) && e.response?.status === 400) {
-      console.error(
-        `Skip workflow video_wan2_2_5B_ti2v.json: bad request (400)`,
+    if (typeof res.data !== "object" || res.data === null) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        "Invalid detail tasks response",
       );
-      console.error("e:", JSON.stringify(e.response.data, null, 2));
     }
+
+    historyTasks = historyTasks.concat(Object.entries(res.data));
   }
 
-  // for (const item of res.data) {
-  //   const workflowUrl = `${baseUrl}/userdata/workflows%2F${item.path}`;
-  //   const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
+  const successTasks = Object.fromEntries(historyTasks) as ComfyTaskResponse;
 
-  //   try {
-  //     const promptRes = await axios.post<ExecutePromptResult>(
-  //       `${baseUrl}/prompt`,
-  //       {
-  //         extra_pnginfo: {
-  //           workflow: workflowRes.data,
-  //         },
-  //         client_id: clientId,
-  //         prompt: {} as ComfyPromptConfig,
-  //       },
-  //     );
-  //     availableWorkflow.push(promptRes.data.prompt_id);
+  if (successTasks === null) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      "Invalid detail tasks response",
+    );
+  }
 
-  //     console.error(`[${promptRes.data.prompt_id}] ${workflowRes.data.id}`);
-  //   } catch (e) {
-  //     // 工作流初始化校验失败
-  //     if (axios.isAxiosError(e) && e.response?.status === 400) {
-  //       console.error(`Skip workflow ${item.path}: bad request (400)`);
-  //       continue;
-  //     }
-  //   }
-  // }
-
-  return availableWorkflow;
+  return successTasks;
 }
 
 /**
@@ -244,7 +203,7 @@ export async function executeWorkflowTaskByPrompts(
 export async function waitForExecutionCompletion(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
-  const { client, promptId, timeout = 5 * 60 * 1000, onProgress } = options;
+  const { client, promptId, timeout = 10 * 60 * 1000, onProgress } = options;
   const startTime = Date.now();
 
   console.error(`[等待执行] 开始监听 Prompt ID: ${promptId}`);
@@ -431,6 +390,124 @@ export async function waitForExecutionCompletion(
           success: false,
           promptId,
           error: "工作流执行被中断",
+          executionTime: Date.now() - startTime,
+        });
+      } else if (data.prompt_id !== promptId) {
+        console.error(
+          `[执行中断] prompt_id 不匹配: 收到 ${data.prompt_id}, 期望 ${promptId}`,
+        );
+      }
+    };
+  });
+}
+
+export async function waitForExecutionInterrupt(
+  options: WaitForExecutionOptions,
+): Promise<ExecutionResult> {
+  const { client, promptId, timeout = 10 * 1000 } = options;
+  const startTime = Date.now();
+
+  console.error(`[等待中断信号] 开始监听 Prompt ID: ${promptId}`);
+
+  return new Promise((resolve, reject) => {
+    let isCompleted = false;
+
+    // 设置超时
+    const timeoutTimer = setTimeout(() => {
+      if (!isCompleted) {
+        isCompleted = true;
+        cleanup();
+        resolve({
+          success: false,
+          promptId,
+          error: `工作流等待中断信号超时（${timeout / 1000}秒）`,
+          executionTime: Date.now() - startTime,
+        });
+      }
+    }, timeout);
+
+    // 保存原始钩子函数
+    const originalHooks = {
+      onExecutionInterrupted: client.hook.onExecutionInterrupted.bind(
+        client.hook,
+      ),
+    };
+
+    // 清理函数：恢复原始钩子
+    const cleanup = () => {
+      clearTimeout(timeoutTimer);
+      client.hook.onExecutionInterrupted = originalHooks.onExecutionInterrupted;
+    };
+
+    client.hook.onExecutionInterrupted = (data) => {
+      console.error(`[onExecutionInterrupted] 收到消息:`, data);
+      originalHooks.onExecutionInterrupted(data);
+      if (data.prompt_id === promptId && !isCompleted) {
+        isCompleted = true;
+        cleanup();
+        console.error(`[执行中断] Prompt ID: ${promptId}`);
+        resolve({
+          success: true,
+          promptId,
+          error: "工作流已收到中断信号",
+          executionTime: Date.now() - startTime,
+        });
+      } else if (data.prompt_id !== promptId) {
+        console.error(
+          `[执行中断] prompt_id 不匹配: 收到 ${data.prompt_id}, 期望 ${promptId}`,
+        );
+      }
+    };
+  });
+}
+
+export async function waitForExecutionStart(
+  options: WaitForExecutionOptions,
+): Promise<ExecutionResult> {
+  const { client, promptId, timeout = 10 * 1000 } = options;
+  const startTime = Date.now();
+
+  console.error(`[等待开始信号] 开始监听 Prompt ID: ${promptId}`);
+
+  return new Promise((resolve, reject) => {
+    let isCompleted = false;
+
+    // 设置超时
+    const timeoutTimer = setTimeout(() => {
+      if (!isCompleted) {
+        isCompleted = true;
+        cleanup();
+        resolve({
+          success: false,
+          promptId,
+          error: `工作流等待开始信号超时（${timeout / 1000}秒）`,
+          executionTime: Date.now() - startTime,
+        });
+      }
+    }, timeout);
+
+    // 保存原始钩子函数
+    const originalHooks = {
+      onExecutionStart: client.hook.onExecutionStart.bind(client.hook),
+    };
+
+    // 清理函数：恢复原始钩子
+    const cleanup = () => {
+      clearTimeout(timeoutTimer);
+      client.hook.onExecutionStart = originalHooks.onExecutionStart;
+    };
+
+    client.hook.onExecutionStart = (data) => {
+      console.error(`[onExecutionStart] 收到消息:`, data);
+      originalHooks.onExecutionStart(data);
+      if (data.prompt_id === promptId && !isCompleted) {
+        isCompleted = true;
+        cleanup();
+        console.error(`[执行开始] Prompt ID: ${promptId}`);
+        resolve({
+          success: true,
+          promptId,
+          error: "工作流已收到开始信号",
           executionTime: Date.now() - startTime,
         });
       } else if (data.prompt_id !== promptId) {

@@ -113,10 +113,18 @@ export class WorkflowConverter {
                 linksMap.get(`${node.inputs[i].link}:${node.inputs[i].type}`) ||
                 [];
             } else {
-              if (node.widgets_values[noLink] === "randomize") {
-                noLink++;
+              if (Array.isArray(node.widgets_values)) {
+                if (node.widgets_values[noLink] === "randomize") {
+                  noLink++;
+                }
+                inputs[inputName] = node.widgets_values[noLink++];
+              } else if (
+                typeof node.widgets_values === "object" &&
+                node.widgets_values !== null
+              ) {
+                inputs[inputName] = node.widgets_values[inputName];
+                console.log(node.id + "," + inputs[inputName]);
               }
-              inputs[inputName] = node.widgets_values[noLink++];
             }
             break;
           }
