@@ -132,7 +132,7 @@ server.registerTool(
   },
   withMcpErrorHandling(async ({ maxItems, token, enableWorkflow }) => {
     // token校验失败，启用默认Prompt
-    if (!token || !validateToken(token)) {
+    if (!token || !validateToken({ token })) {
       const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
       const token = deterministicRandom({
         seed: "my-seed",
@@ -154,19 +154,32 @@ server.registerTool(
     }
 
     let hasMore: boolean = true;
+    let totalCollected = 0;
+    let totalFailedTasks = 0;
 
     for (let i = 0; hasMore; i++) {
       const result = await collectAndSaveFormatTask({
         baseUrl: BASE_URL,
         maxItems,
         offset: i * maxItems,
-        append: i === 0 ? false : true,
+        append: i === 0 ? (enableWorkflow ? true : false) : true,
       });
 
       hasMore = result.detail.data?.pagination?.hasNextPage || false;
+
+      if (result.detail.data?.itemsCollected) {
+        totalCollected = totalCollected + result.detail.data?.itemsCollected;
+      }
+
+      if (result.detail.data?.failedTasks) {
+        totalFailedTasks = totalFailedTasks + result.detail.data?.failedTasks;
+      }
     }
 
-    // TODO 如果enableWorkflow为false，并且历史任务数量为0，那么强制调用一次从工作流中获取工作流
+    // 如果enableWorkflow为false，并且历史任务数量为0，那么强制调用一次从工作流中获取工作流
+    if (!enableWorkflow && totalCollected - totalFailedTasks <= 0) {
+      await collectAndSaveFormatTaskFromWorkflows(BASE_URL, client);
+    }
 
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 

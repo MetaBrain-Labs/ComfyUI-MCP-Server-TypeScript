@@ -11,6 +11,7 @@ import {
   fetchTaskByPromptId,
   fetchUserWorkflow,
 } from "./tasks";
+import { executeWorkflowTask } from "./workflow-executor";
 
 /**
  * @METHOD
@@ -104,45 +105,26 @@ export async function collectAndSaveFormatTaskFromWorkflows(
 ) {
   const startTime = Date.now();
 
-  // 根据拼接后的Prompt执行工作流
-  const clientId = client.getClientId();
-  console.error(`[工作流提交] Client ID: ${clientId}`);
+  const availableWorkflow = await executeWorkflowTask(baseUrl, client);
 
-  const data = await fetchUserWorkflow(baseUrl, clientId);
+  const data = await fetchUserWorkflow(baseUrl, availableWorkflow);
 
-  // const formatData = formatTask(data.successTasks);
+  const formatData = formatTask(data);
 
-  // const result = await saveWorkflow(formatData.workflows, {
-  //   append: params?.append,
-  // });
+  const result = await saveWorkflow(formatData.workflows, {
+    append: false,
+  });
 
   const executionTime = Date.now() - startTime;
 
-  // return ok<WorkflowCollectionData>(
-  //   t("workflow.collected", params.offset, params.maxItems, params.append),
-  //   {
-  //     savedPath: result.filePath,
-  //     itemsRequested: params.maxItems,
-  //     itemsCollected: data.total,
-  //     failedTasks: data.fail,
-  //     offset: params.offset,
-  //     pagination: {
-  //       hasNextPage: data.total === params.maxItems,
-  //       nextOffset:
-  //         data.total === params.maxItems
-  //           ? params.offset + params.maxItems
-  //           : null,
-  //       currentOffset: params.offset,
-  //       requestedItems: params.maxItems,
-  //       returnedItems: data.total,
-  //     },
-  //   },
-  //   {
-  //     action: "collect_workflow",
-  //     mode: params.append ? "append" : "overwrite",
-  //   },
-  //   executionTime,
-  // );
+  return ok(
+    "从原始工作流中获取历史任务，并保存到本地缓存文件中",
+    { filePath: result.filePath },
+    {
+      action: "collect_origin_workflow",
+    },
+    executionTime,
+  );
 }
 
 /**

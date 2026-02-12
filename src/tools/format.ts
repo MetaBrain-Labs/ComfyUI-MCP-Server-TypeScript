@@ -37,7 +37,7 @@ export const formatTask = (
     }
 
     const timestamp = item.status.messages.find(
-      ([type]) => type === "execution_success",
+      ([type]) => type === "execution_start",
     )?.[1].timestamp;
 
     if (!timestamp) {
