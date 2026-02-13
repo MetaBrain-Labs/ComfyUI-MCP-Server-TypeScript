@@ -9,6 +9,7 @@ import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
  */
 export const formatTask = (
   data: ComfyTaskResponse,
+  isFromOriginWorkflow: boolean,
 ): CollectFormatTaskResult => {
   const result: CollectFormatTaskResult = {
     last_updated: Date.now(),
@@ -50,6 +51,7 @@ export const formatTask = (
       description: description,
       parameters: parameters,
       last_updated: timestamp,
+      isFromOriginWorkflow,
     });
   }
 
