@@ -15,24 +15,19 @@ import { COMMON } from "../constants";
 import {
   DynamicWorkflowToolData,
   ListDynamicWorkflowToolData,
-} from "../interface/dynamic-tool";
-import {
-  error,
-  errorWithDetail,
-  errorWithToken,
-  ok,
-} from "../interface/result";
+} from "../types/dynamic-tool";
+import { error, errorWithDetail, errorWithToken, ok } from "../types/result";
 import {
   buildComfyViewUrls,
   ResultToMcpResponse,
   ResultToMcpStringResponse,
   withMcpErrorHandling,
-} from "../tools/mcp-helpers";
+} from "../utils/mcp-helpers";
 import {
   collectAndSaveFormatTask,
   collectAndSaveFormatTaskFromWorkflows,
   getTaskDetailByPromptId,
-} from "../workflow";
+} from "../services";
 import {
   createDynamicWorkflowTool,
   deleteDynamicTool,
@@ -41,14 +36,14 @@ import {
   getAllDynamicTools,
   getDynamicTool,
   hasDynamicTool,
-} from "../workflow/dynamic-tool";
+} from "../services/dynamic-tool";
 import {
   executeWorkflowTaskByPrompts,
   ExecutionProgress,
   waitForExecutionCompletion,
-} from "../workflow/tasks";
-import { deterministicRandom, validateToken } from "../workflow/validateToken";
-import { ComfyClient } from "../ws";
+} from "../services/tasks";
+import { deterministicRandom, validateToken } from "../services/validateToken";
+import { ComfyClient } from "../utils/ws";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
 

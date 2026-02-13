@@ -1,15 +1,15 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
 import axios from "axios";
-import { ExecutePromptResult, ExecutionResult } from "../interface/execute";
+import { ExecutePromptResult, ExecutionResult } from "../types/execute";
 import {
   ComfyPromptConfig,
   ComfyTaskItem,
   ComfyTaskResponse,
   WorkflowSimpleData,
-} from "../interface/task";
-import { ComfyUIWorkflow } from "../interface/workflow";
-import { ComfyClient } from "../ws";
-import { WorkflowConverter } from "../tools/workflow-converter";
+} from "../types/task";
+import { ComfyUIWorkflow } from "../types/workflow";
+import { ComfyClient } from "../utils/ws";
+import { WorkflowConverter } from "../utils/workflow-converter";
 
 export interface FetchTasksOptions {
   baseUrl: string;

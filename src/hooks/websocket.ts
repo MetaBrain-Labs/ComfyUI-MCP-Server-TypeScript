@@ -8,7 +8,7 @@ import {
   ComfyProgressData,
   ComfyProgressStateData,
   ComfyStatusData,
-} from "../interface/ws";
+} from "../types/ws";
 
 export class ComfyClientHook {
   /**

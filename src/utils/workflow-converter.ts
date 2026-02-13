@@ -1,13 +1,13 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
-import { ObjectInfoResponse } from "../interface/object-info";
-import { ComfyInputValue, ComfyPromptConfig } from "../interface/task";
+import { ObjectInfoResponse } from "../types/object-info";
+import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
 import {
   ComfyLink,
   ComfyNode,
   ComfyNodeInput,
   ComfyNodeMode,
   ComfyUIWorkflow,
-} from "../interface/workflow";
+} from "../types/workflow";
 
 /**
  * WorkflowConverter 类用于将 ComfyUIWorkflow 转换为 ComfyPromptConfig

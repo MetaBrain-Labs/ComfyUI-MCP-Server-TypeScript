@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import { randomUUID } from "crypto";
 import "dotenv/config";
-import { ComfyClientHook } from "./hooks/websocket";
+import { ComfyClientHook } from "../hooks/websocket";
 
 export class ComfyClient {
   private ws: WebSocket | null = null;
