@@ -138,9 +138,13 @@ export async function fetchTaskByPromptId(
 ): Promise<ComfyPromptConfig> {
   const { baseUrl, promptId } = options;
 
+  console.log("promptId", promptId);
+
   const url = `${baseUrl}/history/${promptId}`;
 
   const res = await axios.get<ComfyTaskResponse>(url);
+
+  console.log("res", res);
 
   if (typeof res.data !== "object" || res.data === null) {
     throw new McpError(
@@ -150,9 +154,16 @@ export async function fetchTaskByPromptId(
   }
 
   const successTasks = Object.fromEntries(
-    Object.entries(res.data).filter(
-      ([uuid, item]) => item.status.status_str === "success",
-    ),
+    Object.entries(res.data).filter(([uuid, item]) => {
+      if (item.status.status_str === "success") {
+        return true;
+      } else {
+        const isExecutionInterrupted = item.status.messages.filter((item) => {
+          return item[0] === "execution_interrupted";
+        });
+        return isExecutionInterrupted.length > 0;
+      }
+    }),
   ) as ComfyTaskResponse;
 
   if (successTasks === null) {

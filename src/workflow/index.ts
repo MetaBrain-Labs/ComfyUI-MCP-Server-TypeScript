@@ -58,7 +58,7 @@ export async function collectAndSaveFormatTask(params: {
 
   const data = await fetchHistoryTasks(params);
 
-  const formatData = formatTask(data.successTasks);
+  const formatData = formatTask(data.successTasks, false);
 
   const result = await saveWorkflow(formatData.workflows, {
     append: params?.append,
@@ -109,7 +109,7 @@ export async function collectAndSaveFormatTaskFromWorkflows(
 
   const data = await fetchUserWorkflow(baseUrl, availableWorkflow);
 
-  const formatData = formatTask(data);
+  const formatData = formatTask(data, true);
 
   const result = await saveWorkflow(formatData.workflows, {
     append: false,
