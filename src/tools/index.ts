@@ -75,23 +75,37 @@ const server = new McpServer(
   },
 );
 
+server.registerTool(
+  "cui_get_core_manual",
+  {
+    title: "获取项目核心手册",
+    description: `向 AGENT 提供提供项目全貌、核心概念及操作规范。`,
+    inputSchema: {},
+  },
+  withMcpErrorHandling(async () => {
+    const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
+
+    return ResultToMcpResponse(ok(`${defaultRule}`));
+  }),
+);
+
 /**
  * @METHOD
  * @description 获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT
  * @author LaiFQZzr
  * @date 2026/02/02 09:30
  */
-server.registerTool(
-  "cui_list_models",
-  {
-    title: "获取模型列表",
-    description: `获取ComfyUI现有模型列表`,
-    inputSchema: {},
-  },
-  withMcpErrorHandling(async ({}) => {
-    return ResultToMcpStringResponse("这是模型结果");
-  }),
-);
+// server.registerTool(
+//   "cui_list_models",
+//   {
+//     title: "获取模型列表",
+//     description: `获取ComfyUI现有模型列表`,
+//     inputSchema: {},
+//   },
+//   withMcpErrorHandling(async ({}) => {
+//     return ResultToMcpStringResponse("这是模型结果");
+//   }),
+// );
 
 /**
  * @METHOD
@@ -128,7 +142,6 @@ server.registerTool(
   withMcpErrorHandling(async ({ maxItems, token, enableWorkflow }) => {
     // token校验失败，启用默认Prompt
     if (!token || !validateToken({ token })) {
-      const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
       const token = deterministicRandom({
         seed: "my-seed",
         referenceTime: Date.now(),
@@ -136,9 +149,7 @@ server.registerTool(
       // 将通用Prompts加载给AGENT
       return ResultToMcpResponse(
         errorWithToken(
-          `AGENT没有正确加载 SKILL 相关资源，将提供默认 Prompt ，请使用token(${token})以及prompt继续进行生成操作
-          \n
-          ${defaultRule}`,
+          `AGENT没有正确加载 SKILL 相关资源，请通过cui_get_core_manual tool获取默认 Prompt 。后续对话中请将token(${token})保存到上下文中使用`,
           token,
         ),
       );
@@ -319,44 +330,44 @@ server.registerTool(
  * @author LaiFQZzr
  * @date 2026/02/03 14:50
  */
-server.registerTool(
-  "cui_list_dynamic_tools",
-  {
-    title: "列出所有动态 Workflow Tools",
-    description: `获取所有通过 cui_mount_dynamic_tool 创建的动态 Tool 列表`,
-    inputSchema: {},
-  },
-  withMcpErrorHandling(async () => {
-    const startTime = Date.now();
+// server.registerTool(
+//   "cui_list_dynamic_tools",
+//   {
+//     title: "列出所有动态 Workflow Tools",
+//     description: `获取所有通过 cui_mount_dynamic_tool 创建的动态 Tool 列表`,
+//     inputSchema: {},
+//   },
+//   withMcpErrorHandling(async () => {
+//     const startTime = Date.now();
 
-    const tools = getAllDynamicTools();
+//     const tools = getAllDynamicTools();
 
-    const executionTime = Date.now() - startTime;
+//     const executionTime = Date.now() - startTime;
 
-    const response: ListDynamicWorkflowToolData = {
-      count: tools.length,
-      tools: tools.map((tool) => ({
-        name: tool.name,
-        title: tool.title,
-        description: tool.description,
-        sourcePromptId: tool.sourcePromptId,
-        configurableParamsCount: tool.configurableParams.length,
-        createdAt: new Date(tool.createdAt).toISOString(),
-      })),
-    };
+//     const response: ListDynamicWorkflowToolData = {
+//       count: tools.length,
+//       tools: tools.map((tool) => ({
+//         name: tool.name,
+//         title: tool.title,
+//         description: tool.description,
+//         sourcePromptId: tool.sourcePromptId,
+//         configurableParamsCount: tool.configurableParams.length,
+//         createdAt: new Date(tool.createdAt).toISOString(),
+//       })),
+//     };
 
-    return ResultToMcpResponse(
-      ok(
-        `成功获取所有动态 Workflow Tools`,
-        response,
-        {
-          action: "cui_list_dynamic_tools",
-        },
-        executionTime,
-      ),
-    );
-  }),
-);
+//     return ResultToMcpResponse(
+//       ok(
+//         `成功获取所有动态 Workflow Tools`,
+//         response,
+//         {
+//           action: "cui_list_dynamic_tools",
+//         },
+//         executionTime,
+//       ),
+//     );
+//   }),
+// );
 
 /**
  * @METHOD
@@ -525,7 +536,8 @@ server.registerTool(
         "成功执行动态 Workflow Tool",
         {
           promptId: submitResult.prompt_id,
-          description: "选择异步执行，请一段时间后访问ComfyUI查看结果",
+          description:
+            "选择异步执行，请用户一段时间后手动访问ComfyUI查看结果，对话结束",
         },
         {
           action: "cui_execute_dynamic_tool",

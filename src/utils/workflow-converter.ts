@@ -7,6 +7,7 @@ import {
   ComfyNodeMode,
   ComfyUIWorkflow,
 } from "../types/workflow";
+import { api } from "../api/api";
 
 /**
  * @METHOD
@@ -24,16 +25,12 @@ export class WorkflowConverter {
 
   /**
    * @METHOD
-   * @description 初始化，获取结点信息
+   * @description 初始化，加载图的节点对象定义
    * @author LaiFQZzr
    * @date 2026/02/13 11:24
    */
-  async init(): Promise<ObjectInfoResponse | void> {
-    const response = await fetch(`${this.baseUrl}/api/object_info`);
-    if (response.ok) {
-      this.objectInfo = await response.json();
-      return this.objectInfo;
-    }
+  async init(): Promise<void> {
+    this.objectInfo = await api.getNodeDefs();
   }
 
   /**
