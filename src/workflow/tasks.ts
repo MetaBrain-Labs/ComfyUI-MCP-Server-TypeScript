@@ -138,13 +138,9 @@ export async function fetchTaskByPromptId(
 ): Promise<ComfyPromptConfig> {
   const { baseUrl, promptId } = options;
 
-  console.log("promptId", promptId);
-
   const url = `${baseUrl}/history/${promptId}`;
 
   const res = await axios.get<ComfyTaskResponse>(url);
-
-  console.log("res", res);
 
   if (typeof res.data !== "object" || res.data === null) {
     throw new McpError(
