@@ -12,7 +12,7 @@ async function main() {
 
   await server.connect(transport);
 
-  console.error("✅ MCP Stdio Server is running");
+  console.error("MCP Stdio Server is running");
 }
 
 main().catch((error) => {

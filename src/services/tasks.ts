@@ -5,11 +5,8 @@ import {
   ComfyPromptConfig,
   ComfyTaskItem,
   ComfyTaskResponse,
-  WorkflowSimpleData,
 } from "../types/task";
-import { ComfyUIWorkflow } from "../types/workflow";
 import { ComfyClient } from "../utils/ws";
-import { WorkflowConverter } from "../utils/workflow-converter";
 
 export interface FetchTasksOptions {
   baseUrl: string;
@@ -408,6 +405,12 @@ export async function waitForExecutionCompletion(
   });
 }
 
+/**
+ * @METHOD
+ * @description 等待工作流执行中断
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:20
+ */
 export async function waitForExecutionInterrupt(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
@@ -468,6 +471,12 @@ export async function waitForExecutionInterrupt(
   });
 }
 
+/**
+ * @METHOD
+ * @description 等待工作流开始执行
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:21
+ */
 export async function waitForExecutionStart(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {

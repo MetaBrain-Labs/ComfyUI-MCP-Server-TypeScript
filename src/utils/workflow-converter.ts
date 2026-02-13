@@ -4,13 +4,15 @@ import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
 import {
   ComfyLink,
   ComfyNode,
-  ComfyNodeInput,
   ComfyNodeMode,
   ComfyUIWorkflow,
 } from "../types/workflow";
 
 /**
- * WorkflowConverter 类用于将 ComfyUIWorkflow 转换为 ComfyPromptConfig
+ * @METHOD
+ * @description 根据 ComfyUI 规则，将从原始工作流中获取的信息（ComfyUIWorkflow）格式化为执行工作流需要用到的信息（ComfyPromptConfig）
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:24
  */
 export class WorkflowConverter {
   private baseUrl: string;
@@ -21,7 +23,10 @@ export class WorkflowConverter {
   }
 
   /**
-   * 初始化方法，获取节点信息
+   * @METHOD
+   * @description 初始化，获取结点信息
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:24
    */
   async init(): Promise<ObjectInfoResponse | void> {
     const response = await fetch(`${this.baseUrl}/api/object_info`);
@@ -32,14 +37,17 @@ export class WorkflowConverter {
   }
 
   /**
-   * 将 ComfyUIWorkflow 转换为 ComfyPromptConfig
+   * @METHOD
+   * @description 格式化核心方法 —— 将 ComfyUIWorkflow 转换为 ComfyPromptConfig
    * @param workflow ComfyUIWorkflow 数据
    * @returns ComfyPromptConfig 对象，可直接用于 /prompt 接口
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:32
    */
   convert(workflow: ComfyUIWorkflow): ComfyPromptConfig {
     const output: ComfyPromptConfig = {};
 
-    // 1. 首先创建所有节点的映射，过滤掉不需要的节点
+    // 1. 创建所有节点的映射，过滤掉不需要的节点
     const validNodes = workflow.nodes.filter((node: ComfyNode) => {
       return (
         !node.mode ||
@@ -133,7 +141,7 @@ export class WorkflowConverter {
       // 构建节点对象
       output[nodeId] = {
         inputs,
-        class_type: this.getNodeClassType(node),
+        class_type: node.type,
         _meta: {
           title: node.title || node.type,
         },
@@ -141,16 +149,5 @@ export class WorkflowConverter {
     });
 
     return output;
-  }
-
-  /**
-   * 获取节点的 class_type
-   * @param node 节点对象
-   * @returns class_type 字符串
-   */
-  private getNodeClassType(node: ComfyNode): string {
-    // 这里需要根据你的节点类型映射逻辑来实现
-    // 简单实现：直接使用 node.type
-    return node.type;
   }
 }
