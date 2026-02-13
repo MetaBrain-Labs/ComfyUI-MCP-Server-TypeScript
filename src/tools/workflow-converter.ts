@@ -123,7 +123,6 @@ export class WorkflowConverter {
                 node.widgets_values !== null
               ) {
                 inputs[inputName] = node.widgets_values[inputName];
-                console.log(node.id + "," + inputs[inputName]);
               }
             }
             break;
