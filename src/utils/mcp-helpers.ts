@@ -2,6 +2,9 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { ExecutionResult } from "../types/execute";
 import { Result } from "../types/result";
+import "dotenv/config";
+
+const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
 
 /**
  * @METHOD
@@ -94,10 +97,7 @@ export function ResultToMcpStringResponse(result: string): CallToolResult {
  * @author LaiFQZzr
  * @date 2026/02/04 17:58
  */
-export function buildComfyViewUrls(
-  result: ExecutionResult,
-  baseURL: string,
-): string[] {
+export function buildComfyViewUrls(result: ExecutionResult): string[] {
   if (!result.outputs) return [];
 
   const urls: string[] = [];
@@ -110,7 +110,7 @@ export function buildComfyViewUrls(
         subfolder: img.subfolder ?? "",
       });
 
-      urls.push(`${baseURL}/view?${params.toString()}`);
+      urls.push(`${BASE_URL}/view?${params.toString()}`);
     }
   }
 

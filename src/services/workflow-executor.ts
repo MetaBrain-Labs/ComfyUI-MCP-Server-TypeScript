@@ -1,8 +1,7 @@
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
-import axios, { HttpStatusCode } from "axios";
-import { ExecutePromptResult } from "../types/execute";
-import { ComfyPromptConfig, WorkflowSimpleData } from "../types/task";
-import { ComfyUIWorkflow } from "../types/workflow";
+import axios from "axios";
+import { api } from "../api/api";
+import { ExecutePromptRequest } from "../types/execute";
+import { ComfyPromptConfig } from "../types/task";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
 import { waitForExecutionInterrupt, waitForExecutionStart } from "./tasks";
@@ -14,74 +13,57 @@ import { waitForExecutionInterrupt, waitForExecutionStart } from "./tasks";
  * @date 2026/01/20 11:50
  */
 export async function executeWorkflowTask(
-  baseUrl: string,
   client: ComfyClient,
+  converter: WorkflowConverter,
 ): Promise<string[]> {
   const availableWorkflow: string[] = [];
 
-  // 获取用户的工作流列表
-  const url = `${baseUrl}/userdata?dir=workflows&recurse=true&split=false&full_info=true`;
+  const res = await api.getUserData("workflows");
 
-  const res = await axios.get<WorkflowSimpleData[]>(url);
+  for (const item of res) {
+    const workflowRes = await api.getDetailUserData(item.path);
 
-  if (res.data === null) {
-    throw new McpError(ErrorCode.InternalError, "Not Exist Workflow response");
-  }
-
-  const converter = new WorkflowConverter(baseUrl);
-  await converter.init();
-
-  for (const item of res.data) {
-    const workflowUrl = `${baseUrl}/userdata/workflows%2F${item.path}`;
-    const workflowRes = await axios.get<ComfyUIWorkflow>(workflowUrl);
-
-    const output = converter.convert(workflowRes.data);
+    const output = converter.convert(workflowRes);
 
     try {
-      const promptRes = await axios.post<ExecutePromptResult>(
-        `${baseUrl}/prompt`,
-        {
-          extra_pnginfo: {
-            workflow: workflowRes.data,
-          },
-          client_id: client.getClientId(),
-          prompt: output as ComfyPromptConfig,
+      const data: ExecutePromptRequest = {
+        extra_pnginfo: {
+          workflow: workflowRes,
         },
-      );
+        client_id: client.getClientId(),
+        prompt: output as ComfyPromptConfig,
+      };
+      const promptRes = await api.prompt(data);
 
-      if (promptRes.status === HttpStatusCode.Ok) {
-        const promptId = promptRes.data.prompt_id;
+      const promptId = promptRes.prompt_id;
 
-        availableWorkflow.push(promptId);
+      availableWorkflow.push(promptId);
 
-        const startResult = await waitForExecutionStart({
+      const startResult = await waitForExecutionStart({
+        client,
+        promptId,
+      });
+
+      if (startResult.success) {
+        console.error(`Start workflow ${promptId} success`);
+        await api.interrupt(promptId);
+
+        const executionResult = await waitForExecutionInterrupt({
           client,
           promptId,
         });
 
-        if (startResult.success) {
-          console.error(`Start workflow ${promptId} success`);
-          await axios.post(`${baseUrl}/interrupt`, {
-            prompt_id: promptId,
-          });
-
-          const executionResult = await waitForExecutionInterrupt({
-            client,
-            promptId,
-          });
-
-          if (executionResult.success) {
-            console.error(`Interrupt workflow ${promptId} success`);
-          } else {
-            console.error(
-              `Interrupt workflow task ${promptId} failed: ${executionResult.error}`,
-            );
-          }
+        if (executionResult.success) {
+          console.error(`Interrupt workflow ${promptId} success`);
         } else {
           console.error(
-            `Start workflow task ${promptId} failed: ${startResult.error}`,
+            `Interrupt workflow task ${promptId} failed: ${executionResult.error}`,
           );
         }
+      } else {
+        console.error(
+          `Start workflow task ${promptId} failed: ${startResult.error}`,
+        );
       }
     } catch (e) {
       if (axios.isAxiosError(e) && e.response?.status === 400) {

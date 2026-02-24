@@ -1,4 +1,4 @@
-import { ComfyNodeOutput } from "./task";
+import { ComfyNodeOutput, ComfyPromptConfig } from "./task";
 
 export interface ExecutePromptResult {
   prompt_id: string;
@@ -13,4 +13,12 @@ export interface ExecutionResult {
   outputs?: Record<string, ComfyNodeOutput>;
   error?: string;
   executionTime: number;
+}
+
+export interface ExecutePromptRequest {
+  extra_pnginfo?: {
+    workflow: any;
+  };
+  client_id: string;
+  prompt: ComfyPromptConfig;
 }
