@@ -1,6 +1,10 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
-import axios from "axios";
-import { ExecutePromptResult, ExecutionResult } from "../types/execute";
+import { api } from "../api/api";
+import {
+  ExecutePromptRequest,
+  ExecutePromptResult,
+  ExecutionResult,
+} from "../types/execute";
 import {
   ComfyPromptConfig,
   ComfyTaskItem,
@@ -9,20 +13,17 @@ import {
 import { ComfyClient } from "../utils/ws";
 
 export interface FetchTasksOptions {
-  baseUrl: string;
   maxItems?: number;
   offset?: number;
 }
 
 export interface FetchTaskOptions {
-  baseUrl: string;
   promptId: string;
 }
 
 export interface ExecuteTaskOptions {
-  baseUrl: string;
   prompts: ComfyPromptConfig;
-  clientId?: string;
+  clientId: string;
 }
 
 export interface WaitForExecutionOptions {
@@ -59,23 +60,14 @@ export interface ExecutionProgress {
 export async function fetchHistoryTasks(
   options: FetchTasksOptions,
 ): Promise<{ successTasks: ComfyTaskResponse; total: number; fail: number }> {
-  const { baseUrl, maxItems, offset } = options;
+  const { maxItems, offset } = options;
 
-  const url = `${baseUrl}/history?max_items=${maxItems}&offset=${offset}`;
+  const res = await api.pageHistoryTasks(maxItems, offset);
 
-  const res = await axios.get<ComfyTaskResponse>(url);
-
-  if (typeof res.data !== "object" || res.data === null) {
-    throw new McpError(
-      ErrorCode.InternalError,
-      "Invalid history tasks response",
-    );
-  }
-
-  const total = Object.entries(res.data).length;
+  const total = Object.entries(res).length;
 
   const successTasks = Object.fromEntries(
-    Object.entries(res.data).filter(
+    Object.entries(res).filter(
       ([uuid, item]) => item.status.status_str === "success",
     ),
   ) as ComfyTaskResponse;
@@ -92,24 +84,14 @@ export async function fetchHistoryTasks(
  * @date 2026/02/12 15:44
  */
 export async function fetchUserWorkflow(
-  baseUrl: string,
   availableWorkflow: string[],
 ): Promise<ComfyTaskResponse> {
   let historyTasks: [string, ComfyTaskItem][] = [];
 
   for (const promptId of availableWorkflow) {
-    const url = `${baseUrl}/history/${promptId}`;
+    const res = await api.getDetailHistoryTasks(promptId);
 
-    const res = await axios.get<ComfyTaskResponse>(url);
-
-    if (typeof res.data !== "object" || res.data === null) {
-      throw new McpError(
-        ErrorCode.InternalError,
-        "Invalid detail tasks response",
-      );
-    }
-
-    historyTasks = historyTasks.concat(Object.entries(res.data));
+    historyTasks = historyTasks.concat(Object.entries(res));
   }
 
   const successTasks = Object.fromEntries(historyTasks) as ComfyTaskResponse;
@@ -133,21 +115,12 @@ export async function fetchUserWorkflow(
 export async function fetchTaskByPromptId(
   options: FetchTaskOptions,
 ): Promise<ComfyPromptConfig> {
-  const { baseUrl, promptId } = options;
+  const { promptId } = options;
 
-  const url = `${baseUrl}/history/${promptId}`;
-
-  const res = await axios.get<ComfyTaskResponse>(url);
-
-  if (typeof res.data !== "object" || res.data === null) {
-    throw new McpError(
-      ErrorCode.InternalError,
-      "Invalid detail tasks response",
-    );
-  }
+  const res = await api.getDetailHistoryTasks(promptId);
 
   const successTasks = Object.fromEntries(
-    Object.entries(res.data).filter(([uuid, item]) => {
+    Object.entries(res).filter(([uuid, item]) => {
       if (item.status.status_str === "success") {
         return true;
       } else {
@@ -178,23 +151,23 @@ export async function fetchTaskByPromptId(
 export async function executeWorkflowTaskByPrompts(
   options: ExecuteTaskOptions,
 ): Promise<ExecutePromptResult> {
-  const { baseUrl, prompts, clientId } = options;
+  const { prompts, clientId } = options;
 
-  const url = `${baseUrl}/prompt`;
-  const data: any = { prompt: { ...prompts } };
-
-  // 如果有 clientId，传递给服务器以关联 WebSocket 消息
-  if (clientId) {
-    data.client_id = clientId;
+  if (!clientId) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      `不存在WS客户端ID，请检查是否正确连接WS服务器`,
+    );
   }
 
-  const res = await axios.post<ExecutePromptResult>(url, data);
+  const data: ExecutePromptRequest = {
+    client_id: clientId,
+    prompt: prompts,
+  };
 
-  if (res.status !== 200) {
-    throw new McpError(ErrorCode.InternalError, `执行工作流失败`);
-  }
+  const res = await api.prompt(data);
 
-  return res.data;
+  return res;
 }
 
 /**

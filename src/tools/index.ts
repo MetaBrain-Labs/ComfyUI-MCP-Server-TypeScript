@@ -32,10 +32,7 @@ import {
   waitForExecutionCompletion,
 } from "../services/tasks";
 import { deterministicRandom, validateToken } from "../services/validateToken";
-import {
-  DynamicWorkflowToolData,
-  ListDynamicWorkflowToolData,
-} from "../types/dynamic-tool";
+import { DynamicWorkflowToolData } from "../types/dynamic-tool";
 import { error, errorWithDetail, errorWithToken, ok } from "../types/result";
 import {
   buildComfyViewUrls,
@@ -44,12 +41,15 @@ import {
   withMcpErrorHandling,
 } from "../utils/mcp-helpers";
 import { ComfyClient } from "../utils/ws";
+import { WorkflowConverter } from "../utils/workflow-converter";
 
-const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://192.168.0.171:8188";
-
+// 初始化连接WebSocket
 const client = new ComfyClient();
-
 await client.connect();
+
+// 初始化WorkflowConverter
+const converter = new WorkflowConverter();
+await converter.init();
 
 /**
  * @METHOD
@@ -75,6 +75,12 @@ const server = new McpServer(
   },
 );
 
+/**
+ * @METHOD
+ * @description 提供通用Prompt
+ * @author LaiFQZzr
+ * @date 2026/02/24 15:47
+ */
 server.registerTool(
   "cui_get_core_manual",
   {
@@ -91,7 +97,7 @@ server.registerTool(
 
 /**
  * @METHOD
- * @description 获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT
+ * @description 获取工作流模型
  * @author LaiFQZzr
  * @date 2026/02/02 09:30
  */
@@ -146,17 +152,17 @@ server.registerTool(
         seed: "my-seed",
         referenceTime: Date.now(),
       });
-      // 将通用Prompts加载给AGENT
+      // 让AGENT去加载通用Prompt
       return ResultToMcpResponse(
         errorWithToken(
-          `AGENT没有正确加载 SKILL 相关资源，请通过cui_get_core_manual tool获取默认 Prompt 。后续对话中请将token(${token})保存到上下文中使用`,
+          `AGENT 没有正确加载 SKILL 相关资源，请通过 cui_get_core_manual tool 获取默认 Prompt 。后续对话中请将token(${token})保存到上下文中使用`,
           token,
         ),
       );
     }
 
     if (enableWorkflow) {
-      await collectAndSaveFormatTaskFromWorkflows(BASE_URL, client);
+      await collectAndSaveFormatTaskFromWorkflows(client, converter);
     }
 
     let hasMore: boolean = true;
@@ -165,7 +171,6 @@ server.registerTool(
 
     for (let i = 0; hasMore; i++) {
       const result = await collectAndSaveFormatTask({
-        baseUrl: BASE_URL,
         maxItems,
         offset: i * maxItems,
         append: i === 0 ? (enableWorkflow ? true : false) : true,
@@ -184,7 +189,7 @@ server.registerTool(
 
     // 如果enableWorkflow为false，并且历史任务数量为0，那么强制调用一次从工作流中获取工作流
     if (!enableWorkflow && totalCollected - totalFailedTasks <= 0) {
-      await collectAndSaveFormatTaskFromWorkflows(BASE_URL, client);
+      await collectAndSaveFormatTaskFromWorkflows(client, converter);
     }
 
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
@@ -210,7 +215,6 @@ server.registerTool(
   },
   withMcpErrorHandling(async ({ promptId }) => {
     const result = await getTaskDetailByPromptId({
-      baseUrl: BASE_URL,
       promptId: promptId,
     });
 
@@ -267,7 +271,6 @@ server.registerTool(
 
     // 获取任务详情
     const result = await getTaskDetailByPromptId({
-      baseUrl: BASE_URL,
       promptId: promptId,
     });
 
@@ -435,7 +438,6 @@ server.registerTool(
     console.error(`[工作流提交] Client ID: ${clientId}`);
 
     const submitResult = await executeWorkflowTaskByPrompts({
-      baseUrl: BASE_URL,
       prompts: execResult,
       clientId: clientId,
     });
@@ -518,7 +520,7 @@ server.registerTool(
           "成功执行动态 Workflow Tool",
           {
             promptId: submitResult.prompt_id,
-            img: buildComfyViewUrls(executionResult, BASE_URL),
+            img: buildComfyViewUrls(executionResult),
             outputs: executionResult.outputs,
           },
           {

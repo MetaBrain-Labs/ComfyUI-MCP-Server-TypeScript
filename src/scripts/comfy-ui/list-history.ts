@@ -1,15 +1,7 @@
-import "dotenv/config";
-import { collectAndSaveWorkflow } from "../../services";
-
-const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
+import { api } from "../../api/api";
 
 async function run() {
-  const result = await collectAndSaveWorkflow({
-    baseUrl: BASE_URL,
-    offset: 0,
-    maxItems: 3,
-    append: true,
-  });
+  const result = await api.pageHistoryTasks(3, 0);
 
   console.error("结果为：", result);
 }

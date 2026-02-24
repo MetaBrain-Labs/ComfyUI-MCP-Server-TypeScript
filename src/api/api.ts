@@ -1,31 +1,10 @@
+import { ExecutePromptRequest, ExecutePromptResult } from "../types/execute";
 import { ObjectInfoResponse } from "../types/object-info";
-import "dotenv/config";
+import { ComfyTaskResponse, WorkflowSimpleData } from "../types/task";
+import { ComfyUIWorkflow } from "../types/workflow";
+import http from "./http";
 
 export class ComfyApi {
-  BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
-
-  internalURL(route: string): string {
-    return this.BASE_URL + "/internal" + route;
-  }
-
-  apiURL(route: string): string {
-    return this.BASE_URL + "/api" + route;
-  }
-
-  fileURL(route: string): string {
-    return this.BASE_URL + route;
-  }
-
-  async fetchApi(route: string, options?: RequestInit) {
-    const headers: HeadersInit = options?.headers ?? {};
-
-    return fetch(this.apiURL(route), {
-      cache: "no-cache",
-      ...options,
-      headers,
-    });
-  }
-
   /**
    * @METHOD
    * @description 加载图的节点对象定义
@@ -33,8 +12,78 @@ export class ComfyApi {
    * @date 2026/02/13 11:53
    */
   async getNodeDefs(): Promise<ObjectInfoResponse> {
-    const resp = await this.fetchApi("/object_info", { cache: "no-store" });
-    return await resp.json();
+    return await http.get<ObjectInfoResponse>("/object_info");
+  }
+
+  /**
+   * @METHOD
+   * @description 分页获取历史任务
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async pageHistoryTasks(
+    max_items: number = 10,
+    offset?: number,
+  ): Promise<ComfyTaskResponse> {
+    return await http.get<ComfyTaskResponse>(
+      `/history?max_items=${max_items}&offset=${offset}`,
+    );
+  }
+
+  /**
+   * @METHOD
+   * @description 获取历史任务详情
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async getDetailHistoryTasks(promptId: string): Promise<ComfyTaskResponse> {
+    // if (typeof res.data !== "object" || res.data === null) {
+    //       throw new McpError(
+    //         ErrorCode.InternalError,
+    //         "Invalid detail tasks response",
+    //       );
+    //     }
+    return await http.get<ComfyTaskResponse>(`/history/${promptId}`);
+  }
+
+  /**
+   * @METHOD
+   * @description 执行工作流
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async prompt(data: ExecutePromptRequest): Promise<ExecutePromptResult> {
+    return await http.post<ExecutePromptResult>(`/prompt`, data);
+  }
+
+  async interrupt(promptId: string): Promise<ComfyTaskResponse> {
+    return await http.post<ComfyTaskResponse>(`/interrupt`, {
+      prompt_id: promptId,
+    });
+  }
+
+  /**
+   * @METHOD
+   * @description 获取用户当前拥有工作流
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async getUserData(dir: string = "workflows"): Promise<WorkflowSimpleData[]> {
+    return await http.get<WorkflowSimpleData[]>(
+      `/userdata?dir=${dir}&recurse=true&split=false&full_info=true`,
+    );
+  }
+
+  /**
+   * @METHOD
+   * @description 获取用户当前工作流具体信息
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async getDetailUserData(workflowPath: string): Promise<ComfyUIWorkflow> {
+    return await http.get<ComfyUIWorkflow>(
+      `/userdata/workflows%2F${workflowPath}`,
+    );
   }
 }
 

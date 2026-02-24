@@ -1,9 +1,10 @@
 import { t } from "../i18n";
 import "../i18n/locales";
 import { ok, Result } from "../types/result";
-import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
+import { ComfyPromptConfig } from "../types/task";
 import { WorkflowCollectionData } from "../types/workflow";
 import { formatTask } from "../utils/format";
+import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
 import { saveWorkflow } from "./saveWorkflow";
 import {
@@ -15,41 +16,11 @@ import { executeWorkflowTask } from "./workflow-executor";
 
 /**
  * @METHOD
- * @description 提供给server调用，用于收集工作流数据
- * @author LaiFQZzr
- * @date 2026/01/20 11:50
- */
-export async function collectAndSaveWorkflow(params: {
-  baseUrl: string;
-  maxItems: number;
-  offset: number;
-  append: boolean;
-}): Promise<Result<ComfyTaskResponse>> {
-  const startTime = Date.now();
-
-  const data = await fetchHistoryTasks(params);
-
-  const executionTime = Date.now() - startTime;
-
-  return ok(
-    t("workflow.collected", params.offset, params.maxItems, params.append),
-    data.successTasks,
-    {
-      action: "collect_workflow",
-      mode: params.append ? "append" : "overwrite",
-    },
-    executionTime,
-  );
-}
-
-/**
- * @METHOD
  * @description 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
  * @author LaiFQZzr
  * @date 2026/01/20 11:50
  */
 export async function collectAndSaveFormatTask(params: {
-  baseUrl: string;
   maxItems: number;
   offset: number;
   append: boolean;
@@ -100,14 +71,14 @@ export async function collectAndSaveFormatTask(params: {
  * @date 2026/02/10 15:46
  */
 export async function collectAndSaveFormatTaskFromWorkflows(
-  baseUrl: string,
   client: ComfyClient,
+  converter: WorkflowConverter,
 ) {
   const startTime = Date.now();
 
-  const availableWorkflow = await executeWorkflowTask(baseUrl, client);
+  const availableWorkflow = await executeWorkflowTask(client, converter);
 
-  const data = await fetchUserWorkflow(baseUrl, availableWorkflow);
+  const data = await fetchUserWorkflow(availableWorkflow);
 
   const formatData = formatTask(data, true);
 
@@ -134,7 +105,6 @@ export async function collectAndSaveFormatTaskFromWorkflows(
  * @date 2026/02/03 11:30
  */
 export async function getTaskDetailByPromptId(params: {
-  baseUrl: string;
   promptId: string;
 }): Promise<Result<ComfyPromptConfig>> {
   const startTime = Date.now();

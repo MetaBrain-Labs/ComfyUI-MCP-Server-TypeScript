@@ -16,12 +16,7 @@ import { api } from "../api/api";
  * @date 2026/02/13 11:24
  */
 export class WorkflowConverter {
-  private baseUrl: string;
   private objectInfo: ObjectInfoResponse = {};
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
 
   /**
    * @METHOD
