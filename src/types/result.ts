@@ -1,4 +1,4 @@
-import { ResultCode } from "../enums/result";
+import { ResultCode } from "./enums/result";
 
 interface ResultDetail<T = any> {
   data?: T;

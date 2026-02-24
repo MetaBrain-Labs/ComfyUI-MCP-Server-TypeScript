@@ -1,10 +1,10 @@
 import { t } from "../i18n";
 import "../i18n/locales";
-import { ok, Result } from "../interface/result";
-import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
-import { WorkflowCollectionData } from "../interface/workflow";
-import { formatTask } from "../tools/format";
-import { ComfyClient } from "../ws";
+import { ok, Result } from "../types/result";
+import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
+import { WorkflowCollectionData } from "../types/workflow";
+import { formatTask } from "../utils/format";
+import { ComfyClient } from "../utils/ws";
 import { saveWorkflow } from "./saveWorkflow";
 import {
   fetchHistoryTasks,

@@ -1,15 +1,12 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
 import axios from "axios";
-import { ExecutePromptResult, ExecutionResult } from "../interface/execute";
+import { ExecutePromptResult, ExecutionResult } from "../types/execute";
 import {
   ComfyPromptConfig,
   ComfyTaskItem,
   ComfyTaskResponse,
-  WorkflowSimpleData,
-} from "../interface/task";
-import { ComfyUIWorkflow } from "../interface/workflow";
-import { ComfyClient } from "../ws";
-import { WorkflowConverter } from "../tools/workflow-converter";
+} from "../types/task";
+import { ComfyClient } from "../utils/ws";
 
 export interface FetchTasksOptions {
   baseUrl: string;
@@ -408,6 +405,12 @@ export async function waitForExecutionCompletion(
   });
 }
 
+/**
+ * @METHOD
+ * @description 等待工作流执行中断
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:20
+ */
 export async function waitForExecutionInterrupt(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
@@ -468,6 +471,12 @@ export async function waitForExecutionInterrupt(
   });
 }
 
+/**
+ * @METHOD
+ * @description 等待工作流开始执行
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:21
+ */
 export async function waitForExecutionStart(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {

@@ -1,5 +1,5 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import server from "./serve";
+import server from "./tools";
 
 /**
  * @METHOD
@@ -12,7 +12,7 @@ async function main() {
 
   await server.connect(transport);
 
-  console.error("✅ MCP Stdio Server is running");
+  console.error("MCP Stdio Server is running");
 }
 
 main().catch((error) => {

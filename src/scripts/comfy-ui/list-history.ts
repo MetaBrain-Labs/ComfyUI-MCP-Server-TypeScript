@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { collectAndSaveWorkflow } from "../../workflow";
+import { collectAndSaveWorkflow } from "../../services";
 
 const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
 

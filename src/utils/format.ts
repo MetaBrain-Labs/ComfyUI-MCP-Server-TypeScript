@@ -1,5 +1,5 @@
-import { CollectFormatTaskResult } from "../interface/common";
-import { ComfyPromptConfig, ComfyTaskResponse } from "../interface/task";
+import { CollectFormatTaskResult } from "../types/common";
+import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
 
 /**
  * @METHOD

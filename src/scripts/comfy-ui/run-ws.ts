@@ -1,4 +1,4 @@
-import { ComfyClient } from "../../ws";
+import { ComfyClient } from "../../utils/ws";
 
 async function run() {
   const client = new ComfyClient();

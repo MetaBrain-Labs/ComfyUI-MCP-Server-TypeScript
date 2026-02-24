@@ -8,79 +8,110 @@ import {
   ComfyProgressData,
   ComfyProgressStateData,
   ComfyStatusData,
-} from "../interface/ws";
+} from "../types/ws";
 
 export class ComfyClientHook {
   /**
-   * 处理状态消息
+   * @METHOD
+   * @description 处理状态消息
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:17
    */
   onStatus(data: ComfyStatusData): void {}
 
   /**
-   * 执行开始
+   * @METHOD
+   * @description 执行开始
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:18
    */
   onExecutionStart(data: ComfyExecutionStartData): void {}
 
   /**
-   * 缓存执行
+   * @METHOD
+   * @description 缓存执行
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:18
    */
   onExecutionCached(data: ComfyExecutionCachedData): void {}
 
   /**
-   * 节点执行中
+   * @METHOD
+   * @description 节点执行中
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:18
    */
   onNodeExecuting(data: ComfyExecutingData): void {}
 
   /**
    * @METHOD
    * @description 整体进度更新
-   * 处理措施：不应打印相关信息
    * @author LaiFQZzr
-   * @date 2026/02/04 16:24
+   * @date 2026/02/13 11:18
    */
   onProgressState(data: ComfyProgressStateData): void {}
 
   /**
    * @METHOD
    * @description 获取特定结点的进度（例如：KSampler等）
-   * 处理措施：内容较少，可以考虑打印信息，监听特定结点进度
    * @author LaiFQZzr
-   * @date 2026/02/04 16:26
+   * @date 2026/02/13 11:18
    */
   onProgress(data: ComfyProgressData): void {}
 
   /**
-   * 节点执行完成
+   * @METHOD
+   * @description 节点执行完成
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:18
    */
   onExecuted(data: ComfyExecutedData): void {}
 
   /**
-   * 节点执行完成
+   * @METHOD
+   * @description 工作流执行成果
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:18
    */
   onExecutionSuccess(data: ComfyExecutionSuccessData): void {}
 
   /**
-   * 执行错误
+   * @METHOD
+   * @description 执行错误
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:19
    */
   onExecutionError(data: any): void {}
 
   /**
-   * 执行中断
+   * @METHOD
+   * @description 执行中断
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:19
    */
   onExecutionInterrupted(data: any): void {}
 
   /**
-   * 功能标志
+   * @METHOD
+   * @description 功能标志
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:19
    */
   handleFeatureFlags(data: ComfyFeatureFlagsData): void {}
 
   /**
-   * 二进制数据 (如预览图片)
+   * @METHOD
+   * @description 二进制数据
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:19
    */
   onBinaryData(data: Buffer): void {}
 
   /**
-   * 未处理的消息
+   * @METHOD
+   * @description 未处理的消息
+   * @author LaiFQZzr
+   * @date 2026/02/13 11:19
    */
   onUnhandledMessage(type: string, data: any): void {
     console.error("Unhandled message type:", type, data);

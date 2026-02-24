@@ -1,10 +1,7 @@
 import { z } from "zod";
-import {
-  ConfigurableParam,
-  DynamicWorkflowTool,
-} from "../interface/dynamic-tool";
-import { ComfyInputValue, ComfyPromptConfig } from "../interface/task";
-import { ComfyClient } from "../ws";
+import { ConfigurableParam, DynamicWorkflowTool } from "../types/dynamic-tool";
+import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
+import { ComfyClient } from "../utils/ws";
 
 /**
  * 动态 Tool 存储

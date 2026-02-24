@@ -1,10 +1,10 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
 import axios, { HttpStatusCode } from "axios";
-import { ExecutePromptResult } from "../interface/execute";
-import { ComfyPromptConfig, WorkflowSimpleData } from "../interface/task";
-import { ComfyUIWorkflow } from "../interface/workflow";
-import { WorkflowConverter } from "../tools/workflow-converter";
-import { ComfyClient } from "../ws";
+import { ExecutePromptResult } from "../types/execute";
+import { ComfyPromptConfig, WorkflowSimpleData } from "../types/task";
+import { ComfyUIWorkflow } from "../types/workflow";
+import { WorkflowConverter } from "../utils/workflow-converter";
+import { ComfyClient } from "../utils/ws";
 import { waitForExecutionInterrupt, waitForExecutionStart } from "./tasks";
 
 /**

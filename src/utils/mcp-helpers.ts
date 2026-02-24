@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { ExecutionResult } from "../interface/execute";
-import { Result } from "../interface/result";
+import { ExecutionResult } from "../types/execute";
+import { Result } from "../types/result";
 
 /**
  * @METHOD

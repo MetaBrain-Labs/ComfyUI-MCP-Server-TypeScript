@@ -1,8 +1,8 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { COMMON } from "../constants";
-import server from "../serve";
-import { CollectFormatTaskWorkflow } from "../interface/common";
+import server from "../tools";
+import { CollectFormatTaskWorkflow } from "../types/common";
 
 export interface SaveWorkflowOptions {
   dir?: string;

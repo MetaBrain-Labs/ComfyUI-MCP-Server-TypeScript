@@ -1,7 +1,7 @@
-import WebSocket from "ws";
 import { randomUUID } from "crypto";
 import "dotenv/config";
-import { ComfyClientHook } from "./hooks/websocket";
+import WebSocket from "ws";
+import { ComfyClientHook } from "../hooks/websocket";
 
 export class ComfyClient {
   private ws: WebSocket | null = null;
@@ -28,14 +28,25 @@ export class ComfyClient {
    * @date 2026/01/28 16:06
    */
   public async connect(): Promise<void> {
-    const wsUrl = `ws://${this.serverAddress}/ws?clientId=${this.clientId}`;
+    const serverIp = process.env.COMFY_UI_SERVER_IP || "http://127.0.0.1:8188";
+    const urlObj = new URL(serverIp);
+    const protocol = urlObj.protocol === "https:" ? "wss" : "ws";
+
+    const wsUrl = `${protocol}://${this.serverAddress}/ws?clientId=${this.clientId}`;
+
     console.error(`Connecting to ComfyUI: ${wsUrl}`);
 
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on("open", () => {
-        console.error("Connected to ComfyUI WebSocket");
+        this.sendJson({
+          type: "feature_flags",
+          data: {
+            supports_preview_metadata: true,
+            supports_manager_v4_ui: true,
+          },
+        });
         this.reconnectAttempts = 0;
         this.isManualClose = false;
         resolve();

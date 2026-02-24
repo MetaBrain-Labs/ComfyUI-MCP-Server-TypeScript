@@ -2,38 +2,10 @@ import crypto from "crypto";
 
 /**
  * @METHOD
- * @description 写入随机码到文件中
+ * @description 生成随机码（指定时间以及区间内随机码可校验）
  * @author LaiFQZzr
- * @date 2026/02/09 11:49
+ * @date 2026/02/13 11:21
  */
-// export function validateToken(token: string): boolean {
-//   const validateToken = deterministicRandom({
-//     seed: "my-seed",
-//     referenceTime: Date.now(),
-//   });
-
-//   if (token === validateToken) {
-//     return true;
-//   }
-//   return false;
-// }
-
-// export function deterministicRandom({
-//   seed = "my-seed",
-//   referenceTime = Date.now(),
-//   timeWindow = 600_000,
-//   length = 16,
-// }): string {
-//   const bucket = Math.floor(referenceTime / timeWindow);
-
-//   const hmac = crypto
-//     .createHmac("sha256", String(seed))
-//     .update(String(bucket))
-//     .digest("hex");
-
-//   return hmac.slice(0, length);
-// }
-
 export function deterministicRandom({
   seed = "my-seed",
   referenceTime = Date.now(),
@@ -55,6 +27,12 @@ export function deterministicRandom({
   return hmac.slice(0, length);
 }
 
+/**
+ * @METHOD
+ * @description 校验随机码
+ * @author LaiFQZzr
+ * @date 2026/02/13 11:22
+ */
 export function validateToken({
   token,
   seed = "my-seed",
@@ -72,7 +50,6 @@ export function validateToken({
 }): boolean {
   const currentBucket = Math.floor(referenceTime / timeWindow);
 
-  // 遍历当前窗口前后 tolerance 个 bucket
   for (let offset = -tolerance; offset <= tolerance; offset++) {
     const bucket = currentBucket + offset;
 
