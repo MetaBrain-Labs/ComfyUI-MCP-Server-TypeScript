@@ -58,3 +58,4 @@ _Only applicable for Mounted Tools._
 
 1. Never re-execute the `cui_execute_dynamic_task` tool.
 2. It will either ultimately return an error or successfully retrieve the image URL.
+3. If image/video asset replacement is required for image/video nodes prior to `cui_execute_dynamic_task`, users must actively provide the absolute path or URL of the corresponding assets and upload them using the `cui_upload_assets` tool. The AGENT will then replace the corresponding parameter values based on the returned name.

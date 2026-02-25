@@ -12,3 +12,9 @@ export interface CollectFormatTaskWorkflow {
   // 是否从原始工作流中生成的历史任务
   isFromOriginWorkflow: boolean;
 }
+
+export interface UploadImgResponse {
+  subfolder: string;
+  name: string;
+  type: string;
+}

@@ -1,3 +1,4 @@
+import { UploadImgResponse } from "../types/common";
 import { ExecutePromptRequest, ExecutePromptResult } from "../types/execute";
 import { ObjectInfoResponse } from "../types/object-info";
 import { ComfyTaskResponse, WorkflowSimpleData } from "../types/task";
@@ -37,12 +38,6 @@ export class ComfyApi {
    * @date 2026/02/24 15:09
    */
   async getDetailHistoryTasks(promptId: string): Promise<ComfyTaskResponse> {
-    // if (typeof res.data !== "object" || res.data === null) {
-    //       throw new McpError(
-    //         ErrorCode.InternalError,
-    //         "Invalid detail tasks response",
-    //       );
-    //     }
     return await http.get<ComfyTaskResponse>(`/history/${promptId}`);
   }
 
@@ -56,6 +51,12 @@ export class ComfyApi {
     return await http.post<ExecutePromptResult>(`/prompt`, data);
   }
 
+  /**
+   * @METHOD
+   * @description 中断工作流
+   * @author LaiFQZzr
+   * @date 2026/02/25 11:34
+   */
   async interrupt(promptId: string): Promise<ComfyTaskResponse> {
     return await http.post<ComfyTaskResponse>(`/interrupt`, {
       prompt_id: promptId,
@@ -84,6 +85,17 @@ export class ComfyApi {
     return await http.get<ComfyUIWorkflow>(
       `/userdata/workflows%2F${workflowPath}`,
     );
+  }
+
+  /**
+   * @METHOD
+   * @description 获取用户当前工作流具体信息
+   * @author LaiFQZzr
+   * @date 2026/02/24 15:09
+   */
+  async uploadImg(body: FormData): Promise<string | null> {
+    const resp = await http.post<UploadImgResponse>(`/upload/image`, body);
+    return resp.subfolder ? `${resp.subfolder}/${resp.name}` : resp.name;
   }
 }
 
