@@ -24,12 +24,15 @@ export const formatTask = (
 
     for (const [nodeId, nodeConfig] of Object.entries(promptConfig)) {
       const isDesc = nodeConfig._meta?.title?.match(/==(.+?)==/);
+      const isRequired = nodeConfig._meta?.title?.startsWith("=>");
       if (isDesc) {
         description =
           (nodeConfig.inputs["value"] as string) || "无工作流描述内容";
         name = isDesc[1] || "无工作流名称";
       }
-      parameters.push(nodeConfig.class_type);
+      if (isRequired) {
+        parameters.push(nodeConfig.class_type);
+      }
     }
 
     // 如果name为null或者description为null的时候则不纳入列表

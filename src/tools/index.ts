@@ -88,15 +88,25 @@ server.registerTool(
   "cui_get_core_manual",
   {
     title: "获取项目核心手册",
-    description: `向 AGENT 提供提供项目全貌、核心概念及操作规范。`,
+    description: `高优先级资源。必须在初始化或涉及工具调用时优先读取。包含核心协议、错误处理及参数填充策略。`,
     inputSchema: {},
   },
   withMcpErrorHandling(async () => {
     const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
 
-    return ResultToMcpResponse(ok(`${defaultRule}`));
+    return ResultToMcpResponse(
+      ok(
+        `核心手册已加载，请严格根据其中的协议与参数策略执行后续操作。`,
+        defaultRule,
+        {
+          action: "cui_get_core_manual",
+        },
+      ),
+    );
   }),
 );
+
+// 重载服务配置
 
 /**
  * @METHOD
@@ -107,12 +117,14 @@ server.registerTool(
 // server.registerTool(
 //   "cui_list_models",
 //   {
-//     title: "获取模型列表",
-//     description: `获取ComfyUI现有模型列表`,
-//     inputSchema: {},
+//     title: "检索模型文件",
+//     description: `列出可用模型。强制规则：填写 ckpt_name 等参数前，必须先调用此工具获取精确文件名。严禁猜测或臆造名称。`,
+//     inputSchema: {
+//       type_name: z.string().describe("所需模型类型"),
+//     },
 //   },
-//   withMcpErrorHandling(async ({}) => {
-//     return ResultToMcpStringResponse("这是模型结果");
+//   withMcpErrorHandling(async ({ type_name }) => {
+//     return ResultToMcpStringResponse("这是模型结果" + type_name);
 //   }),
 // );
 
@@ -125,8 +137,8 @@ server.registerTool(
 server.registerTool(
   "cui_get_workflows_catalog",
   {
-    title: "获取工作流任务目录",
-    description: `获取工作流任务目录，并且格式化（提炼）任务信息，任务信息保存本地及返回输出给 AGENT。AGENT 可通过分析该信息最终选择更符合用户请求的生成任务`,
+    title: "获取工作流目录",
+    description: `响应 ComfyUI 需求（如“画图”）。检索最佳匹配工作流。严禁猜测 ID 或名称，必须基于检索结果。`,
     inputSchema: {
       maxItems: z
         .number()
@@ -217,11 +229,24 @@ server.registerTool(
     },
   },
   withMcpErrorHandling(async ({ promptId }) => {
+    const startTime = Date.now();
+
     const result = await getTaskDetailByPromptId({
       promptId: promptId,
     });
 
-    return ResultToMcpResponse(result);
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。",
+        result,
+        {
+          action: "cui_get_task_detail",
+        },
+        executionTime,
+      ),
+    );
   }),
 );
 
@@ -236,28 +261,19 @@ server.registerTool(
 server.registerTool(
   "cui_mount_dynamic_tool",
   {
-    title: "基于历史任务创建动态 Workflow Tool",
-    description: `基于历史任务（prompt_id）创建一个可重用的动态 Workflow Tool。
-      功能说明：
-      1. 分析指定历史任务的 prompts 结构
-      2. 提取所有可配置的基础类型参数（排除连接引用）
-      3. 生成一个新的 MCP Tool，名称由 toolName 指定
-      4. 生成的 Tool 会出现在 cui_list_dynamic_tools 列表中
-
-      使用场景：
-      - 当你找到一个成功执行的历史任务，想要基于它创建可重用的模板
-      - 需要让 Agent 能够修改工作流参数（如提示词、种子、尺寸等）但不改变结构
-      - 创建标准化的工作流工具供后续重复使用
-    `,
+    title: "挂载动态工具",
+    description: `用于动态生成专用的工作流执行函数。调用成功后立即停止生成。等待 Host 刷新上下文后，于下一轮对话调用新生成的 cui_execute_dynamic_task_{workflow_name}。`,
     inputSchema: {
-      promptId: z.string().describe("历史任务的 prompt_id"),
+      promptId: z.string().describe("目标工作流名称"),
       toolName: z
         .string()
         .regex(
           /^[a-zA-Z0-9_-]+$/,
           "Tool 名称只能包含字母、数字、下划线、连字符",
         )
-        .describe("新 Tool 的名称，只能包含字母、数字、下划线、连字符"),
+        .describe(
+          "唯一工具后缀名（纯英文，如 flux_dev），用于生成工具名 cui_execute_dynamic_task_{workflow_name}，只能包含字母、数字、下划线、连字符",
+        ),
       title: z.string().optional().describe("可选，Tool 的显示标题"),
       description: z.string().optional().describe("可选，Tool 的详细描述"),
     },
@@ -385,21 +401,18 @@ server.registerTool(
 server.registerTool(
   "cui_execute_dynamic_tool",
   {
-    title: "执行动态 Workflow Tool",
-    description: `执行通过 cui_mount_dynamic_tool 创建的动态 Tool。
-      使用说明：
-      1. 先使用 cui_list_dynamic_tools 查看可用的动态 Tools
-      2. 调用此工具执行，传入 toolName 和需要修改的参数
-      3. 分析用户意图，是否需要异步输出
-
-      注意：
-      - 未提供的参数将使用默认值
-      - 只能修改参数值，不能修改工作流结构
-      - 参数类型必须与定义一致
-    `,
+    title: "执行工作流任务（动态构建后的工具函数）",
+    description: `执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。`,
     inputSchema: {
-      toolName: z.string().describe("要执行的动态 Tool 名称"),
-      isAsync: z.boolean().default(false).describe("是否异步执行"),
+      toolName: z
+        .string()
+        .describe(
+          "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
+        ),
+      isAsync: z
+        .boolean()
+        .default(false)
+        .describe("是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。"),
       params: z
         .record(z.string(), z.any())
         .optional()
