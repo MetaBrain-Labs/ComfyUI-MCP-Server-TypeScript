@@ -5,7 +5,7 @@ const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
 
 const instance = axios.create({
   baseURL: BASE_URL + "/api",
-  timeout: 10000,
+  timeout: 100000,
   withCredentials: true,
 });
 
@@ -52,9 +52,6 @@ instance.interceptors.response.use(
   },
 );
 
-/**
- * ⭐ 关键：重新封装一层，改变返回类型
- */
 const http = {
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     return instance.get(url, config);

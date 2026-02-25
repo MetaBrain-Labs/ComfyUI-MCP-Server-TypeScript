@@ -2,6 +2,11 @@ import { z } from "zod";
 import { ConfigurableParam, DynamicWorkflowTool } from "../types/dynamic-tool";
 import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
 import { ComfyClient } from "../utils/ws";
+import {
+  generateSeed32,
+  handleKey,
+  isSupportedKey,
+} from "../utils/special-node-handler";
 
 /**
  * 动态 Tool 存储
@@ -134,7 +139,7 @@ function valueToZodSchema(
 * @author LaiFQZzr
 * @date 2026/02/03 17:09
 */
-export function extractConfigurableParams(
+function extractConfigurableParams(
   workflow: ComfyPromptConfig,
 ): ConfigurableParam[] {
   const params: ConfigurableParam[] = [];
@@ -157,31 +162,11 @@ export function extractConfigurableParams(
 
       let description = "";
 
-      if (isRequired) {
-        description = `【必须填充】`;
+      if (!isRequired) {
+        continue;
       }
 
       description += `${class_type} 节点的 ${inputKey} 参数`;
-
-      const lowerKey = inputKey.toLowerCase();
-      if (lowerKey.includes("seed") || lowerKey.includes("种子")) {
-        description += `随机种子 (Seed)，控制生成结果的随机性`;
-      } else if (lowerKey.includes("prompt") || lowerKey.includes("text")) {
-        description += `提示词文本，支持多行`;
-      } else if (lowerKey.includes("width") || lowerKey.includes("宽度")) {
-        description += `图像宽度 (像素)`;
-      } else if (lowerKey.includes("height") || lowerKey.includes("高度")) {
-        description += `图像高度 (像素)`;
-      } else if (lowerKey.includes("steps") || lowerKey.includes("步数")) {
-        description += `采样步数`;
-      } else if (lowerKey.includes("cfg") || lowerKey.includes("scale")) {
-        description += `CFG Scale，提示词遵循程度`;
-      }
-
-      // 如果是必须填充的节点，添加额外说明
-      if (isRequired) {
-        description += ` (原值: ${JSON.stringify(value)})`;
-      }
 
       params.push({
         path: `${nodeId}.${inputKey}`,
@@ -233,9 +218,22 @@ export function mergeParamsToWorkflow(
   const workflow = JSON.parse(JSON.stringify(template)) as ComfyPromptConfig;
 
   for (const param of params) {
+    // 如果非必填参数，则跳过
+    if (!param.required) {
+      continue;
+    }
+
+    // 如果是结点的特殊参数，则需要对应方法获取参数
+    if (param.inputKey && isSupportedKey(param.inputKey)) {
+      const generateValue = handleKey(param.inputKey);
+      workflow[param.nodeId!].inputs[param.inputKey!] = generateValue;
+      continue;
+    }
+
     const key = `${param.nodeId}_${param.inputKey}`;
     const userValue = userInputs[key];
 
+    // 如果AGENT提供的参数中有匹配项，那么使用AGENT提供的参数
     if (userValue !== undefined && workflow[param.nodeId!]) {
       workflow[param.nodeId!].inputs[param.inputKey!] = userValue;
     }
@@ -262,10 +260,7 @@ export function createDynamicWorkflowTool(
   const schema = generateZodSchema(configurableParams);
 
   const paramDescriptions = configurableParams
-    .map(
-      (p) =>
-        `- ${p.nodeId}_${p.inputKey}: ${p.description} (默认: ${JSON.stringify(p.defaultValue)})`,
-    )
+    .map((p) => `- ${p.nodeId}_${p.inputKey}: ${p.description}`)
     .join("\n");
 
   const tool: DynamicWorkflowTool = {
@@ -274,7 +269,7 @@ export function createDynamicWorkflowTool(
     description:
       customDescription ||
       `基于历史任务 ${sourcePromptId} 创建的动态工作流工具。\n\n` +
-        `可配置参数:\n${paramDescriptions}\n\n` +
+        `需配置参数:\n${paramDescriptions}\n\n` +
         `注意：只能修改参数值，不能修改工作流结构。`,
     sourcePromptId,
     workflowTemplate: JSON.parse(JSON.stringify(workflow)),
