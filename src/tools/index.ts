@@ -304,6 +304,7 @@ server.registerTool(
         description: p.description,
         nodeTitle: p.nodeTitle,
         classType: p.classType,
+        paramType: p.inputKey,
         required: p.required,
       })),
       requiredParams: tool.configurableParams
