@@ -42,6 +42,9 @@ import {
 } from "../utils/mcp-helpers";
 import { ComfyClient } from "../utils/ws";
 import { WorkflowConverter } from "../utils/workflow-converter";
+import fs from "fs";
+import path from "path";
+import { api } from "../api/api";
 
 // 初始化连接WebSocket
 const client = new ComfyClient();
@@ -548,6 +551,99 @@ server.registerTool(
         executionTime,
       ),
     );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 导入资产到ComfyUI中
+ * @author LaiFQZzr
+ * @date 2026/02/25 16:08
+ */
+server.registerTool(
+  "cui_upload_assets",
+  {
+    title: "ComfyUI导入资产",
+    description:
+      "当用户提供一张图片的本地路径或网络链接时，调用此工具将图片上传并处理。",
+    inputSchema: {
+      fileSource: z
+        .string()
+        .describe("图片的本地绝对路径或网络 URL 链接（http/https）"),
+      description: z
+        .string()
+        .optional()
+        .describe(
+          "用户对这次上传图片的描述，后续AGENT可参考这个描述来决定在多结点需要Asset替换时替换的结点",
+        ),
+      mimeType: z
+        .string()
+        .optional()
+        .describe("图片类型(可选)，默认 image/png"),
+    },
+  },
+  withMcpErrorHandling(async ({ fileSource, description, mimeType }) => {
+    try {
+      const startTime = Date.now();
+
+      let buffer;
+      let finalFileName = "uploaded_image.png";
+
+      const isUrl = /^https?:\/\//i.test(fileSource);
+
+      if (isUrl) {
+        const res = await fetch(fileSource);
+
+        if (!res.ok) {
+          return ResultToMcpResponse(
+            error(`无法下载网络图片，HTTP状态码: ${res.status}`),
+          );
+        }
+
+        // 获取文件流并转为 Buffer
+        const arrayBuffer = await res.arrayBuffer();
+        buffer = Buffer.from(arrayBuffer);
+
+        // 尝试从 URL 中提取文件名 (去除查询参数如 ?v=1)
+        const urlWithoutQuery = fileSource.split("?")[0];
+        finalFileName = urlWithoutQuery.split("/").pop() || "downloaded.png";
+      } else {
+        // 检查文件是否存在
+        if (!fs.existsSync(fileSource)) {
+          return ResultToMcpResponse(
+            error(`本地文件不存在，请检查路径是否正确: ${fileSource}`),
+          );
+        }
+
+        buffer = fs.readFileSync(fileSource);
+        finalFileName = path.basename(fileSource);
+      }
+
+      const form = new FormData();
+      const blob = new Blob([buffer], {
+        type: mimeType || "application/octet-stream",
+      });
+      form.append("image", blob, finalFileName);
+
+      const response = await api.uploadImg(form);
+
+      const executionTime = Date.now() - startTime;
+
+      return ResultToMcpResponse(
+        ok(
+          `图片：${finalFileName} 已成功导入ComfyUI Assets中`,
+          { response, description },
+          {
+            action: "cui_upload_file",
+          },
+          executionTime,
+        ),
+      );
+    } catch (err: any) {
+      return ResultToMcpResponse(
+        error(`导入ComfyUI Assets失败: ${err.message}`),
+      );
+    }
   }),
 );
 
