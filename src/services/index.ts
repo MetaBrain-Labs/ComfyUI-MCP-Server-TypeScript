@@ -1,5 +1,3 @@
-import { t } from "../i18n";
-import "../i18n/locales";
 import { ok, Result } from "../types/result";
 import { ComfyPromptConfig } from "../types/task";
 import { WorkflowCollectionData } from "../types/workflow";
@@ -38,7 +36,7 @@ export async function collectAndSaveFormatTask(params: {
   const executionTime = Date.now() - startTime;
 
   return ok<WorkflowCollectionData>(
-    t("workflow.collected", params.offset, params.maxItems, params.append),
+    `已从偏移量 ${params.offset} 处收集并保存 ${data.total - data.fail} 条工作流，模式：${params.append ? "追加" : "覆盖"}`,
     {
       savedPath: result.filePath,
       itemsRequested: params.maxItems,
