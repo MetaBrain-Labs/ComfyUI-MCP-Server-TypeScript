@@ -1,0 +1,69 @@
+{
+  "common": {},
+  "error": {
+    "notTokenError": "The AGENT failed to correctly load SKILL resources. Please use the `cui_get_core_manual` tool to obtain the default Prompt. In subsequent conversations, please save the token({{token}}) into the context.",
+    "toolAlreadyExistError": "Tool {{toolName}} already exists, please use another name.",
+    "toolNotAlreadyExistError": "Tool {{toolName}} does not exist.",
+    "getTaskDetailFail": "Failed to retrieve task details.",
+    "workflowExecuteFail": "Workflow execution failed: {{error}}",
+    "downloadAssetsFail": "Unable to download network resources. HTTP status code: {{status}}",
+    "fileNotExistError": "Local file does not exist. Please check if the path is correct: ${fileSource}",
+    "uploadFail": "Failed to import ComfyUI Assets: {{message}}"
+  },
+  "tool": {
+    "cui_get_core_manual": {
+      "title": "cui_get_core_manual",
+      "description": "High-priority resource. Must be read first during initialization or when tool calls are involved. Contains core protocols, error handling, and parameter filling strategies.",
+      "inputSchema": {},
+      "success": "Core manual loaded. Please strictly follow the protocols and parameter strategies within for subsequent operations."
+    },
+    "cui_get_workflows_catalog": {
+      "title": "cui_get_workflows_catalog",
+      "description": "Responds to ComfyUI requests (e.g., 'draw a picture'). Retrieves the best matching workflow. Guessing IDs or names is strictly prohibited; must depend on retrieval results.",
+      "inputSchema": {
+        "maxItems": "Maximum number of items per page when querying historical tasks",
+        "token": "Token obtained after the AGENT correctly loads the SKILL and executes the `generateToken.ts` script",
+        "enableWorkflow": "Whether to retrieve user workflow information"
+      }
+    },
+    "cui_get_task_detail": {
+      "title": "cui_get_task_detail",
+      "description": "Retrieve task details based on prompt_id, including prompt, outputs, status, meta, etc.",
+      "inputSchema": {
+        "promptId": "Unique ID for a single workflow execution task"
+      },
+      "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly adhere to format constraints."
+    },
+    "cui_mount_dynamic_tool": {
+      "title": "cui_mount_dynamic_tool",
+      "description": "Used to dynamically generate dedicated workflow execution functions. Stop generation immediately after a successful call. Wait for the Host to refresh the context, then call the newly generated `cui_execute_dynamic_task_{workflow_name}` in the next conversation turn.",
+      "inputSchema": {
+        "promptId": "Unique ID for a single workflow execution task",
+        "toolName": "Unique tool suffix (English only, e.g., flux_dev), used to generate the tool name `cui_execute_dynamic_task_{workflow_name}`. Can only contain letters, numbers, underscores, and hyphens",
+        "title": "Optional, display title for the Tool",
+        "description": "Optional, detailed description of the Tool"
+      },
+      "success": "Successfully created dynamic Tool: {{toolName}}"
+    },
+    "cui_execute_dynamic_tool": {
+      "title": "cui_execute_dynamic_tool",
+      "description": "Dedicated tool for executing {workflow_name}. Only populate user-visible parameters. Map accurately; fabricating fields is prohibited.",
+      "inputSchema": {
+        "toolName": "Dedicated tool for executing {workflow_name}. Only populate user-visible parameters. Map accurately; fabricating fields is prohibited.",
+        "isAsync": "Whether to execute the task asynchronously. Default is false; change to true only if explicitly requested by the user.",
+        "params": "Parameters to modify. Key format is `nodeId_inputKey`. Parameters not provided will use default values"
+      },
+      "success": "Successfully executed dynamic Workflow Tool",
+      "asyncSupplement": "Asynchronous execution selected. Please ask the user to manually access ComfyUI after some time to check the results. Conversation ends."
+    },
+    "cui_upload_assets": {
+      "title": "cui_upload_assets",
+      "description": "When the user provides a local path or network link to an image, call this tool to upload and process the image.",
+      "inputSchema": {
+        "fileSource": "Local absolute path or network URL link (http/https) of the image",
+        "mimeType": "Image type (optional), default is image/png"
+      },
+      "success": "Image: {{finalFileName}} has been successfully imported into ComfyUI Assets"
+    }
+  }
+}

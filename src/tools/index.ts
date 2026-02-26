@@ -1,17 +1,15 @@
 import "@modelcontextprotocol/sdk/client/streamableHttp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  ErrorCode,
-  McpError,
-  type ReadResourceResult,
-} from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import "dotenv/config";
 import { z } from "zod";
-import { t } from "../i18n";
-import "../i18n/locales";
 
+import fs from "fs";
 import { readFile } from "fs/promises";
+import path from "path";
+import { api } from "../api/api";
 import { COMMON } from "../constants";
+import i18n from "../i18n";
 import {
   collectAndSaveFormatTask,
   collectAndSaveFormatTaskFromWorkflows,
@@ -40,17 +38,12 @@ import {
   ResultToMcpStringResponse,
   withMcpErrorHandling,
 } from "../utils/mcp-helpers";
-import { ComfyClient } from "../utils/ws";
 import { WorkflowConverter } from "../utils/workflow-converter";
-import fs from "fs";
-import path from "path";
-import { api } from "../api/api";
+import { ComfyClient } from "../utils/ws";
 
-// 初始化连接WebSocket
 const client = new ComfyClient();
 await client.connect();
 
-// 初始化WorkflowConverter
 const converter = new WorkflowConverter();
 await converter.init();
 
@@ -87,46 +80,19 @@ const server = new McpServer(
 server.registerTool(
   "cui_get_core_manual",
   {
-    title: "获取项目核心手册",
-    description: `高优先级资源。必须在初始化或涉及工具调用时优先读取。包含核心协议、错误处理及参数填充策略。`,
+    title: i18n.t("tool.cui_get_core_manual.title"),
+    description: i18n.t("tool.cui_get_core_manual.description"),
     inputSchema: {},
   },
   withMcpErrorHandling(async () => {
     const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
-
     return ResultToMcpResponse(
-      ok(
-        `核心手册已加载，请严格根据其中的协议与参数策略执行后续操作。`,
-        defaultRule,
-        {
-          action: "cui_get_core_manual",
-        },
-      ),
+      ok(i18n.t("tool.cui_get_core_manual.success"), defaultRule, {
+        action: "cui_get_core_manual",
+      }),
     );
   }),
 );
-
-// 重载服务配置
-
-/**
- * @METHOD
- * @description 获取工作流模型
- * @author LaiFQZzr
- * @date 2026/02/02 09:30
- */
-// server.registerTool(
-//   "cui_list_models",
-//   {
-//     title: "检索模型文件",
-//     description: `列出可用模型。强制规则：填写 ckpt_name 等参数前，必须先调用此工具获取精确文件名。严禁猜测或臆造名称。`,
-//     inputSchema: {
-//       type_name: z.string().describe("所需模型类型"),
-//     },
-//   },
-//   withMcpErrorHandling(async ({ type_name }) => {
-//     return ResultToMcpStringResponse("这是模型结果" + type_name);
-//   }),
-// );
 
 /**
  * @METHOD
@@ -137,8 +103,8 @@ server.registerTool(
 server.registerTool(
   "cui_get_workflows_catalog",
   {
-    title: "获取工作流目录",
-    description: `响应 ComfyUI 需求（如“画图”）。检索最佳匹配工作流。严禁猜测 ID 或名称，必须基于检索结果。`,
+    title: i18n.t("tool.cui_get_workflows_catalog.title"),
+    description: i18n.t("tool.cui_get_workflows_catalog.description"),
     inputSchema: {
       maxItems: z
         .number()
@@ -146,18 +112,20 @@ server.registerTool(
         .max(10)
         .optional()
         .default(10)
-        .describe(t("workflow.collectedContent.maxItems")),
+        .describe(
+          i18n.t("tool.cui_get_workflows_catalog.inputSchema.maxItems"),
+        ),
       token: z
         .string()
         .optional()
-        .describe(
-          "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
-        ),
+        .describe(i18n.t("tool.cui_get_workflows_catalog.inputSchema.token")),
       enableWorkflow: z
         .boolean()
         .optional()
         .default(false)
-        .describe("是否获取用户的工作流信息"),
+        .describe(
+          i18n.t("tool.cui_get_workflows_catalog.inputSchema.enableWorkflow"),
+        ),
     },
   },
   withMcpErrorHandling(async ({ maxItems, token, enableWorkflow }) => {
@@ -170,7 +138,9 @@ server.registerTool(
       // 让AGENT去加载通用Prompt
       return ResultToMcpResponse(
         errorWithToken(
-          `AGENT 没有正确加载 SKILL 相关资源，请通过 cui_get_core_manual tool 获取默认 Prompt 。后续对话中请将token(${token})保存到上下文中使用`,
+          i18n.t("error.notTokenError", {
+            token,
+          }),
           token,
         ),
       );
@@ -222,10 +192,12 @@ server.registerTool(
 server.registerTool(
   "cui_get_task_detail",
   {
-    title: "根据prompt_id获取任务详情",
-    description: `根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容`,
+    title: i18n.t("tool.cui_get_task_detail.title"),
+    description: i18n.t("tool.cui_get_task_detail.description"),
     inputSchema: {
-      promptId: z.string().describe(t("workflow.promptId")),
+      promptId: z
+        .string()
+        .describe(i18n.t("tool.cui_get_task_detail.inputSchema.promptId")),
     },
   },
   withMcpErrorHandling(async ({ promptId }) => {
@@ -239,7 +211,7 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。",
+        i18n.t("tool.cui_get_task_detail.success"),
         result,
         {
           action: "cui_get_task_detail",
@@ -261,28 +233,40 @@ server.registerTool(
 server.registerTool(
   "cui_mount_dynamic_tool",
   {
-    title: "挂载动态工具",
-    description: `用于动态生成专用的工作流执行函数。调用成功后立即停止生成。等待 Host 刷新上下文后，于下一轮对话调用新生成的 cui_execute_dynamic_task_{workflow_name}。`,
+    title: i18n.t("tool.cui_mount_dynamic_tool.title"),
+    description: i18n.t("tool.cui_mount_dynamic_tool.description"),
     inputSchema: {
-      promptId: z.string().describe("目标工作流名称"),
+      promptId: z
+        .string()
+        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.promptId")),
       toolName: z
         .string()
         .regex(
           /^[a-zA-Z0-9_-]+$/,
           "Tool 名称只能包含字母、数字、下划线、连字符",
         )
+        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.toolName")),
+      title: z
+        .string()
+        .optional()
+        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.title")),
+      description: z
+        .string()
+        .optional()
         .describe(
-          "唯一工具后缀名（纯英文，如 flux_dev），用于生成工具名 cui_execute_dynamic_task_{workflow_name}，只能包含字母、数字、下划线、连字符",
+          i18n.t("tool.cui_mount_dynamic_tool.inputSchema.description"),
         ),
-      title: z.string().optional().describe("可选，Tool 的显示标题"),
-      description: z.string().optional().describe("可选，Tool 的详细描述"),
     },
   },
   withMcpErrorHandling(async ({ promptId, toolName, title, description }) => {
     // 检查 Tool 名称是否已存在
     if (hasDynamicTool(toolName)) {
       return ResultToMcpResponse(
-        error(`Tool "${toolName}" 已存在，请使用其他名称`),
+        error(
+          i18n.t("error.toolAlreadyExistError", {
+            toolName,
+          }),
+        ),
       );
     }
 
@@ -294,7 +278,7 @@ server.registerTool(
     });
 
     if (!result.success || !result.detail.data) {
-      return ResultToMcpResponse(error("获取任务详情失败"));
+      return ResultToMcpResponse(error(i18n.t("error.getTaskDetailFail")));
     }
 
     const workflow = result.detail.data;
@@ -336,7 +320,9 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        `成功创建动态 Tool: ${toolName}`,
+        i18n.t("tool.cui_mount_dynamic_tool.success", {
+          toolName,
+        }),
         response,
         {
           action: "cui_mount_dynamic_tool",
@@ -349,51 +335,6 @@ server.registerTool(
 
 /**
  * @METHOD
- * @description 列出所有已创建的动态 Workflow Tools
- * @author LaiFQZzr
- * @date 2026/02/03 14:50
- */
-// server.registerTool(
-//   "cui_list_dynamic_tools",
-//   {
-//     title: "列出所有动态 Workflow Tools",
-//     description: `获取所有通过 cui_mount_dynamic_tool 创建的动态 Tool 列表`,
-//     inputSchema: {},
-//   },
-//   withMcpErrorHandling(async () => {
-//     const startTime = Date.now();
-
-//     const tools = getAllDynamicTools();
-
-//     const executionTime = Date.now() - startTime;
-
-//     const response: ListDynamicWorkflowToolData = {
-//       count: tools.length,
-//       tools: tools.map((tool) => ({
-//         name: tool.name,
-//         title: tool.title,
-//         description: tool.description,
-//         sourcePromptId: tool.sourcePromptId,
-//         configurableParamsCount: tool.configurableParams.length,
-//         createdAt: new Date(tool.createdAt).toISOString(),
-//       })),
-//     };
-
-//     return ResultToMcpResponse(
-//       ok(
-//         `成功获取所有动态 Workflow Tools`,
-//         response,
-//         {
-//           action: "cui_list_dynamic_tools",
-//         },
-//         executionTime,
-//       ),
-//     );
-//   }),
-// );
-
-/**
- * @METHOD
  * @description 执行动态 Workflow Tool
  * @author LaiFQZzr
  * @date 2026/02/03 14:50
@@ -401,24 +342,20 @@ server.registerTool(
 server.registerTool(
   "cui_execute_dynamic_tool",
   {
-    title: "执行工作流任务（动态构建后的工具函数）",
-    description: `执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。`,
+    title: i18n.t("tool.cui_execute_dynamic_tool.title"),
+    description: i18n.t("tool.cui_execute_dynamic_tool.description"),
     inputSchema: {
       toolName: z
         .string()
-        .describe(
-          "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
-        ),
+        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.toolName")),
       isAsync: z
         .boolean()
         .default(false)
-        .describe("是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。"),
+        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.isAsync")),
       params: z
         .record(z.string(), z.any())
         .optional()
-        .describe(
-          "要修改的参数，key 格式为 nodeId_inputKey，未提供的参数使用默认值",
-        ),
+        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.params")),
     },
   },
   withMcpErrorHandling(async ({ toolName, isAsync, params = {} }, extra) => {
@@ -429,7 +366,9 @@ server.registerTool(
     if (!tool) {
       return ResultToMcpResponse(
         errorWithDetail(
-          `Tool "${toolName}" 不存在`,
+          i18n.t("error.toolNotAlreadyExistError", {
+            toolName,
+          }),
           `availableTools: ${getAllDynamicTools().map((t) => t.name)}`,
         ),
       );
@@ -440,7 +379,7 @@ server.registerTool(
     }
 
     if (!client.isConnected()) {
-      throw new McpError(ErrorCode.InternalError, "WebSocket服务器未连接");
+      throw new McpError(ErrorCode.InternalError, "WebSocket NOT CONNECTED");
     }
 
     // 获取拼接AGENT修改参数后的Prompt
@@ -452,7 +391,6 @@ server.registerTool(
 
     // 根据拼接后的Prompt执行工作流
     const clientId = client.getClientId();
-    console.error(`[工作流提交] Client ID: ${clientId}`);
 
     const submitResult = await executeWorkflowTaskByPrompts({
       prompts: execResult,
@@ -524,7 +462,9 @@ server.registerTool(
 
         return ResultToMcpResponse(
           errorWithDetail(
-            `工作流执行失败: ${executionResult.error}`,
+            i18n.t("error.workflowExecuteFail", {
+              error: executionResult.error,
+            }),
             `Prompt ID: ${submitResult.prompt_id}`,
           ),
         );
@@ -534,7 +474,7 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          "成功执行动态 Workflow Tool",
+          i18n.t("tool.cui_execute_dynamic_tool.success"),
           {
             promptId: submitResult.prompt_id,
             img: buildComfyViewUrls(executionResult),
@@ -552,11 +492,10 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        "成功执行动态 Workflow Tool",
+        i18n.t("tool.cui_execute_dynamic_tool.success"),
         {
           promptId: submitResult.prompt_id,
-          description:
-            "选择异步执行，请用户一段时间后手动访问ComfyUI查看结果，对话结束",
+          description: i18n.t("tool.cui_execute_dynamic_tool.asyncSupplement"),
         },
         {
           action: "cui_execute_dynamic_tool",
@@ -576,26 +515,19 @@ server.registerTool(
 server.registerTool(
   "cui_upload_assets",
   {
-    title: "ComfyUI导入资产",
-    description:
-      "当用户提供一张图片的本地路径或网络链接时，调用此工具将图片上传并处理。",
+    title: i18n.t("tool.cui_upload_assets.title"),
+    description: i18n.t("tool.cui_upload_assets.description"),
     inputSchema: {
       fileSource: z
         .string()
-        .describe("图片的本地绝对路径或网络 URL 链接（http/https）"),
-      description: z
-        .string()
-        .optional()
-        .describe(
-          "用户对这次上传图片的描述，后续AGENT可参考这个描述来决定在多结点需要Asset替换时替换的结点",
-        ),
+        .describe(i18n.t("tool.cui_upload_assets.inputSchema.fileSource")),
       mimeType: z
         .string()
         .optional()
-        .describe("图片类型(可选)，默认 image/png"),
+        .describe(i18n.t("tool.cui_upload_assets.inputSchema.mimeType")),
     },
   },
-  withMcpErrorHandling(async ({ fileSource, description, mimeType }) => {
+  withMcpErrorHandling(async ({ fileSource, mimeType }) => {
     try {
       const startTime = Date.now();
 
@@ -609,7 +541,11 @@ server.registerTool(
 
         if (!res.ok) {
           return ResultToMcpResponse(
-            error(`无法下载网络图片，HTTP状态码: ${res.status}`),
+            error(
+              i18n.t("error.downloadAssetsFail", {
+                status: res.status,
+              }),
+            ),
           );
         }
 
@@ -624,7 +560,11 @@ server.registerTool(
         // 检查文件是否存在
         if (!fs.existsSync(fileSource)) {
           return ResultToMcpResponse(
-            error(`本地文件不存在，请检查路径是否正确: ${fileSource}`),
+            error(
+              i18n.t("error.fileNotExistError", {
+                fileSource,
+              }),
+            ),
           );
         }
 
@@ -644,8 +584,10 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          `图片：${finalFileName} 已成功导入ComfyUI Assets中`,
-          { response, description },
+          i18n.t("tool.cui_upload_assets.success", {
+            finalFileName,
+          }),
+          response,
           {
             action: "cui_upload_file",
           },
@@ -654,55 +596,14 @@ server.registerTool(
       );
     } catch (err: any) {
       return ResultToMcpResponse(
-        error(`导入ComfyUI Assets失败: ${err.message}`),
+        error(
+          i18n.t("error.uploadFail", {
+            message: err.message,
+          }),
+        ),
       );
     }
   }),
-);
-
-/**
- * @METHOD
- * @description 将工作流格式化任务注册为 AGENT 可见资源
- * @author LaiFQZzr
- * @date 2026/02/02 09:36
- */
-server.registerResource(
-  "workflow_tasks",
-  COMMON.WORKFLOW_RESOURCE_URI,
-  {
-    title: "本地 Workflow 文件",
-    description: "AGENT 生成并保存的工作流文件",
-    mimeType: "application/json",
-  },
-  async (uri): Promise<ReadResourceResult> => {
-    try {
-      const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
-
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: "application/json",
-            text: content,
-          },
-        ],
-      };
-    } catch (err: any) {
-      if (err.code === "ENOENT") {
-        return {
-          contents: [
-            {
-              uri: uri.href,
-              mimeType: "application/json",
-              text: "[]",
-            },
-          ],
-        };
-      }
-
-      throw err;
-    }
-  },
 );
 
 export default server;

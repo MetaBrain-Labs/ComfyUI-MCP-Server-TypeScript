@@ -1,0 +1,69 @@
+{
+  "common": {},
+  "error": {
+    "notTokenError": "AGENT 没有正确加载 SKILL 相关资源，请通过 cui_get_core_manual tool 获取默认 Prompt 。后续对话中请将token({{token}})保存到上下文中使用",
+    "toolAlreadyExistError": "Tool {{toolName}} 已存在，请使用其他名称",
+    "toolNotAlreadyExistError": "Tool {{toolName}} 不存在",
+    "getTaskDetailFail": "获取任务详情失败",
+    "workflowExecuteFail": "工作流执行失败: {{error}}",
+    "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
+    "fileNotExistError": "本地文件不存在，请检查路径是否正确: ${fileSource}",
+    "uploadFail": "导入ComfyUI Assets失败: {{message}}"
+  },
+  "tool": {
+    "cui_get_core_manual": {
+      "title": "获取项目核心手册",
+      "description": "高优先级资源。必须在初始化或涉及工具调用时优先读取。包含核心协议、错误处理及参数填充策略。",
+      "inputSchema": {},
+      "success": "核心手册已加载，请严格根据其中的协议与参数策略执行后续操作。"
+    },
+    "cui_get_workflows_catalog": {
+      "title": "获取工作流目录",
+      "description": "响应 ComfyUI 需求（如“画图”）。检索最佳匹配工作流。严禁猜测 ID 或名称，必须基于检索结果。",
+      "inputSchema": {
+        "maxItems": "分页查询历史任务中每页最多条数",
+        "token": "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
+        "enableWorkflow": "是否获取用户的工作流信息"
+      }
+    },
+    "cui_get_task_detail": {
+      "title": "根据prompt_id获取任务详情",
+      "description": "根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容",
+      "inputSchema": {
+        "promptId": "一次 工作流执行任务 的唯一 ID"
+      },
+      "success": "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。"
+    },
+    "cui_mount_dynamic_tool": {
+      "title": "挂载动态工具",
+      "description": "用于动态生成专用的工作流执行函数。调用成功后立即停止生成。等待 Host 刷新上下文后，于下一轮对话调用新生成的 cui_execute_dynamic_task_{workflow_name}。",
+      "inputSchema": {
+        "promptId": "一次 工作流执行任务 的唯一 ID",
+        "toolName": "唯一工具后缀名（纯英文，如 flux_dev），用于生成工具名 cui_execute_dynamic_task_{workflow_name}，只能包含字母、数字、下划线、连字符",
+        "title": "可选，Tool 的显示标题",
+        "description": "可选，Tool 的详细描述"
+      },
+      "success": "成功创建动态 Tool: {{toolName}}"
+    },
+    "cui_execute_dynamic_tool": {
+      "title": "执行工作流任务（动态构建后的工具函数）",
+      "description": "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
+      "inputSchema": {
+        "toolName": "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
+        "isAsync": "是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。",
+        "params": "要修改的参数，key 格式为 nodeId_inputKey，未提供的参数使用默认值"
+      },
+      "success": "成功执行动态 Workflow Tool",
+      "asyncSupplement": "选择异步执行，请用户一段时间后手动访问ComfyUI查看结果，对话结束"
+    },
+    "cui_upload_assets": {
+      "title": "ComfyUI导入资产",
+      "description": "当用户提供一张图片的本地路径或网络链接时，调用此工具将图片上传并处理。",
+      "inputSchema": {
+        "fileSource": "图片的本地绝对路径或网络 URL 链接（http/https）",
+        "mimeType": "图片类型(可选)，默认 image/png"
+      },
+      "success": "图片：{{finalFileName}} 已成功导入ComfyUI Assets中"
+    }
+  }
+}
