@@ -1,8 +1,7 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { COMMON } from "../constants";
-import server from "../tools";
-import { CollectFormatTaskWorkflow } from "../types/common";
+import { CollectFormatTaskWorkflow, sourcePriority } from "../types/common";
 
 export interface SaveWorkflowOptions {
   dir?: string;
@@ -64,7 +63,6 @@ export async function saveWorkflow(
 
     finalData = [...finalData, ...newData];
 
-    // 去重
     const uniqueData = deduplicateWorkflows(finalData);
 
     // 过滤空对象
@@ -75,11 +73,7 @@ export async function saveWorkflow(
       return true;
     });
 
-    // 写入文件
     await writeFile(filePath, JSON.stringify(filteredData, null, 2), "utf-8");
-
-    // 通知 AGENT 资源变更
-    server.sendResourceListChanged();
 
     return { filePath, itemsCollected };
   } catch (error) {
@@ -97,7 +91,6 @@ export async function saveWorkflow(
 /**
  * @METHOD
  * @description 根据 name 去重，保留最新的项
- * TODO 是否加一个标记位，允许当前项无论时间戳多少都保留当前项
  * @author LaiFQZzr
  * @date 2026/01/27 11:55
  */
@@ -109,8 +102,61 @@ function deduplicateWorkflows(
   for (const workflow of workflows) {
     const existing = map.get(workflow.name);
 
-    if (!existing || workflow.last_updated > existing.last_updated) {
+    // 如果不存在那么直接添加
+    if (!existing) {
       map.set(workflow.name, workflow);
+      continue;
+    } else {
+      // 已存在的判断逻辑
+      const typeDiff =
+        sourcePriority[workflow.inspection_status] -
+        sourcePriority[existing.inspection_status];
+
+      // 相同类型的处理
+      if (typeDiff === 0) {
+        if (workflow.last_updated > existing.last_updated) {
+          map.set(workflow.name, workflow);
+        }
+      } else if (typeDiff === 1) {
+        // 针对已有类型为CompleteInspection，新增类型为InitialInspection
+        if (
+          workflow.inspection_status === "InitialInspection" &&
+          existing.inspection_status === "CompleteInspection"
+        ) {
+          if (workflow.userdata_modified! > existing.last_updated) {
+            // 如果workflow的userdata_modified更大，那么说明在existing运行后初始工作流进行了更改，用初始工作流最新的数据workflow的数据覆盖
+            map.set(workflow.name, workflow);
+            continue;
+          } else {
+            // 如果workflow的userdata_modified更小，那么说明在existing运行后初始工作流没有进行了更改，不覆盖
+            continue;
+          }
+        }
+
+        // 针对已有类型为InitialInspection，新增类型为CompleteInspection
+        if (
+          workflow.inspection_status === "CompleteInspection" &&
+          existing.inspection_status === "InitialInspection"
+        ) {
+          if (existing.userdata_modified! > workflow.last_updated) {
+            // 如果existing的userdata_modified更大，那么说明在workflow运行后初始工作流进行了更改，用初始工作流最新的数据existing的数据覆盖
+            continue;
+          } else {
+            // 如果existing的userdata_modified更小，那么说明在workflow运行前初始工作流没有进行了更改，用workflow的数据覆盖
+            map.set(workflow.name, workflow);
+            continue;
+          }
+        }
+
+        if (existing.inspection_status === "External") {
+          map.set(workflow.name, workflow);
+        }
+      } else if (typeDiff === 2) {
+        // 如果diff为2，说明一个必然是CompleteInspection，另一个必然是External，External为优先级最低的任务
+        if (workflow.inspection_status === "CompleteInspection") {
+          map.set(workflow.name, workflow);
+        }
+      }
     }
   }
 

@@ -146,36 +146,21 @@ server.registerTool(
       );
     }
 
-    if (enableWorkflow) {
-      await collectAndSaveFormatTaskFromWorkflows(client, converter);
-    }
-
     let hasMore: boolean = true;
-    let totalCollected = 0;
-    let totalFailedTasks = 0;
 
+    // 获取历史任务中为成功的任务
     for (let i = 0; hasMore; i++) {
       const result = await collectAndSaveFormatTask({
         maxItems,
         offset: i * maxItems,
-        append: i === 0 ? (enableWorkflow ? true : false) : true,
+        append: i > 0,
       });
 
       hasMore = result.detail.data?.pagination?.hasNextPage || false;
-
-      if (result.detail.data?.itemsCollected) {
-        totalCollected = totalCollected + result.detail.data?.itemsCollected;
-      }
-
-      if (result.detail.data?.failedTasks) {
-        totalFailedTasks = totalFailedTasks + result.detail.data?.failedTasks;
-      }
     }
 
-    // 如果enableWorkflow为false，并且历史任务数量为0，那么强制调用一次从工作流中获取工作流
-    if (!enableWorkflow && totalCollected - totalFailedTasks <= 0) {
-      await collectAndSaveFormatTaskFromWorkflows(client, converter);
-    }
+    // 获取所有初始工作流对应的任务
+    await collectAndSaveFormatTaskFromWorkflows(client, converter);
 
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
