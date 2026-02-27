@@ -15,8 +15,12 @@ import { waitForExecutionInterrupt, waitForExecutionStart } from "./tasks";
 export async function executeWorkflowTask(
   client: ComfyClient,
   converter: WorkflowConverter,
-): Promise<string[]> {
+): Promise<{
+  availableWorkflow: string[];
+  modifiedWorkflow: Map<string, number>;
+}> {
   const availableWorkflow: string[] = [];
+  const modifiedWorkflow = new Map<string, number>();
 
   const res = await api.getUserData("workflows");
 
@@ -36,6 +40,8 @@ export async function executeWorkflowTask(
       const promptRes = await api.prompt(data);
 
       const promptId = promptRes.prompt_id;
+
+      modifiedWorkflow.set(promptId, item.modified * 1000);
 
       availableWorkflow.push(promptId);
 
@@ -75,5 +81,5 @@ export async function executeWorkflowTask(
     }
   }
 
-  return availableWorkflow;
+  return { availableWorkflow, modifiedWorkflow };
 }

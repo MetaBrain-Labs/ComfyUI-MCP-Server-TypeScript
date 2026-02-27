@@ -1,4 +1,4 @@
-import { CollectFormatTaskResult } from "../types/common";
+import { CollectFormatTaskResult, SourceType } from "../types/common";
 import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
 
 /**
@@ -9,7 +9,8 @@ import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
  */
 export const formatTask = (
   data: ComfyTaskResponse,
-  isFromOriginWorkflow: boolean,
+  sourceType: SourceType,
+  modifiedWorkflow?: Map<string, number>,
 ): CollectFormatTaskResult => {
   const result: CollectFormatTaskResult = {
     last_updated: Date.now(),
@@ -18,7 +19,9 @@ export const formatTask = (
 
   for (const [uuid, item] of Object.entries(data)) {
     const promptConfig: ComfyPromptConfig = item.prompt[2];
+    const promptId: string = item.prompt[1];
     const parameters: string[] = [];
+    let modified: number | undefined;
     let description: string | null = null;
     let name: string | null = null;
 
@@ -31,7 +34,7 @@ export const formatTask = (
         name = isDesc[1] || "无工作流名称";
       }
       if (isRequired) {
-        parameters.push(nodeConfig.class_type);
+        parameters.push(nodeConfig.class_type + nodeConfig._meta?.title);
       }
     }
 
@@ -48,13 +51,18 @@ export const formatTask = (
       continue;
     }
 
+    if (sourceType === "InitialInspection" && modifiedWorkflow) {
+      modified = modifiedWorkflow.get(promptId);
+    }
+
     result.workflows.push({
       name: name,
       id: uuid,
       description: description,
       parameters: parameters,
       last_updated: timestamp,
-      isFromOriginWorkflow,
+      inspection_status: sourceType,
+      userdata_modified: modified,
     });
   }
 

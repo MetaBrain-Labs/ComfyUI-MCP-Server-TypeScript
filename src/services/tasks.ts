@@ -387,7 +387,7 @@ export async function waitForExecutionCompletion(
 export async function waitForExecutionInterrupt(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
-  const { client, promptId, timeout = 10 * 1000 } = options;
+  const { client, promptId, timeout = 20 * 1000 } = options;
   const startTime = Date.now();
 
   console.error(`[等待中断信号] 开始监听 Prompt ID: ${promptId}`);
@@ -453,7 +453,7 @@ export async function waitForExecutionInterrupt(
 export async function waitForExecutionStart(
   options: WaitForExecutionOptions,
 ): Promise<ExecutionResult> {
-  const { client, promptId, timeout = 10 * 1000 } = options;
+  const { client, promptId, timeout = 20 * 1000 } = options;
   const startTime = Date.now();
 
   console.error(`[等待开始信号] 开始监听 Prompt ID: ${promptId}`);
