@@ -102,63 +102,75 @@ function deduplicateWorkflows(
   for (const workflow of workflows) {
     const existing = map.get(workflow.name);
 
-    // 如果不存在那么直接添加
     if (!existing) {
       map.set(workflow.name, workflow);
       continue;
-    } else {
-      // 已存在的判断逻辑
-      const typeDiff =
-        sourcePriority[workflow.inspection_status] -
-        sourcePriority[existing.inspection_status];
+    }
 
-      // 相同类型的处理
-      if (typeDiff === 0) {
-        if (workflow.last_updated > existing.last_updated) {
-          map.set(workflow.name, workflow);
-        }
-      } else if (typeDiff === 1) {
-        // 针对已有类型为CompleteInspection，新增类型为InitialInspection
-        if (
-          workflow.inspection_status === "InitialInspection" &&
-          existing.inspection_status === "CompleteInspection"
-        ) {
-          if (workflow.userdata_modified! > existing.last_updated) {
-            // 如果workflow的userdata_modified更大，那么说明在existing运行后初始工作流进行了更改，用初始工作流最新的数据workflow的数据覆盖
-            map.set(workflow.name, workflow);
-            continue;
-          } else {
-            // 如果workflow的userdata_modified更小，那么说明在existing运行后初始工作流没有进行了更改，不覆盖
-            continue;
-          }
-        }
-
-        // 针对已有类型为InitialInspection，新增类型为CompleteInspection
-        if (
-          workflow.inspection_status === "CompleteInspection" &&
-          existing.inspection_status === "InitialInspection"
-        ) {
-          if (existing.userdata_modified! > workflow.last_updated) {
-            // 如果existing的userdata_modified更大，那么说明在workflow运行后初始工作流进行了更改，用初始工作流最新的数据existing的数据覆盖
-            continue;
-          } else {
-            // 如果existing的userdata_modified更小，那么说明在workflow运行前初始工作流没有进行了更改，用workflow的数据覆盖
-            map.set(workflow.name, workflow);
-            continue;
-          }
-        }
-
-        if (existing.inspection_status === "External") {
-          map.set(workflow.name, workflow);
-        }
-      } else if (typeDiff === 2) {
-        // 如果diff为2，说明一个必然是CompleteInspection，另一个必然是External，External为优先级最低的任务
-        if (workflow.inspection_status === "CompleteInspection") {
-          map.set(workflow.name, workflow);
-        }
-      }
+    if (shouldReplaceWorkflow(existing, workflow)) {
+      map.set(workflow.name, workflow);
     }
   }
 
   return Array.from(map.values());
+}
+
+/**
+* @METHOD
+* @description 核心规则:
+    同类型：取 last_updated 最新的。
+    External 类型：优先级最低，总是被非 External 替换。
+    Initial vs Complete：
+    这是核心业务逻辑。通常 Complete 优先级高于 Initial。
+    但在特定条件下反转：如果 Initial 的 userdata_modified 晚于 Complete 的 last_updated，说明“完成检测”后用户又修改了数据，此时 Initial 更可信（更新），应保留 Initial。
+    否则，保留 Complete。
+* @return boolean 返回 true 表示替换，false 表示保持原样
+* @author LaiFQZzr
+* @date 2026/02/27 15:27
+*/
+function shouldReplaceWorkflow(
+  existing: CollectFormatTaskWorkflow,
+  candidate: CollectFormatTaskWorkflow,
+): boolean {
+  // 1. 如果状态相同：保留 last_updated 较新的
+  if (existing.inspection_status === candidate.inspection_status) {
+    return candidate.last_updated > existing.last_updated;
+  }
+
+  // 2. 特殊情况下：InitialInspection和CompleteInspection做比较
+  const isInitialVsComplete =
+    (existing.inspection_status === "InitialInspection" &&
+      candidate.inspection_status === "CompleteInspection") ||
+    (existing.inspection_status === "CompleteInspection" &&
+      candidate.inspection_status === "InitialInspection");
+
+  if (isInitialVsComplete) {
+    const initial =
+      existing.inspection_status === "InitialInspection" ? existing : candidate;
+    const complete =
+      existing.inspection_status === "CompleteInspection"
+        ? existing
+        : candidate;
+
+    const initialModifiedTime = initial.userdata_modified ?? 0;
+
+    if (initialModifiedTime > complete.last_updated) {
+      return candidate === initial;
+    } else {
+      return candidate === complete;
+    }
+  }
+
+  // 3. 其他情况：默认按优先级高低处理 (非 External 覆盖 External)
+  // 获取优先级，默认为 -1 防止字典中不存在的类型
+  const existingPriority = sourcePriority[existing.inspection_status] ?? -1;
+  const candidatePriority = sourcePriority[candidate.inspection_status] ?? -1;
+
+  // 如果优先级不同，取优先级高的
+  if (candidatePriority !== existingPriority) {
+    return candidatePriority > existingPriority;
+  }
+
+  // 4. 兜底：如果优先级定义相同但状态名不同，按时间最新的
+  return candidate.last_updated > existing.last_updated;
 }
