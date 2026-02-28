@@ -707,6 +707,169 @@ server.registerTool(
 
 /**
  * @METHOD
+ * @description 取消运行中的工作流
+ * @author LaiFQZzr
+ * @date 2026/02/28 10:46
+ */
+server.registerTool(
+  "cui_cancel_task",
+  {
+    title: i18n.t("tool.cui_cancel_task.title"),
+    description: i18n.t("tool.cui_cancel_task.description"),
+    inputSchema: {
+      promptId: z
+        .string()
+        .describe(i18n.t("tool.cui_cancel_task.inputSchema.promptId")),
+    },
+  },
+  withMcpErrorHandling(async ({ promptId }) => {
+    const startTime = Date.now();
+
+    const result = await api.interrupt(promptId);
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        i18n.t("tool.cui_cancel_task.success", {
+          promptId,
+        }),
+        result,
+        {
+          action: "cui_cancel_task",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 查询任务执行状态及最终产物。
+ * @author LaiFQZzr
+ * @date 2026/02/28 14:38
+ */
+server.registerTool(
+  "cui_get_task_result",
+  {
+    title: i18n.t("tool.cui_get_task_result.title"),
+    description: i18n.t("tool.cui_get_task_result.description"),
+    inputSchema: {
+      promptId: z
+        .string()
+        .describe(i18n.t("tool.cui_get_task_result.inputSchema.promptId")),
+    },
+  },
+  withMcpErrorHandling(async ({ promptId }) => {
+    const startTime = Date.now();
+
+    const result = await api.getDetailHistoryTasks(promptId);
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        i18n.t("tool.cui_get_task_result.success"),
+        result,
+        {
+          action: "cui_get_task_result",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 获取系统状态
+ * @author LaiFQZzr
+ * @date 2026/02/28 15:22
+ */
+server.registerTool(
+  "cui_get_system_status",
+  {
+    title: i18n.t("tool.cui_get_system_status.title"),
+    description: i18n.t("tool.cui_get_system_status.description"),
+    inputSchema: {},
+  },
+  withMcpErrorHandling(async ({}) => {
+    const startTime = Date.now();
+
+    const result = await api.getSystemStatus();
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        i18n.t("tool.cui_get_system_status.success"),
+        result,
+        {
+          action: "cui_get_system_status",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 检索模型文件
+ * @author LaiFQZzr
+ * @date 2026/02/28 14:56
+ */
+server.registerTool(
+  "cui_list_models",
+  {
+    title: i18n.t("tool.cui_list_models.title"),
+    description: i18n.t("tool.cui_list_models.description"),
+    inputSchema: {
+      typeName: z
+        .string()
+        .optional()
+        .describe(i18n.t("tool.cui_list_models.inputSchema.type_name")),
+    },
+  },
+  withMcpErrorHandling(async ({ typeName }) => {
+    const startTime = Date.now();
+
+    const modelType = await api.getModelType();
+
+    const hasModel = modelType.find((item) => item.name === typeName);
+
+    if (!hasModel || !typeName) {
+      return ResultToMcpResponse(
+        error(
+          i18n.t("error.notFoundModel", {
+            models: modelType.map((item) => item.name).join(", "),
+          }),
+        ),
+      );
+    }
+
+    const result = await api.getDetailModel(typeName);
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        result.length === 0
+          ? i18n.t("tool.cui_list_models.successButNoModel")
+          : i18n.t("tool.cui_list_models.success"),
+        result,
+        {
+          action: "cui_list_models",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
  * @description 导入资产到ComfyUI中
  * @author LaiFQZzr
  * @date 2026/02/25 16:08

@@ -9,7 +9,8 @@
     "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
     "fileNotExistError": "本地文件不存在，请检查路径是否正确: ${fileSource}",
     "uploadFail": "导入ComfyUI Assets失败: {{message}}",
-    "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}"
+    "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}",
+    "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}"
   },
   "tool": {
     "cui_get_core_manual": {
@@ -75,6 +76,37 @@
         "isAsync": "是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。"
       },
       "success": "任务 ({{workflowName}}) 已成功加入任务队列 (ID: {{promptId}})，请监控进度或等待结果生成。"
+    },
+    "cui_cancel_task": {
+      "title": "取消任务",
+      "description": "取消运行中的任务。",
+      "inputSchema": {
+        "promptId": "一次 工作流执行任务 的唯一 ID"
+      },
+      "success": "任务 (ID: {{prompt_id}}) 已取消。"
+    },
+    "cui_get_task_result": {
+      "title": "获取任务结果",
+      "description": "查询任务状态。若 running：报告进度并保持等待。若 success：展示元数据及 output 字段中的媒体链接。",
+      "inputSchema": {
+        "promptId": "一次 工作流执行任务 的唯一 ID"
+      },
+      "success": "任务状态已检索，请根据返回结果汇报进度或展示最终生成的媒体资源。"
+    },
+    "cui_get_system_status": {
+      "title": "获取系统状态",
+      "description": "查询服务器负载、队列或显存。任务失败时用于诊断环境（如 Python/Torch 状态）。",
+      "inputSchema": {},
+      "success": "系统状态与环境诊断数据已获取，请根据返回指标分析负载情况或排查故障原因。"
+    },
+    "cui_list_models": {
+      "title": "检索模型文件",
+      "description": "列出可用模型。强制规则：填写 ckpt_name 等参数前，必须先调用此工具获取精确文件名。严禁猜测或臆造名称。",
+      "inputSchema": {
+        "type_name": "所需模型类型"
+      },
+      "success": "可用模型列表已获取，请在填写参数时严格引用返回的精确文件名，禁止猜测。",
+      "successButNoModel": "存在可用模型类型，但模型类型下无可用模型。请检查模型文件是否正确上传或使用其他类型模型。"
     },
     "cui_upload_assets": {
       "title": "ComfyUI导入资产",
