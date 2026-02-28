@@ -1,4 +1,9 @@
-import { UploadImgResponse } from "../types/common";
+import {
+  DetailModelResponse,
+  ModelTypeResponse,
+  SystemStatus,
+  UploadImgResponse,
+} from "../types/common";
 import { ExecutePromptRequest, ExecutePromptResult } from "../types/execute";
 import { ObjectInfoResponse } from "../types/object-info";
 import { ComfyTaskResponse, WorkflowSimpleData } from "../types/task";
@@ -96,6 +101,38 @@ export class ComfyApi {
   async uploadImg(body: FormData): Promise<string | null> {
     const resp = await http.post<UploadImgResponse>(`/upload/image`, body);
     return resp.subfolder ? `${resp.subfolder}/${resp.name}` : resp.name;
+  }
+
+  /**
+   * @METHOD
+   * @description 获取模型类型列表
+   * @author LaiFQZzr
+   * @date 2026/02/28 15:00
+   */
+  async getModelType(): Promise<ModelTypeResponse[]> {
+    return await http.get<ModelTypeResponse[]>(`/experiment/models`);
+  }
+
+  /**
+   * @METHOD
+   * @description 模型
+   * @author LaiFQZzr
+   * @date 2026/02/28 15:00
+   */
+  async getDetailModel(typeName: string): Promise<DetailModelResponse[]> {
+    return await http.get<DetailModelResponse[]>(
+      `/experiment/models/${typeName}`,
+    );
+  }
+
+  /**
+   * @METHOD
+   * @description 获取系统状态
+   * @author LaiFQZzr
+   * @date 2026/02/28 15:00
+   */
+  async getSystemStatus(): Promise<SystemStatus> {
+    return await http.get<SystemStatus>(`/system_stats`);
   }
 }
 
