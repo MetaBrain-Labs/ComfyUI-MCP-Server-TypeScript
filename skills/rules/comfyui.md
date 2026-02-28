@@ -26,10 +26,10 @@ You must follow this strictly defined protocol to interact with the ComfyUI MCP 
 ### Phase 2: Tool Mounting (JIT Compilation)
 
 _Only applicable if a Workflow Name was selected in Phase 1._  
-4. **Register Tool**: Call `cui_mount_dynamic_tool` using the selected name.  
+4. **Register Tool**: Call `cui_mount_workflow` using the selected name.  
  _ `workflow_name`: The exact name string identified in Phase 1 (this acts as the ID).  
  _ `extension_name`: Generate a unique, short suffix (regex: `^[a-z][a-z0-9_]*$`). Example: `flux_p`.  
-5. **CRITICAL STOP SEQUENCE**: Immediately after calling `cui_mount_dynamic_tool`:  
+5. **CRITICAL STOP SEQUENCE**: Immediately after calling `cui_mount_workflow`:  
  _ **Terminate generation**.  
  _ Do not output any further text or tool calls in this turn.
 

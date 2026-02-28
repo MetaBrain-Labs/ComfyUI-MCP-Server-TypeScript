@@ -41,7 +41,6 @@ import {
 } from "../utils/mcp-helpers";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
-import { AxiosError } from "axios";
 
 const client = new ComfyClient();
 await client.connect();
@@ -267,31 +266,29 @@ server.registerTool(
  * @date 2026/02/03 14:50
  */
 server.registerTool(
-  "cui_mount_dynamic_tool",
+  "cui_mount_workflow",
   {
-    title: i18n.t("tool.cui_mount_dynamic_tool.title"),
-    description: i18n.t("tool.cui_mount_dynamic_tool.description"),
+    title: i18n.t("tool.cui_mount_workflow.title"),
+    description: i18n.t("tool.cui_mount_workflow.description"),
     inputSchema: {
       promptId: z
         .string()
-        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.promptId")),
+        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.promptId")),
       toolName: z
         .string()
         .regex(
           /^[a-zA-Z0-9_-]+$/,
           "Tool 名称只能包含字母、数字、下划线、连字符",
         )
-        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.toolName")),
+        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.toolName")),
       title: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_mount_dynamic_tool.inputSchema.title")),
+        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.title")),
       description: z
         .string()
         .optional()
-        .describe(
-          i18n.t("tool.cui_mount_dynamic_tool.inputSchema.description"),
-        ),
+        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.description")),
     },
   },
   withMcpErrorHandling(async ({ promptId, toolName, title, description }) => {
@@ -356,12 +353,12 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_mount_dynamic_tool.success", {
+        i18n.t("tool.cui_mount_workflow.success", {
           toolName,
         }),
         response,
         {
-          action: "cui_mount_dynamic_tool",
+          action: "cui_mount_workflow",
         },
         executionTime,
       ),
@@ -376,22 +373,22 @@ server.registerTool(
  * @date 2026/02/03 14:50
  */
 server.registerTool(
-  "cui_execute_dynamic_tool",
+  "cui_execute_workflow",
   {
-    title: i18n.t("tool.cui_execute_dynamic_tool.title"),
-    description: i18n.t("tool.cui_execute_dynamic_tool.description"),
+    title: i18n.t("tool.cui_execute_workflow.title"),
+    description: i18n.t("tool.cui_execute_workflow.description"),
     inputSchema: {
       toolName: z
         .string()
-        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.toolName")),
+        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.toolName")),
       isAsync: z
         .boolean()
         .default(false)
-        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.isAsync")),
+        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.isAsync")),
       params: z
         .record(z.string(), z.any())
         .optional()
-        .describe(i18n.t("tool.cui_execute_dynamic_tool.inputSchema.params")),
+        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.params")),
     },
   },
   withMcpErrorHandling(async ({ toolName, isAsync, params = {} }, extra) => {
@@ -510,14 +507,14 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          i18n.t("tool.cui_execute_dynamic_tool.success"),
+          i18n.t("tool.cui_execute_workflow.success"),
           {
             promptId: submitResult.prompt_id,
             img: buildComfyViewUrls(executionResult),
             outputs: executionResult.outputs,
           },
           {
-            action: "cui_execute_dynamic_tool",
+            action: "cui_execute_workflow",
           },
           executionTime,
         ),
@@ -528,13 +525,13 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_execute_dynamic_tool.success"),
+        i18n.t("tool.cui_execute_workflow.success"),
         {
           promptId: submitResult.prompt_id,
-          description: i18n.t("tool.cui_execute_dynamic_tool.asyncSupplement"),
+          description: i18n.t("tool.cui_execute_workflow.asyncSupplement"),
         },
         {
-          action: "cui_execute_dynamic_tool",
+          action: "cui_execute_workflow",
         },
         executionTime,
       ),
@@ -694,7 +691,7 @@ server.registerTool(
         }),
         {
           promptId: submitResult.prompt_id,
-          description: i18n.t("tool.cui_execute_dynamic_tool.asyncSupplement"),
+          description: i18n.t("tool.cui_execute_workflow.asyncSupplement"),
         },
         {
           action: "cui_execute_custom_workflow",
