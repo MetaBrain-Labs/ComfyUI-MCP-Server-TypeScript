@@ -172,6 +172,34 @@ export async function executeWorkflowTaskByPrompts(
 
 /**
  * @METHOD
+ * @description 执行工作流任务
+ * @author LaiFQZzr
+ * @date 2026/02/04 15:59
+ */
+export async function executeCustomWorkflowTaskByPrompts(
+  options: any,
+): Promise<ExecutePromptResult> {
+  const { prompts, clientId } = options;
+
+  if (!clientId) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      `不存在WS客户端ID，请检查是否正确连接WS服务器`,
+    );
+  }
+
+  const data: ExecutePromptRequest = {
+    client_id: clientId,
+    prompt: prompts,
+  };
+
+  const res = await api.prompt(data);
+
+  return res;
+}
+
+/**
+ * @METHOD
  * @description 等待工作流执行完成
  *              通过 WebSocket 监听执行状态，直到收到 execution_success 或 execution_error
  * @author LaiFQZzr

@@ -11,6 +11,7 @@ export const formatTask = (
   data: ComfyTaskResponse,
   sourceType: SourceType,
   modifiedWorkflow?: Map<string, number>,
+  workflowNames?: Map<string, string>,
 ): CollectFormatTaskResult => {
   const result: CollectFormatTaskResult = {
     last_updated: Date.now(),
@@ -22,6 +23,7 @@ export const formatTask = (
     const promptId: string = item.prompt[1];
     const parameters: string[] = [];
     let modified: number | undefined;
+    let workflowName: string | undefined;
     let description: string | null = null;
     let name: string | null = null;
 
@@ -51,8 +53,13 @@ export const formatTask = (
       continue;
     }
 
-    if (sourceType === "InitialInspection" && modifiedWorkflow) {
+    if (
+      sourceType === "InitialInspection" &&
+      modifiedWorkflow &&
+      workflowNames
+    ) {
       modified = modifiedWorkflow.get(promptId);
+      workflowName = workflowNames.get(promptId);
     }
 
     result.workflows.push({
@@ -63,6 +70,7 @@ export const formatTask = (
       last_updated: timestamp,
       inspection_status: sourceType,
       userdata_modified: modified,
+      workflowName,
     });
   }
 

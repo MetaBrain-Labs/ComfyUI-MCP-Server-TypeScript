@@ -18,9 +18,11 @@ export async function executeWorkflowTask(
 ): Promise<{
   availableWorkflow: string[];
   modifiedWorkflow: Map<string, number>;
+  workflowNames: Map<string, string>;
 }> {
   const availableWorkflow: string[] = [];
   const modifiedWorkflow = new Map<string, number>();
+  const workflowNames = new Map<string, string>();
 
   const res = await api.getUserData("workflows");
 
@@ -42,6 +44,7 @@ export async function executeWorkflowTask(
       const promptId = promptRes.prompt_id;
 
       modifiedWorkflow.set(promptId, item.modified * 1000);
+      workflowNames.set(promptId, item.path);
 
       availableWorkflow.push(promptId);
 
@@ -81,5 +84,5 @@ export async function executeWorkflowTask(
     }
   }
 
-  return { availableWorkflow, modifiedWorkflow };
+  return { availableWorkflow, modifiedWorkflow, workflowNames };
 }
