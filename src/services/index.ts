@@ -74,14 +74,17 @@ export async function collectAndSaveFormatTaskFromWorkflows(
 ) {
   const startTime = Date.now();
 
-  const { availableWorkflow, modifiedWorkflow } = await executeWorkflowTask(
-    client,
-    converter,
-  );
+  const { availableWorkflow, modifiedWorkflow, workflowNames } =
+    await executeWorkflowTask(client, converter);
 
   const data = await fetchUserWorkflow(availableWorkflow);
 
-  const formatData = formatTask(data, "InitialInspection", modifiedWorkflow);
+  const formatData = formatTask(
+    data,
+    "InitialInspection",
+    modifiedWorkflow,
+    workflowNames,
+  );
 
   const result = await saveWorkflow(formatData.workflows, {
     append: true,

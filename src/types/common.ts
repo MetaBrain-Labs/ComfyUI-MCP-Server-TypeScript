@@ -22,6 +22,7 @@ export interface CollectFormatTaskWorkflow {
   last_updated: number;
   inspection_status: SourceType;
   userdata_modified?: number;
+  workflowName?: string;
 }
 
 export interface UploadImgResponse {

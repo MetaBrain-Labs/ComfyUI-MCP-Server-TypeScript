@@ -8,7 +8,8 @@
     "workflowExecuteFail": "工作流执行失败: {{error}}",
     "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
     "fileNotExistError": "本地文件不存在，请检查路径是否正确: ${fileSource}",
-    "uploadFail": "导入ComfyUI Assets失败: {{message}}"
+    "uploadFail": "导入ComfyUI Assets失败: {{message}}",
+    "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}"
   },
   "tool": {
     "cui_get_core_manual": {
@@ -24,7 +25,16 @@
         "maxItems": "分页查询历史任务中每页最多条数",
         "token": "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
         "enableWorkflow": "是否获取用户的工作流信息"
-      }
+      },
+      "success": "工作流目录已检索，请严格基于结果选择最佳匹配项，禁止猜测 ID 或名称。"
+    },
+    "cui_get_workflow_API": {
+      "title": "获取工作流详情",
+      "description": "用于处理复杂工作流或运行报错。通过返回的 JSON Schema 解析参数的具体含义与格式约束。",
+      "inputSchema": {
+        "workflowName": "目标工作流名称（优先使用目录中的workflowName字段，如果没有使用name字段，并且在name尾部添加.json）"
+      },
+      "success": "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。"
     },
     "cui_get_task_detail": {
       "title": "根据prompt_id获取任务详情",
@@ -55,6 +65,16 @@
       },
       "success": "成功执行动态 Workflow Tool",
       "asyncSupplement": "选择异步执行，请用户一段时间后手动访问ComfyUI查看结果，对话结束"
+    },
+    "cui_execute_custom_workflow": {
+      "title": "执行自定义工作流",
+      "description": "受限工具。仅用于明确要求的底层调试或无预设 工作流API 生成。普通任务禁止使用。",
+      "inputSchema": {
+        "workflowName ": "自定义工作流的名称",
+        "apiJson": "完整的 ComfyUI Prompt 格式 JSON 字符串",
+        "isAsync": "是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。"
+      },
+      "success": "任务 ({{workflowName}}) 已成功加入任务队列 (ID: {{promptId}})，请监控进度或等待结果生成。"
     },
     "cui_upload_assets": {
       "title": "ComfyUI导入资产",

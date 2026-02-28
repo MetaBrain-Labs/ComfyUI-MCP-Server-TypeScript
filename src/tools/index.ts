@@ -25,6 +25,7 @@ import {
   hasDynamicTool,
 } from "../services/dynamic-tool";
 import {
+  executeCustomWorkflowTaskByPrompts,
   executeWorkflowTaskByPrompts,
   ExecutionProgress,
   waitForExecutionCompletion,
@@ -40,6 +41,7 @@ import {
 } from "../utils/mcp-helpers";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
+import { AxiosError } from "axios";
 
 const client = new ComfyClient();
 await client.connect();
@@ -165,6 +167,55 @@ server.registerTool(
     const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
 
     return ResultToMcpStringResponse(content);
+  }),
+);
+
+/**
+ * @METHOD
+ * @description 获取指定工作流的详细 API 定义（输入节点、参数类型、默认值）。
+ * @author LaiFQZzr
+ * @date 2026/02/28 10:46
+ */
+server.registerTool(
+  "cui_get_workflow_API",
+  {
+    title: i18n.t("tool.cui_get_workflow_API.title"),
+    description: i18n.t("tool.cui_get_workflow_API.description"),
+    inputSchema: {
+      workflowName: z
+        .string()
+        .describe(i18n.t("tool.cui_get_workflow_API.inputSchema.workflowName")),
+    },
+  },
+  withMcpErrorHandling(async ({ workflowName }) => {
+    if (!workflowName.endsWith(".json")) {
+      return ResultToMcpResponse(
+        error(
+          i18n.t("error.getWorkflowFormatError", {
+            workflowName,
+          }),
+        ),
+      );
+    }
+
+    const startTime = Date.now();
+
+    const result = await api.getDetailUserData(
+      encodeURIComponent(workflowName),
+    );
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        i18n.t("tool.cui_get_workflow_API.success"),
+        result,
+        {
+          action: "cui_get_workflow_API",
+        },
+        executionTime,
+      ),
+    );
   }),
 );
 
@@ -484,6 +535,169 @@ server.registerTool(
         },
         {
           action: "cui_execute_dynamic_tool",
+        },
+        executionTime,
+      ),
+    );
+  }),
+);
+
+/**
+ * @METHOD
+ * @description AGENT自行提供API_JSON，并执行工作流
+ * @author LaiFQZzr
+ * @date 2026/02/28 11:29
+ */
+server.registerTool(
+  "cui_execute_custom_workflow",
+  {
+    title: i18n.t("tool.cui_execute_custom_workflow.title"),
+    description: i18n.t("tool.cui_execute_custom_workflow.description"),
+    inputSchema: {
+      workflowName: z
+        .string()
+        .describe(
+          i18n.t("tool.cui_execute_custom_workflow.inputSchema.workflowName "),
+        ),
+      isAsync: z
+        .boolean()
+        .default(false)
+        .describe(
+          i18n.t("tool.cui_execute_custom_workflow.inputSchema.isAsync"),
+        ),
+      apiJson: z
+        .record(z.string(), z.any())
+        .optional()
+        .describe(
+          i18n.t("tool.cui_execute_custom_workflow.inputSchema.apiJson"),
+        ),
+    },
+  },
+  withMcpErrorHandling(async ({ workflowName, isAsync, apiJson }, extra) => {
+    const startTime = Date.now();
+
+    if (!client.isConnected()) {
+      await client.connect();
+    }
+
+    if (!client.isConnected()) {
+      throw new McpError(ErrorCode.InternalError, "WebSocket NOT CONNECTED");
+    }
+
+    // 根据拼接后的Prompt执行工作流
+    const clientId = client.getClientId();
+
+    const submitResult = await executeCustomWorkflowTaskByPrompts({
+      prompts: apiJson,
+      clientId: clientId,
+    });
+
+    console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
+
+    if (!isAsync) {
+      // 获取 progressToken，用于发送进度通知
+      // 注意：AGENT 需要在调用工具时在 _meta.progressToken 中传入 token
+      const progressToken = extra?._meta?.progressToken as
+        | number
+        | string
+        | undefined;
+
+      if (progressToken) {
+        console.error(`[进度通知] 已启用，Token: ${progressToken}`);
+      } else {
+        console.error(`[进度通知] 未启用（AGENT 未传入 progressToken）`);
+      }
+
+      const progressInterval = 2000; // 最小进度通知间隔 (毫秒)
+      let lastProgressTime = 0;
+
+      // 进度回调函数
+      const onProgress = async (progress: ExecutionProgress) => {
+        const now = Date.now();
+        // 限制进度通知频率，避免过于频繁
+        if (progressToken && now - lastProgressTime >= progressInterval) {
+          lastProgressTime = now;
+          // 计算进度值 (0-1 之间)
+          const progressValue =
+            progress.percent !== undefined
+              ? progress.percent / 100
+              : progress.stage === "completed"
+                ? 1
+                : 0.5;
+
+          try {
+            // 发送进度通知到 AGENT
+            await extra?.sendNotification?.({
+              method: "notifications/progress",
+              params: {
+                progressToken,
+                progress: progressValue,
+                total: 1,
+                message: progress.message,
+              },
+            });
+            console.error(
+              `[进度通知] Token: ${progressToken}, Progress: ${(progressValue * 100).toFixed(1)}%`,
+            );
+          } catch (err) {
+            console.error(`[进度通知] 发送失败:`, err);
+          }
+        }
+      };
+
+      const executionResult = await waitForExecutionCompletion({
+        client,
+        promptId: submitResult.prompt_id,
+        timeout: 10 * 60 * 1000,
+        onProgress,
+      });
+
+      if (!executionResult.success) {
+        return ResultToMcpResponse(
+          errorWithDetail(
+            i18n.t("error.workflowExecuteFail", {
+              error: executionResult.error,
+            }),
+            `Prompt ID: ${submitResult.prompt_id}`,
+          ),
+        );
+      }
+
+      const executionTime = Date.now() - startTime;
+
+      return ResultToMcpResponse(
+        ok(
+          i18n.t("tool.cui_execute_custom_workflow.success", {
+            workflowName: workflowName,
+            promptId: submitResult.prompt_id,
+          }),
+          {
+            promptId: submitResult.prompt_id,
+            img: buildComfyViewUrls(executionResult),
+            outputs: executionResult.outputs,
+          },
+          {
+            action: "cui_execute_custom_workflow",
+          },
+          executionTime,
+        ),
+      );
+    }
+
+    const executionTime = Date.now() - startTime;
+
+    return ResultToMcpResponse(
+      ok(
+        i18n.t("tool.cui_execute_custom_workflow.success", {
+          workflowName: workflowName,
+          promptId: submitResult.prompt_id,
+        }),
+        {
+          promptId: submitResult.prompt_id,
+          description: i18n.t("tool.cui_execute_dynamic_tool.asyncSupplement"),
+        },
+        {
+          action: "cui_execute_custom_workflow",
         },
         executionTime,
       ),
