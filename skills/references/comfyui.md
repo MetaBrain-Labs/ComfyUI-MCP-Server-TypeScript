@@ -12,7 +12,7 @@
 
 > **Thought**: I have the workflow name (`flux_portrait_v2`) and the model name. Now I must mount the tool.
 
-1. Call `cui_mount_dynamic_tool`.
+1. Call `cui_mount_workflow`.
 2. **[STOP GENERATION]**
 
 **Turn 3: Execution**

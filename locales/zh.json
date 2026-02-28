@@ -45,7 +45,7 @@
       },
       "success": "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。"
     },
-    "cui_mount_dynamic_tool": {
+    "cui_mount_workflow": {
       "title": "挂载动态工具",
       "description": "用于动态生成专用的工作流执行函数。调用成功后立即停止生成。等待 Host 刷新上下文后，于下一轮对话调用新生成的 cui_execute_dynamic_task_{workflow_name}。",
       "inputSchema": {
@@ -56,7 +56,7 @@
       },
       "success": "成功创建动态 Tool: {{toolName}}"
     },
-    "cui_execute_dynamic_tool": {
+    "cui_execute_workflow": {
       "title": "执行工作流任务（动态构建后的工具函数）",
       "description": "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
       "inputSchema": {

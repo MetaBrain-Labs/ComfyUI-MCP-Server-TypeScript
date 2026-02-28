@@ -45,7 +45,7 @@
       },
       "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
     },
-    "cui_mount_dynamic_tool": {
+    "cui_mount_workflow": {
       "title": "Mount dynamic tool",
       "description": "Used to dynamically generate dedicated workflow execution functions. Stop generation immediately after a successful call. Wait for the Host to refresh the context, then call the newly generated cui_execute_dynamic_task_{workflow_name} in the next conversation turn.",
       "inputSchema": {
@@ -56,7 +56,7 @@
       },
       "success": "Successfully created dynamic Tool: {{toolName}}"
     },
-    "cui_execute_dynamic_tool": {
+    "cui_execute_workflow": {
       "title": "Execute workflow task (dynamically built tool function)",
       "description": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
       "inputSchema": {
