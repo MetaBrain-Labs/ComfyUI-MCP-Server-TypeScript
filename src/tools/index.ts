@@ -79,17 +79,17 @@ const server = new McpServer(
  * @date 2026/02/24 15:47
  */
 server.registerTool(
-  "cui_get_core_manual",
+  "get_core_manual",
   {
-    title: i18n.t("tool.cui_get_core_manual.title"),
-    description: i18n.t("tool.cui_get_core_manual.description"),
+    title: i18n.t("tool.get_core_manual.title"),
+    description: i18n.t("tool.get_core_manual.description"),
     inputSchema: {},
   },
   withMcpErrorHandling(async () => {
     const defaultRule = await readFile(COMMON.DEFAULT_RULE_PATH, "utf-8");
     return ResultToMcpResponse(
-      ok(i18n.t("tool.cui_get_core_manual.success"), defaultRule, {
-        action: "cui_get_core_manual",
+      ok(i18n.t("tool.get_core_manual.success"), defaultRule, {
+        action: "get_core_manual",
       }),
     );
   }),
@@ -102,10 +102,10 @@ server.registerTool(
  * @date 2026/02/02 09:30
  */
 server.registerTool(
-  "cui_get_workflows_catalog",
+  "get_workflows_catalog",
   {
-    title: i18n.t("tool.cui_get_workflows_catalog.title"),
-    description: i18n.t("tool.cui_get_workflows_catalog.description"),
+    title: i18n.t("tool.get_workflows_catalog.title"),
+    description: i18n.t("tool.get_workflows_catalog.description"),
     inputSchema: {
       maxItems: z
         .number()
@@ -113,19 +113,17 @@ server.registerTool(
         .max(10)
         .optional()
         .default(10)
-        .describe(
-          i18n.t("tool.cui_get_workflows_catalog.inputSchema.maxItems"),
-        ),
+        .describe(i18n.t("tool.get_workflows_catalog.inputSchema.maxItems")),
       token: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_get_workflows_catalog.inputSchema.token")),
+        .describe(i18n.t("tool.get_workflows_catalog.inputSchema.token")),
       enableWorkflow: z
         .boolean()
         .optional()
         .default(false)
         .describe(
-          i18n.t("tool.cui_get_workflows_catalog.inputSchema.enableWorkflow"),
+          i18n.t("tool.get_workflows_catalog.inputSchema.enableWorkflow"),
         ),
     },
   },
@@ -176,14 +174,14 @@ server.registerTool(
  * @date 2026/02/28 10:46
  */
 server.registerTool(
-  "cui_get_workflow_API",
+  "get_workflow_API",
   {
-    title: i18n.t("tool.cui_get_workflow_API.title"),
-    description: i18n.t("tool.cui_get_workflow_API.description"),
+    title: i18n.t("tool.get_workflow_API.title"),
+    description: i18n.t("tool.get_workflow_API.description"),
     inputSchema: {
       workflowName: z
         .string()
-        .describe(i18n.t("tool.cui_get_workflow_API.inputSchema.workflowName")),
+        .describe(i18n.t("tool.get_workflow_API.inputSchema.workflowName")),
     },
   },
   withMcpErrorHandling(async ({ workflowName }) => {
@@ -207,10 +205,10 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_get_workflow_API.success"),
+        i18n.t("tool.get_workflow_API.success"),
         result,
         {
-          action: "cui_get_workflow_API",
+          action: "get_workflow_API",
         },
         executionTime,
       ),
@@ -266,29 +264,29 @@ server.registerTool(
  * @date 2026/02/03 14:50
  */
 server.registerTool(
-  "cui_mount_workflow",
+  "mount_workflow",
   {
-    title: i18n.t("tool.cui_mount_workflow.title"),
-    description: i18n.t("tool.cui_mount_workflow.description"),
+    title: i18n.t("tool.mount_workflow.title"),
+    description: i18n.t("tool.mount_workflow.description"),
     inputSchema: {
       promptId: z
         .string()
-        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.promptId")),
+        .describe(i18n.t("tool.mount_workflow.inputSchema.promptId")),
       toolName: z
         .string()
         .regex(
           /^[a-zA-Z0-9_-]+$/,
           "Tool 名称只能包含字母、数字、下划线、连字符",
         )
-        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.toolName")),
+        .describe(i18n.t("tool.mount_workflow.inputSchema.toolName")),
       title: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.title")),
+        .describe(i18n.t("tool.mount_workflow.inputSchema.title")),
       description: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_mount_workflow.inputSchema.description")),
+        .describe(i18n.t("tool.mount_workflow.inputSchema.description")),
     },
   },
   withMcpErrorHandling(async ({ promptId, toolName, title, description }) => {
@@ -353,12 +351,12 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_mount_workflow.success", {
+        i18n.t("tool.mount_workflow.success", {
           toolName,
         }),
         response,
         {
-          action: "cui_mount_workflow",
+          action: "mount_workflow",
         },
         executionTime,
       ),
@@ -373,22 +371,22 @@ server.registerTool(
  * @date 2026/02/03 14:50
  */
 server.registerTool(
-  "cui_execute_workflow",
+  "queue_prompt",
   {
-    title: i18n.t("tool.cui_execute_workflow.title"),
-    description: i18n.t("tool.cui_execute_workflow.description"),
+    title: i18n.t("tool.queue_prompt.title"),
+    description: i18n.t("tool.queue_prompt.description"),
     inputSchema: {
       toolName: z
         .string()
-        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.toolName")),
+        .describe(i18n.t("tool.queue_prompt.inputSchema.toolName")),
       isAsync: z
         .boolean()
         .default(false)
-        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.isAsync")),
+        .describe(i18n.t("tool.queue_prompt.inputSchema.isAsync")),
       params: z
         .record(z.string(), z.any())
         .optional()
-        .describe(i18n.t("tool.cui_execute_workflow.inputSchema.params")),
+        .describe(i18n.t("tool.queue_prompt.inputSchema.params")),
     },
   },
   withMcpErrorHandling(async ({ toolName, isAsync, params = {} }, extra) => {
@@ -507,14 +505,14 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          i18n.t("tool.cui_execute_workflow.success"),
+          i18n.t("tool.queue_prompt.success"),
           {
             promptId: submitResult.prompt_id,
             img: buildComfyViewUrls(executionResult),
             outputs: executionResult.outputs,
           },
           {
-            action: "cui_execute_workflow",
+            action: "queue_prompt",
           },
           executionTime,
         ),
@@ -525,13 +523,13 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_execute_workflow.success"),
+        i18n.t("tool.queue_prompt.success"),
         {
           promptId: submitResult.prompt_id,
-          description: i18n.t("tool.cui_execute_workflow.asyncSupplement"),
+          description: i18n.t("tool.queue_prompt.asyncSupplement"),
         },
         {
-          action: "cui_execute_workflow",
+          action: "queue_prompt",
         },
         executionTime,
       ),
@@ -546,28 +544,22 @@ server.registerTool(
  * @date 2026/02/28 11:29
  */
 server.registerTool(
-  "cui_execute_custom_workflow",
+  "queue_custom_prompt",
   {
-    title: i18n.t("tool.cui_execute_custom_workflow.title"),
-    description: i18n.t("tool.cui_execute_custom_workflow.description"),
+    title: i18n.t("tool.queue_custom_prompt.title"),
+    description: i18n.t("tool.queue_custom_prompt.description"),
     inputSchema: {
       workflowName: z
         .string()
-        .describe(
-          i18n.t("tool.cui_execute_custom_workflow.inputSchema.workflowName "),
-        ),
+        .describe(i18n.t("tool.queue_custom_prompt.inputSchema.workflowName ")),
       isAsync: z
         .boolean()
         .default(false)
-        .describe(
-          i18n.t("tool.cui_execute_custom_workflow.inputSchema.isAsync"),
-        ),
+        .describe(i18n.t("tool.queue_custom_prompt.inputSchema.isAsync")),
       apiJson: z
         .record(z.string(), z.any())
         .optional()
-        .describe(
-          i18n.t("tool.cui_execute_custom_workflow.inputSchema.apiJson"),
-        ),
+        .describe(i18n.t("tool.queue_custom_prompt.inputSchema.apiJson")),
     },
   },
   withMcpErrorHandling(async ({ workflowName, isAsync, apiJson }, extra) => {
@@ -664,7 +656,7 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          i18n.t("tool.cui_execute_custom_workflow.success", {
+          i18n.t("tool.queue_custom_prompt.success", {
             workflowName: workflowName,
             promptId: submitResult.prompt_id,
           }),
@@ -674,7 +666,7 @@ server.registerTool(
             outputs: executionResult.outputs,
           },
           {
-            action: "cui_execute_custom_workflow",
+            action: "queue_custom_prompt",
           },
           executionTime,
         ),
@@ -685,16 +677,16 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_execute_custom_workflow.success", {
+        i18n.t("tool.queue_custom_prompt.success", {
           workflowName: workflowName,
           promptId: submitResult.prompt_id,
         }),
         {
           promptId: submitResult.prompt_id,
-          description: i18n.t("tool.cui_execute_workflow.asyncSupplement"),
+          description: i18n.t("tool.queue_prompt.asyncSupplement"),
         },
         {
-          action: "cui_execute_custom_workflow",
+          action: "queue_custom_prompt",
         },
         executionTime,
       ),
@@ -709,14 +701,14 @@ server.registerTool(
  * @date 2026/02/28 10:46
  */
 server.registerTool(
-  "cui_cancel_task",
+  "interrupt_prompt",
   {
-    title: i18n.t("tool.cui_cancel_task.title"),
-    description: i18n.t("tool.cui_cancel_task.description"),
+    title: i18n.t("tool.interrupt_prompt.title"),
+    description: i18n.t("tool.interrupt_prompt.description"),
     inputSchema: {
       promptId: z
         .string()
-        .describe(i18n.t("tool.cui_cancel_task.inputSchema.promptId")),
+        .describe(i18n.t("tool.interrupt_prompt.inputSchema.promptId")),
     },
   },
   withMcpErrorHandling(async ({ promptId }) => {
@@ -728,12 +720,12 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_cancel_task.success", {
+        i18n.t("tool.interrupt_prompt.success", {
           promptId,
         }),
         result,
         {
-          action: "cui_cancel_task",
+          action: "interrupt_prompt",
         },
         executionTime,
       ),
@@ -748,14 +740,14 @@ server.registerTool(
  * @date 2026/02/28 14:38
  */
 server.registerTool(
-  "cui_get_task_result",
+  "get_prompt_result",
   {
-    title: i18n.t("tool.cui_get_task_result.title"),
-    description: i18n.t("tool.cui_get_task_result.description"),
+    title: i18n.t("tool.get_prompt_result.title"),
+    description: i18n.t("tool.get_prompt_result.description"),
     inputSchema: {
       promptId: z
         .string()
-        .describe(i18n.t("tool.cui_get_task_result.inputSchema.promptId")),
+        .describe(i18n.t("tool.get_prompt_result.inputSchema.promptId")),
     },
   },
   withMcpErrorHandling(async ({ promptId }) => {
@@ -767,10 +759,10 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_get_task_result.success"),
+        i18n.t("tool.get_prompt_result.success"),
         result,
         {
-          action: "cui_get_task_result",
+          action: "get_prompt_result",
         },
         executionTime,
       ),
@@ -785,10 +777,10 @@ server.registerTool(
  * @date 2026/02/28 15:22
  */
 server.registerTool(
-  "cui_get_system_status",
+  "get_system_status",
   {
-    title: i18n.t("tool.cui_get_system_status.title"),
-    description: i18n.t("tool.cui_get_system_status.description"),
+    title: i18n.t("tool.get_system_status.title"),
+    description: i18n.t("tool.get_system_status.description"),
     inputSchema: {},
   },
   withMcpErrorHandling(async ({}) => {
@@ -800,10 +792,10 @@ server.registerTool(
 
     return ResultToMcpResponse(
       ok(
-        i18n.t("tool.cui_get_system_status.success"),
+        i18n.t("tool.get_system_status.success"),
         result,
         {
-          action: "cui_get_system_status",
+          action: "get_system_status",
         },
         executionTime,
       ),
@@ -818,15 +810,15 @@ server.registerTool(
  * @date 2026/02/28 14:56
  */
 server.registerTool(
-  "cui_list_models",
+  "list_models",
   {
-    title: i18n.t("tool.cui_list_models.title"),
-    description: i18n.t("tool.cui_list_models.description"),
+    title: i18n.t("tool.list_models.title"),
+    description: i18n.t("tool.list_models.description"),
     inputSchema: {
       typeName: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_list_models.inputSchema.type_name")),
+        .describe(i18n.t("tool.list_models.inputSchema.type_name")),
     },
   },
   withMcpErrorHandling(async ({ typeName }) => {
@@ -853,11 +845,11 @@ server.registerTool(
     return ResultToMcpResponse(
       ok(
         result.length === 0
-          ? i18n.t("tool.cui_list_models.successButNoModel")
-          : i18n.t("tool.cui_list_models.success"),
+          ? i18n.t("tool.list_models.successButNoModel")
+          : i18n.t("tool.list_models.success"),
         result,
         {
-          action: "cui_list_models",
+          action: "list_models",
         },
         executionTime,
       ),
@@ -872,18 +864,18 @@ server.registerTool(
  * @date 2026/02/25 16:08
  */
 server.registerTool(
-  "cui_upload_assets",
+  "upload_assets",
   {
-    title: i18n.t("tool.cui_upload_assets.title"),
-    description: i18n.t("tool.cui_upload_assets.description"),
+    title: i18n.t("tool.upload_assets.title"),
+    description: i18n.t("tool.upload_assets.description"),
     inputSchema: {
       fileSource: z
         .string()
-        .describe(i18n.t("tool.cui_upload_assets.inputSchema.fileSource")),
+        .describe(i18n.t("tool.upload_assets.inputSchema.fileSource")),
       mimeType: z
         .string()
         .optional()
-        .describe(i18n.t("tool.cui_upload_assets.inputSchema.mimeType")),
+        .describe(i18n.t("tool.upload_assets.inputSchema.mimeType")),
     },
   },
   withMcpErrorHandling(async ({ fileSource, mimeType }) => {
@@ -943,7 +935,7 @@ server.registerTool(
 
       return ResultToMcpResponse(
         ok(
-          i18n.t("tool.cui_upload_assets.success", {
+          i18n.t("tool.upload_assets.success", {
             finalFileName,
           }),
           response,

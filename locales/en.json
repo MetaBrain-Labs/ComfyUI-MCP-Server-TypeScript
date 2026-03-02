@@ -1,7 +1,7 @@
 {
   "common": {},
   "error": {
-    "notTokenError": "The AGENT failed to load SKILL related resources correctly. Please retrieve the default Prompt via the cui_get_core_manual tool. In subsequent conversations, please save the token ({{token}}) in the context for use.",
+    "notTokenError": "The AGENT failed to load SKILL related resources correctly. Please retrieve the default Prompt via the get_core_manual tool. In subsequent conversations, please save the token ({{token}}) in the context for use.",
     "toolAlreadyExistError": "Tool {{toolName}} already exists, please use another name.",
     "toolNotAlreadyExistError": "Tool {{toolName}} does not exist.",
     "getTaskDetailFail": "Failed to retrieve task details.",
@@ -13,13 +13,13 @@
     "notFoundModel": "Corresponding model information not found. Currently available models are: {{models}}"
   },
   "tool": {
-    "cui_get_core_manual": {
+    "get_core_manual": {
       "title": "Get project core manual",
       "description": "High-priority resource. Must be read first during initialization or when involving tool calls. Contains core protocols, error handling, and parameter population strategies.",
       "inputSchema": {},
       "success": "Core manual loaded. Please strictly follow the protocols and parameter strategies within it for subsequent operations."
     },
-    "cui_get_workflows_catalog": {
+    "get_workflows_catalog": {
       "title": "Get workflows catalog",
       "description": "Respond to ComfyUI requirements (e.g., 'draw a picture'). Retrieve the best matching workflow. Guessing IDs or names is strictly prohibited; must be based on search results.",
       "inputSchema": {
@@ -29,7 +29,7 @@
       },
       "success": "Workflow catalog retrieved. Please select the best match strictly based on the results. Guessing IDs or names is prohibited."
     },
-    "cui_get_workflow_API": {
+    "get_workflow_API": {
       "title": "Get workflow details",
       "description": "Used to handle complex workflows or execution errors. Parse the specific meaning and format constraints of parameters via the returned JSON Schema.",
       "inputSchema": {
@@ -45,7 +45,7 @@
       },
       "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
     },
-    "cui_mount_workflow": {
+    "mount_workflow": {
       "title": "Mount dynamic tool",
       "description": "Used to dynamically generate dedicated workflow execution functions. Stop generation immediately after a successful call. Wait for the Host to refresh the context, then call the newly generated cui_execute_dynamic_task_{workflow_name} in the next conversation turn.",
       "inputSchema": {
@@ -56,7 +56,7 @@
       },
       "success": "Successfully created dynamic Tool: {{toolName}}"
     },
-    "cui_execute_workflow": {
+    "queue_prompt": {
       "title": "Execute workflow task (dynamically built tool function)",
       "description": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
       "inputSchema": {
@@ -67,7 +67,7 @@
       "success": "Successfully executed dynamic Workflow Tool.",
       "asyncSupplement": "Asynchronous execution selected. Please ask the user to manually visit ComfyUI to check the results after a while. Conversation ends."
     },
-    "cui_execute_custom_workflow": {
+    "queue_custom_prompt": {
       "title": "Execute custom workflow",
       "description": "Restricted tool. Used only for explicitly requested low-level debugging or generation without preset workflow API. Prohibited for normal tasks.",
       "inputSchema": {
@@ -77,7 +77,7 @@
       },
       "success": "Task ({{workflowName}}) successfully added to the task queue (ID: {{promptId}}). Please monitor the progress or wait for the results to be generated."
     },
-    "cui_cancel_task": {
+    "interrupt_prompt": {
       "title": "Cancel task",
       "description": "Cancel a running task.",
       "inputSchema": {
@@ -85,7 +85,7 @@
       },
       "success": "Task (ID: {{prompt_id}}) has been cancelled."
     },
-    "cui_get_task_result": {
+    "get_prompt_result": {
       "title": "Get task result",
       "description": "Query task status. If running: report progress and keep waiting. If success: display metadata and media links from the output field.",
       "inputSchema": {
@@ -93,7 +93,7 @@
       },
       "success": "Task status retrieved. Please report progress or display the final generated media resources based on the returned results."
     },
-    "cui_list_models": {
+    "list_models": {
       "title": "Retrieve model files",
       "description": "List available models. Mandatory rule: Before filling in parameters like ckpt_name, you must call this tool to get the exact file name. Guessing or inventing names is strictly prohibited.",
       "inputSchema": {
@@ -102,7 +102,7 @@
       "success": "Available models list retrieved. Please strictly reference the returned exact file names when filling in parameters; guessing is prohibited.",
       "successButNoModel": "Available model types exist, but no models are available under the selected model type. Please verify that the model file has been uploaded correctly or try using a different model type."
     },
-    "cui_upload_assets": {
+    "upload_assets": {
       "title": "Import ComfyUI assets",
       "description": "Call this tool to upload and process an image when the user provides a local path or a network link.",
       "inputSchema": {

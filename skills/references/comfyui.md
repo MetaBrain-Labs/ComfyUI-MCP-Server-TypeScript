@@ -6,13 +6,13 @@
 
 > **Thought**: The user wants to use a specific model ("Flux"). I need to find the workflow and verify the exact model filename on the server.
 
-1. Call `cui_get_workflows_catalog` -> Returns list of names including `flux_portrait_v2`.
+1. Call `get_workflows_catalog` -> Returns list of names including `flux_portrait_v2`.
 
 **Turn 2: Tool Mounting**
 
 > **Thought**: I have the workflow name (`flux_portrait_v2`) and the model name. Now I must mount the tool.
 
-1. Call `cui_mount_workflow`.
+1. Call `mount_workflow`.
 2. **[STOP GENERATION]**
 
 **Turn 3: Execution**
