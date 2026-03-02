@@ -74,7 +74,7 @@ ComfyUI 节点的 `_meta.title` 使用特定前缀来标记参数重要性：
 ┌─────────────────────────────────────────────────────────────────┐
 │  Step 3: 执行 - 使用动态 Tool 生成图像                            │
 ├─────────────────────────────────────────────────────────────────┤
-│  Tool: cui_execute_workflow                                 │
+│  Tool: queue_prompt                                 │
 │  输入: toolName + 必须填充参数 + 可选修改参数                      │
 │  注意: required=true 的参数必须根据用户需求填写，不可使用默认值     │
 └─────────────────────────────────────────────────────────────────┘
@@ -190,7 +190,7 @@ cui_create_workflow_tool({
 
 ```javascript
 // 调用 - required=true 的参数必须填写，不能保留默认值
-cui_execute_workflow({
+queue_prompt({
   toolName: "flux_txt2img",
   params: {
     // 【必须填充】必须根据用户需求填写，不能使用 "__prompt__"
@@ -241,7 +241,7 @@ cui_execute_workflow({
 组装 params 对象
    │
    ▼
-执行 cui_execute_workflow
+执行 queue_prompt
 ```
 
 ---
@@ -284,7 +284,7 @@ User: 正向：海边夕阳，金色沙滩，椰子树，高品质
 Agent: 收到！我还将调整图像尺寸为 1024x768 以获得更好效果。
 
 [Step 4] 执行工作流...
--> cui_execute_workflow({
+-> queue_prompt({
      toolName: "sunset_beach",
      params: {
        "3_text": "海边夕阳，金色沙滩，椰子树，高品质，cinematic lighting",
@@ -340,7 +340,7 @@ Agent: 完成了！海边夕阳图片已生成。
 await cui_create_workflow_tool({...})  // 只需执行一次
 
 // 之后可以反复调用，每次只改必要的参数
-await cui_execute_workflow({
+await queue_prompt({
   toolName: "sunset_beach",
   params: { "3_text": "新提示词..." }  // 只改提示词
 })
