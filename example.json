@@ -1,0 +1,26 @@
+{
+    "mcpServers": {
+        "comfyui-mcp": {
+            "command": "python",
+            "args": [
+                "-m",
+                "src.__main__"
+            ],
+            "cwd": "<项目根目录绝对路径，如 F:/ComfyUI-MCP-Server>",
+            "env": {
+                "LOCALE": "en",
+                "COMFY_UI_SERVER_IP": "<必填，ComfyUI 完整地址，如 http://127.0.0.1:8188>",
+                "COMFY_UI_SERVER_HOST": "<必填，不含协议的主机名，如 127.0.0.1>",
+                "COMFY_UI_SERVER_PORT": "8188",
+                "SYNC_MODE": "timed",
+                "SYNC_POLL_INTERVAL_SECONDS": "3",
+                "SYNC_EVENT_FALLBACK_INTERVAL_SECONDS": "300",
+                "ONDEMAND_REFRESH_COOLDOWN_SECONDS": "3",
+                "COMFY_UI_INSTALL_PATH": "",
+                "WORKFLOW_NAME_REGEX": "^==(.+?)==$",
+                "WORKFLOW_PARAM_REGEX": "^=>(.+)$",
+                "LOG_LEVEL": "INFO"
+            }
+        }
+    }
+}

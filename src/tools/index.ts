@@ -30,9 +30,8 @@ import {
   ExecutionProgress,
   waitForExecutionCompletion,
 } from "../services/tasks";
-import { deterministicRandom, validateToken } from "../services/validateToken";
 import { DynamicWorkflowToolData } from "../types/dynamic-tool";
-import { error, errorWithDetail, errorWithToken, ok } from "../types/result";
+import { error, errorWithDetail, ok } from "../types/result";
 import {
   buildComfyViewUrls,
   ResultToMcpResponse,
@@ -114,37 +113,9 @@ server.registerTool(
         .optional()
         .default(10)
         .describe(i18n.t("tool.get_workflows_catalog.inputSchema.maxItems")),
-      token: z
-        .string()
-        .optional()
-        .describe(i18n.t("tool.get_workflows_catalog.inputSchema.token")),
-      enableWorkflow: z
-        .boolean()
-        .optional()
-        .default(false)
-        .describe(
-          i18n.t("tool.get_workflows_catalog.inputSchema.enableWorkflow"),
-        ),
     },
   },
-  withMcpErrorHandling(async ({ maxItems, token, enableWorkflow }) => {
-    // token校验失败，启用默认Prompt
-    if (!token || !validateToken({ token })) {
-      const token = deterministicRandom({
-        seed: "my-seed",
-        referenceTime: Date.now(),
-      });
-      // 让AGENT去加载通用Prompt
-      return ResultToMcpResponse(
-        errorWithToken(
-          i18n.t("error.notTokenError", {
-            token,
-          }),
-          token,
-        ),
-      );
-    }
-
+  withMcpErrorHandling(async ({ maxItems }) => {
     let hasMore: boolean = true;
 
     // 获取历史任务中为成功的任务
@@ -272,30 +243,22 @@ server.registerTool(
       promptId: z
         .string()
         .describe(i18n.t("tool.mount_workflow.inputSchema.promptId")),
-      toolName: z
+      workflowName: z
         .string()
         .regex(
           /^[a-zA-Z0-9_-]+$/,
           "Tool 名称只能包含字母、数字、下划线、连字符",
         )
-        .describe(i18n.t("tool.mount_workflow.inputSchema.toolName")),
-      title: z
-        .string()
-        .optional()
-        .describe(i18n.t("tool.mount_workflow.inputSchema.title")),
-      description: z
-        .string()
-        .optional()
-        .describe(i18n.t("tool.mount_workflow.inputSchema.description")),
+        .describe(i18n.t("tool.mount_workflow.inputSchema.workflowName")),
     },
   },
-  withMcpErrorHandling(async ({ promptId, toolName, title, description }) => {
+  withMcpErrorHandling(async ({ promptId, workflowName }) => {
     // 检查 Tool 名称是否已存在
-    if (hasDynamicTool(toolName)) {
+    if (hasDynamicTool(workflowName)) {
       return ResultToMcpResponse(
         error(
           i18n.t("error.toolAlreadyExistError", {
-            toolName,
+            workflowName,
           }),
         ),
       );
@@ -315,13 +278,7 @@ server.registerTool(
     const workflow = result.detail.data;
 
     // 创建动态 Tool
-    const tool = createDynamicWorkflowTool(
-      toolName,
-      promptId,
-      workflow,
-      title,
-      description,
-    );
+    const tool = createDynamicWorkflowTool(workflowName, promptId, workflow);
 
     // 构建响应
     const response: DynamicWorkflowToolData = {
@@ -352,7 +309,7 @@ server.registerTool(
     return ResultToMcpResponse(
       ok(
         i18n.t("tool.mount_workflow.success", {
-          toolName,
+          workflowName,
         }),
         response,
         {
@@ -376,9 +333,9 @@ server.registerTool(
     title: i18n.t("tool.queue_prompt.title"),
     description: i18n.t("tool.queue_prompt.description"),
     inputSchema: {
-      toolName: z
+      workflowName: z
         .string()
-        .describe(i18n.t("tool.queue_prompt.inputSchema.toolName")),
+        .describe(i18n.t("tool.queue_prompt.inputSchema.workflowName")),
       isAsync: z
         .boolean()
         .default(false)
@@ -389,114 +346,133 @@ server.registerTool(
         .describe(i18n.t("tool.queue_prompt.inputSchema.params")),
     },
   },
-  withMcpErrorHandling(async ({ toolName, isAsync, params = {} }, extra) => {
-    const startTime = Date.now();
+  withMcpErrorHandling(
+    async ({ workflowName, isAsync, params = {} }, extra) => {
+      const startTime = Date.now();
 
-    const tool = getDynamicTool(toolName);
+      const tool = getDynamicTool(workflowName);
 
-    if (!tool) {
-      return ResultToMcpResponse(
-        errorWithDetail(
-          i18n.t("error.toolNotAlreadyExistError", {
-            toolName,
-          }),
-          `availableTools: ${getAllDynamicTools().map((t) => t.name)}`,
-        ),
-      );
-    }
-
-    if (!client.isConnected()) {
-      await client.connect();
-    }
-
-    if (!client.isConnected()) {
-      throw new McpError(ErrorCode.InternalError, "WebSocket NOT CONNECTED");
-    }
-
-    // 获取拼接AGENT修改参数后的Prompt
-    const execResult = await executeDynamicWorkflowTool(
-      toolName,
-      params,
-      client,
-    );
-
-    // 根据拼接后的Prompt执行工作流
-    const clientId = client.getClientId();
-
-    const submitResult = await executeWorkflowTaskByPrompts({
-      prompts: execResult,
-      clientId: clientId,
-    });
-
-    console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
-
-    if (!isAsync) {
-      // 获取 progressToken，用于发送进度通知
-      // 注意：AGENT 需要在调用工具时在 _meta.progressToken 中传入 token
-      const progressToken = extra?._meta?.progressToken as
-        | number
-        | string
-        | undefined;
-
-      if (progressToken) {
-        console.error(`[进度通知] 已启用，Token: ${progressToken}`);
-      } else {
-        console.error(`[进度通知] 未启用（AGENT 未传入 progressToken）`);
-      }
-
-      const progressInterval = 2000; // 最小进度通知间隔 (毫秒)
-      let lastProgressTime = 0;
-
-      // 进度回调函数
-      const onProgress = async (progress: ExecutionProgress) => {
-        const now = Date.now();
-        // 限制进度通知频率，避免过于频繁
-        if (progressToken && now - lastProgressTime >= progressInterval) {
-          lastProgressTime = now;
-          // 计算进度值 (0-1 之间)
-          const progressValue =
-            progress.percent !== undefined
-              ? progress.percent / 100
-              : progress.stage === "completed"
-                ? 1
-                : 0.5;
-
-          try {
-            // 发送进度通知到 AGENT
-            await extra?.sendNotification?.({
-              method: "notifications/progress",
-              params: {
-                progressToken,
-                progress: progressValue,
-                total: 1,
-                message: progress.message,
-              },
-            });
-            console.error(
-              `[进度通知] Token: ${progressToken}, Progress: ${(progressValue * 100).toFixed(1)}%`,
-            );
-          } catch (err) {
-            console.error(`[进度通知] 发送失败:`, err);
-          }
-        }
-      };
-
-      const executionResult = await waitForExecutionCompletion({
-        client,
-        promptId: submitResult.prompt_id,
-        timeout: 10 * 60 * 1000,
-        onProgress,
-      });
-
-      if (!executionResult.success) {
-        deleteDynamicTool(toolName);
-
+      if (!tool) {
         return ResultToMcpResponse(
           errorWithDetail(
-            i18n.t("error.workflowExecuteFail", {
-              error: executionResult.error,
+            i18n.t("error.toolNotAlreadyExistError", {
+              workflowName,
             }),
-            `Prompt ID: ${submitResult.prompt_id}`,
+            `availableTools: ${getAllDynamicTools().map((t) => t.name)}`,
+          ),
+        );
+      }
+
+      if (!client.isConnected()) {
+        await client.connect();
+      }
+
+      if (!client.isConnected()) {
+        throw new McpError(ErrorCode.InternalError, "WebSocket NOT CONNECTED");
+      }
+
+      // 获取拼接AGENT修改参数后的Prompt
+      const execResult = await executeDynamicWorkflowTool(
+        workflowName,
+        params,
+        client,
+      );
+
+      // 根据拼接后的Prompt执行工作流
+      const clientId = client.getClientId();
+
+      const submitResult = await executeWorkflowTaskByPrompts({
+        prompts: execResult,
+        clientId: clientId,
+      });
+
+      console.error(`[工作流已提交] Prompt ID: ${submitResult.prompt_id}`);
+
+      if (!isAsync) {
+        // 获取 progressToken，用于发送进度通知
+        // 注意：AGENT 需要在调用工具时在 _meta.progressToken 中传入 token
+        const progressToken = extra?._meta?.progressToken as
+          | number
+          | string
+          | undefined;
+
+        if (progressToken) {
+          console.error(`[进度通知] 已启用，Token: ${progressToken}`);
+        } else {
+          console.error(`[进度通知] 未启用（AGENT 未传入 progressToken）`);
+        }
+
+        const progressInterval = 2000; // 最小进度通知间隔 (毫秒)
+        let lastProgressTime = 0;
+
+        // 进度回调函数
+        const onProgress = async (progress: ExecutionProgress) => {
+          const now = Date.now();
+          // 限制进度通知频率，避免过于频繁
+          if (progressToken && now - lastProgressTime >= progressInterval) {
+            lastProgressTime = now;
+            // 计算进度值 (0-1 之间)
+            const progressValue =
+              progress.percent !== undefined
+                ? progress.percent / 100
+                : progress.stage === "completed"
+                  ? 1
+                  : 0.5;
+
+            try {
+              // 发送进度通知到 AGENT
+              await extra?.sendNotification?.({
+                method: "notifications/progress",
+                params: {
+                  progressToken,
+                  progress: progressValue,
+                  total: 1,
+                  message: progress.message,
+                },
+              });
+              console.error(
+                `[进度通知] Token: ${progressToken}, Progress: ${(progressValue * 100).toFixed(1)}%`,
+              );
+            } catch (err) {
+              console.error(`[进度通知] 发送失败:`, err);
+            }
+          }
+        };
+
+        const executionResult = await waitForExecutionCompletion({
+          client,
+          promptId: submitResult.prompt_id,
+          timeout: 10 * 60 * 1000,
+          onProgress,
+        });
+
+        if (!executionResult.success) {
+          deleteDynamicTool(workflowName);
+
+          return ResultToMcpResponse(
+            errorWithDetail(
+              i18n.t("error.workflowExecuteFail", {
+                error: executionResult.error,
+              }),
+              `Prompt ID: ${submitResult.prompt_id}`,
+            ),
+          );
+        }
+
+        const executionTime = Date.now() - startTime;
+
+        return ResultToMcpResponse(
+          ok(
+            i18n.t("tool.queue_prompt.success"),
+            {
+              promptId: submitResult.prompt_id,
+              img: buildComfyViewUrls(executionResult),
+              outputs: executionResult.outputs,
+            },
+            {
+              action: "queue_prompt",
+            },
+            executionTime,
           ),
         );
       }
@@ -508,8 +484,7 @@ server.registerTool(
           i18n.t("tool.queue_prompt.success"),
           {
             promptId: submitResult.prompt_id,
-            img: buildComfyViewUrls(executionResult),
-            outputs: executionResult.outputs,
+            description: i18n.t("tool.queue_prompt.asyncSupplement"),
           },
           {
             action: "queue_prompt",
@@ -517,24 +492,8 @@ server.registerTool(
           executionTime,
         ),
       );
-    }
-
-    const executionTime = Date.now() - startTime;
-
-    return ResultToMcpResponse(
-      ok(
-        i18n.t("tool.queue_prompt.success"),
-        {
-          promptId: submitResult.prompt_id,
-          description: i18n.t("tool.queue_prompt.asyncSupplement"),
-        },
-        {
-          action: "queue_prompt",
-        },
-        executionTime,
-      ),
-    );
-  }),
+    },
+  ),
 );
 
 /**
@@ -818,7 +777,7 @@ server.registerTool(
       typeName: z
         .string()
         .optional()
-        .describe(i18n.t("tool.list_models.inputSchema.type_name")),
+        .describe(i18n.t("tool.list_models.inputSchema.typeName")),
     },
   },
   withMcpErrorHandling(async ({ typeName }) => {

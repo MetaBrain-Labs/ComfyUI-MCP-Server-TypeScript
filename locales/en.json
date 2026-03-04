@@ -2,8 +2,8 @@
   "common": {},
   "error": {
     "notTokenError": "The AGENT failed to load SKILL related resources correctly. Please retrieve the default Prompt via the get_core_manual tool. In subsequent conversations, please save the token ({{token}}) in the context for use.",
-    "toolAlreadyExistError": "Tool {{toolName}} already exists, please use another name.",
-    "toolNotAlreadyExistError": "Tool {{toolName}} does not exist.",
+    "toolAlreadyExistError": "Tool {{workflowName}} already exists, please use another name.",
+    "toolNotAlreadyExistError": "Tool {{workflowName}} does not exist.",
     "getTaskDetailFail": "Failed to retrieve task details.",
     "workflowExecuteFail": "Workflow execution failed: {{error}}",
     "downloadAssetsFail": "Failed to download network resources, HTTP status code: {{status}}",
@@ -50,17 +50,17 @@
       "description": "Used to dynamically generate dedicated workflow execution functions. Stop generation immediately after a successful call. Wait for the Host to refresh the context, then call the newly generated cui_execute_dynamic_task_{workflow_name} in the next conversation turn.",
       "inputSchema": {
         "promptId": "The unique ID of a single workflow execution task.",
-        "toolName": "Unique tool suffix name (pure English, e.g., flux_dev), used to generate the tool name cui_execute_dynamic_task_{workflow_name}. Can only contain letters, numbers, underscores, and hyphens.",
+        "workflowName": "Unique tool suffix name (pure English, e.g., flux_dev), used to generate the tool name cui_execute_dynamic_task_{workflow_name}. Can only contain letters, numbers, underscores, and hyphens.",
         "title": "Optional, the display title of the Tool.",
         "description": "Optional, the detailed description of the Tool."
       },
-      "success": "Successfully created dynamic Tool: {{toolName}}"
+      "success": "Successfully created dynamic Tool: {{workflowName}}"
     },
     "queue_prompt": {
       "title": "Execute workflow task (dynamically built tool function)",
       "description": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
       "inputSchema": {
-        "toolName": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
+        "workflowName": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
         "isAsync": "Whether to execute the task asynchronously. Default is false. Change to true only when explicitly requested by the user.",
         "params": "Parameters to modify. Key format is nodeId_inputKey. Unprovided parameters will use default values."
       },
@@ -97,7 +97,7 @@
       "title": "Retrieve model files",
       "description": "List available models. Mandatory rule: Before filling in parameters like ckpt_name, you must call this tool to get the exact file name. Guessing or inventing names is strictly prohibited.",
       "inputSchema": {
-        "type_name": "Required model type."
+        "typeName": "Required model type."
       },
       "success": "Available models list retrieved. Please strictly reference the returned exact file names when filling in parameters; guessing is prohibited.",
       "successButNoModel": "Available model types exist, but no models are available under the selected model type. Please verify that the model file has been uploaded correctly or try using a different model type."

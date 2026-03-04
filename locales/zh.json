@@ -2,12 +2,12 @@
   "common": {},
   "error": {
     "notTokenError": "AGENT 没有正确加载 SKILL 相关资源，请通过 get_core_manual tool 获取默认 Prompt 。后续对话中请将token({{token}})保存到上下文中使用",
-    "toolAlreadyExistError": "Tool {{toolName}} 已存在，请使用其他名称",
-    "toolNotAlreadyExistError": "Tool {{toolName}} 不存在",
+    "toolAlreadyExistError": "Tool {{workflowName}} 已存在，请使用其他名称",
+    "toolNotAlreadyExistError": "Tool {{workflowName}} 不存在",
     "getTaskDetailFail": "获取任务详情失败",
     "workflowExecuteFail": "工作流执行失败: {{error}}",
     "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
-    "fileNotExistError": "本地文件不存在，请检查路径是否正确: ${fileSource}",
+    "fileNotExistError": "本地文件不存在，请检查路径是否正确: {{fileSource}}",
     "uploadFail": "导入ComfyUI Assets失败: {{message}}",
     "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}",
     "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}"
@@ -15,13 +15,13 @@
   "tool": {
     "get_core_manual": {
       "title": "获取项目核心手册",
-      "description": "高优先级资源。必须在初始化或涉及工具调用时优先读取。包含核心协议、错误处理及参数填充策略。",
+      "description": "【系统指引】核心协议与操作字典。初始化或调用其他工具前必须优先读取，获取最新参数填充策略与报错恢复机制。",
       "inputSchema": {},
       "success": "核心手册已加载，请严格根据其中的协议与参数策略执行后续操作。"
     },
     "get_workflows_catalog": {
       "title": "获取工作流目录",
-      "description": "响应 ComfyUI 需求（如“画图”）。检索最佳匹配工作流。严禁猜测 ID 或名称，必须基于检索结果。",
+      "description": "【目录检索】获取当前服务器支持的所有工作流清单。涉及生图的指令必须精确匹配此清单，严禁伪造或猜测工作流名称。",
       "inputSchema": {
         "maxItems": "分页查询历史任务中每页最多条数",
         "token": "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
@@ -31,7 +31,7 @@
     },
     "get_workflow_API": {
       "title": "获取工作流详情",
-      "description": "用于处理复杂工作流或运行报错。通过返回的 JSON Schema 解析参数的具体含义与格式约束。",
+      "description": "【工作流API】读取目标工作流的全量底层拓扑JSON。体积庞大，仅在执行异常需排查最底层逻辑时调用，严禁在常规业务中使用防污染上下文。",
       "inputSchema": {
         "workflowName": "目标工作流名称（优先使用目录中的workflowName字段，如果没有使用name字段，并且在name尾部添加.json）"
       },
@@ -46,76 +46,93 @@
       "success": "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。"
     },
     "mount_workflow": {
-      "title": "挂载动态工具",
-      "description": "用于动态生成专用的工作流执行函数。调用成功后立即停止生成。等待 Host 刷新上下文后，于下一轮对话调用新生成的 cui_execute_dynamic_task_{workflow_name}。",
+      "title": "挂载工作流",
+      "description": "【参数挂载】提取目标生成任务的受支持交互参数Schema（屏蔽连线细节）。提交工作流任务前，必须调用此接口获取合法的参数键名表。",
       "inputSchema": {
         "promptId": "一次 工作流执行任务 的唯一 ID",
-        "toolName": "唯一工具后缀名（纯英文，如 flux_dev），用于生成工具名 cui_execute_dynamic_task_{workflow_name}，只能包含字母、数字、下划线、连字符",
-        "title": "可选，Tool 的显示标题",
-        "description": "可选，Tool 的详细描述"
+        "workflowName": "目标工作流名称"
       },
-      "success": "成功创建动态 Tool: {{toolName}}"
+      "success": "成功创建动态 Tool: {{workflowName}}"
     },
     "queue_prompt": {
-      "title": "执行工作流任务（动态构建后的工具函数）",
-      "description": "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
+      "title": "执行工作流任务",
+      "description": "【任务提交】向队列提交任务 Prompt。底层自动调度计算节点并向 Host 实时同步进度。必须确保所有键名已通过挂载校验，严禁编造键名。",
       "inputSchema": {
-        "toolName": "执行 {workflow_name} 的专用工具。仅填充用户可见参数。准确映射，禁止臆造字段。",
+        "workflowName": "目标工作流名称",
         "isAsync": "是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。",
-        "params": "要修改的参数，key 格式为 nodeId_inputKey，未提供的参数使用默认值"
+        "params": "任务参数键值对集合。例如：{'5_text': 'a cat'}。必须严格遵循 Schema。"
       },
       "success": "成功执行动态 Workflow Tool",
       "asyncSupplement": "选择异步执行，请用户一段时间后手动访问ComfyUI查看结果，对话结束"
     },
     "queue_custom_prompt": {
       "title": "执行自定义工作流",
-      "description": "受限工具。仅用于明确要求的底层调试或无预设 工作流API 生成。普通任务禁止使用。",
+      "description": "【高级模式】直接向队列提交完整的原生 ComfyUI API Prompt JSON。仅在调试底层方案或响应明确专家指令时开放，常规任务严禁使用。",
       "inputSchema": {
-        "workflowName ": "自定义工作流的名称",
+        "workflowName ": "目标工作流名称",
         "apiJson": "完整的 ComfyUI Prompt 格式 JSON 字符串",
         "isAsync": "是否以异步方式执行任务，默认为否，仅用户明确要求时改为是。"
       },
       "success": "任务 ({{workflowName}}) 已成功加入任务队列 (ID: {{promptId}})，请监控进度或等待结果生成。"
     },
+    "save_custom_workflow": {
+      "title": "保存自定义工作流",
+      "description": "【保存工作流】将自定义参数化工作流保存到服务器的工作流目录中并随后自动执行语法校验和挂载。提交的 JSON 必须符合规范（至少包含一处符合挂载规则的 ==名称== 节点），否则将被拒绝保存。",
+      "param": {
+        "filename": "要保存的文件名（如 my_workflow 或 my_workflow.json）。",
+        "apiJson": "完整的 ComfyUI Prompt 格式 JSON 对象（包含节点拓扑）。"
+      },
+      "success": "已保存自定义工作流到 {{filePath}}。"
+    },
+    "save_task_assets": {
+      "title": "保存生成资产",
+      "description": "【保存生成资产】获取指定任务 (prompt_id) 的执行历史，并将产生的所有多媒体生成物 (图片、视频、GIF等) 下载并保存到指定的本地目录中。",
+      "param": {
+        "promptId": "任务的 prompt_id。",
+        "destinationDir": "可选。文件要保存到的本地路径（如果未指定或路径不合法，将默认存放在项目目录的 assets 文件夹中）。",
+        "overwrite": "若文件已存在是否覆盖，传 true 为覆盖，默认为 false。"
+      },
+      "success": "已保存资产 {{assetsName}} 到 {{filePath}}"
+    },
     "interrupt_prompt": {
       "title": "取消任务",
-      "description": "取消运行中的任务。",
+      "description": "【任务取消】取消特定 `prompt_id` 的运算进程并强制移除队列中的等待项。",
       "inputSchema": {
         "promptId": "一次 工作流执行任务 的唯一 ID"
       },
-      "success": "任务 (ID: {{prompt_id}}) 已取消。"
+      "success": "任务 (ID: {{promptId}}) 已取消。"
     },
     "get_prompt_result": {
       "title": "获取任务结果",
-      "description": "查询任务状态。若 running：报告进度并保持等待。若 success：展示元数据及 output 字段中的媒体链接。",
+      "description": "【输出快照与资产】获取特定 Prompt 执行完成后的节点快照，提取生成的目标媒体文件（图像/视频链接）或回溯 Traceback 诊断错误。",
       "inputSchema": {
         "promptId": "一次 工作流执行任务 的唯一 ID"
       },
-      "success": "任务状态已检索，请根据返回结果汇报进度或展示最终生成的媒体资源。"
+      "success": "任务状态已检索（如data为空，可能该任务正在处理执行过程中），请根据返回结果汇报进度或展示最终生成的媒体资源。"
     },
     "get_system_status": {
       "title": "获取系统状态",
-      "description": "查询服务器负载、队列或显存。任务失败时用于诊断环境（如 Python/Torch 状态）。",
+      "description": "【系统监控】采集内存、显存及 Python 运行时指标，用于排查 OOM 或服务死锁等底层异常。",
       "inputSchema": {},
       "success": "系统状态与环境诊断数据已获取，请根据返回指标分析负载情况或排查故障原因。"
     },
     "list_models": {
       "title": "检索模型文件",
-      "description": "列出可用模型。强制规则：填写 ckpt_name 等参数前，必须先调用此工具获取精确文件名。严禁猜测或臆造名称。",
+      "description": "【模型目录】轮询本地磁盘模型存放区。参数涉及具体模型文件时，必须前置调用此接口枚举校准，严禁凭空伪造模型文件名。",
       "inputSchema": {
-        "type_name": "所需模型类型"
+        "typeName": "模型类型。如 checkpoints, loras 等。默认为 checkpoints。"
       },
       "success": "可用模型列表已获取，请在填写参数时严格引用返回的精确文件名，禁止猜测。",
       "successButNoModel": "存在可用模型类型，但模型类型下无可用模型。请检查模型文件是否正确上传或使用其他类型模型。"
     },
     "upload_assets": {
       "title": "ComfyUI导入资产",
-      "description": "当用户提供一张图片的本地路径或网络链接时，调用此工具将图片上传并处理。",
+      "description": "【上传文件】将本地文件或网络 URL 上传至 ComfyUI 服务器的 input 目录，以便在工作流中直接应用。",
       "inputSchema": {
         "fileSource": "图片的本地绝对路径或网络 URL 链接（http/https）",
         "mimeType": "图片类型(可选)，默认 image/png"
       },
-      "success": "图片：{{finalFileName}} 已成功导入ComfyUI Assets中"
+      "success": "资产 {{finalFileName}} 成功上传到 ComfyUI 服务器。"
     }
   }
 }
