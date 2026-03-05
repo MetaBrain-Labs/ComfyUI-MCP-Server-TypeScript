@@ -66,7 +66,7 @@ _仅适用于已挂载的工具。_
 > **思考**：用户想要使用特定模型 ("Flux")。我需要找到工作流并在服务器上验证确切的模型文件名。
 
 1. 调用 `get_workflows_catalog` -> 返回包含 `flux_portrait_v2` 的名称列表。
-2. 调用 `list_models(type_name="checkpoints")` -> 返回包含 `flux1-dev-fp8.safetensors` 的列表。
+2. 调用 `list_models(typeName="checkpoints")` -> 返回包含 `flux1-dev-fp8.safetensors` 的列表。
 
 **第 2 轮：工具挂载**
 

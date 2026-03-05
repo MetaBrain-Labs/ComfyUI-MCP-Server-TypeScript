@@ -290,13 +290,13 @@ export function createDynamicWorkflowTool(
  * @date 2026/02/03 17:27
  */
 export async function executeDynamicWorkflowTool(
-  toolName: string,
+  workflowName: string,
   userInputs: Record<string, any>,
   client: ComfyClient,
 ): Promise<any> {
-  const tool = getDynamicTool(toolName);
+  const tool = getDynamicTool(workflowName);
   if (!tool) {
-    return `动态工具 "${toolName}" 不存在`;
+    return `动态工具 "${workflowName}" 不存在`;
   }
 
   // 合并用户输入到 workflow
