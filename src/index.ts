@@ -3,7 +3,8 @@ import cors from "cors";
 import { randomUUID } from "crypto";
 import "dotenv/config";
 import express, { Request, Response } from "express";
-import server from "./tools";
+import { mcpManager } from "./tools";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 
 const app = express();
 app.use(express.json());
@@ -15,9 +16,9 @@ app.use(
   }),
 );
 
-// 会话管理
 interface SessionInfo {
   transport: StreamableHTTPServerTransport;
+  server: McpServer;
   createdAt: number;
   lastAccessedAt: number;
 }
@@ -57,6 +58,7 @@ setInterval(() => {
     console.error(`清理过期会话: ${sessionId}`);
     const session = sessions.get(sessionId);
     if (session) {
+      session.server.close().catch(console.error);
       session.transport.close().catch(console.error);
       sessions.delete(sessionId);
     }
@@ -94,6 +96,8 @@ app.post("/mcp", async (req: Request, res: Response) => {
       isNewSession = true;
       const newSessionId = randomUUID();
 
+      const currentServer = mcpManager.createSessionServer();
+
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => newSessionId,
         onsessioninitialized: (sid) => {
@@ -101,6 +105,7 @@ app.post("/mcp", async (req: Request, res: Response) => {
           const now = Date.now();
           sessions.set(sid, {
             transport,
+            server: currentServer,
             createdAt: now,
             lastAccessedAt: now,
           });
@@ -111,12 +116,16 @@ app.post("/mcp", async (req: Request, res: Response) => {
       transport.onclose = () => {
         console.error(`Transport关闭,清理会话: ${transport.sessionId}`);
         if (transport.sessionId) {
+          const session = sessions.get(transport.sessionId);
+          if (session) {
+            session.server.close().catch(console.error);
+          }
           sessions.delete(transport.sessionId);
         }
       };
 
       // 连接到MCP server
-      await server.connect(transport);
+      await currentServer.connect(transport);
       console.error(`创建新会话: ${newSessionId}`);
     }
     // 3，错误请求
@@ -196,6 +205,7 @@ const handleSessionRequest = async (req: Request, res: Response) => {
     // DELETE请求后清理会话
     if (req.method === "DELETE") {
       console.error(`手动关闭会话: ${sessionId}`);
+      session.server.close().catch(console.error);
       session.transport.close().catch(console.error);
       sessions.delete(sessionId);
     }
@@ -237,12 +247,15 @@ app.get("/health", (req: Request, res: Response) => {
  * @date 2026/01/20 17:16
  */
 process.on("SIGTERM", async () => {
-  const closePromises = Array.from(sessions.values()).map((session) =>
-    session.transport.close().catch(console.error),
-  );
+  const closePromises = Array.from(sessions.values()).map((session) => {
+    session.server.close().catch(console.error);
+    session.transport.close().catch(console.error);
+  });
 
   await Promise.all(closePromises);
   sessions.clear();
+
+  mcpManager.shutdown();
 
   console.error("所有会话已关闭");
   process.exit(0);
@@ -251,7 +264,18 @@ process.on("SIGTERM", async () => {
 const ip = process.env.MCP_SERVER_IP || "http://127.0.0.1";
 const port = process.env.MCP_SERVER_PORT || 8189;
 
-app.listen(port, () => {
-  console.error(`MCP服务器运行在 ${ip}:${port}/mcp`);
-  console.error(`健康检查: ${ip}:${port}/health`);
-});
+async function bootstrap() {
+  try {
+    await mcpManager.initialize();
+
+    app.listen(port, () => {
+      console.error(`MCP服务器运行在 ${ip}:${port}/mcp`);
+      console.error(`健康检查: ${ip}:${port}/health`);
+    });
+  } catch (error) {
+    console.error("服务器启动失败:", error);
+    process.exit(1);
+  }
+}
+
+bootstrap();
