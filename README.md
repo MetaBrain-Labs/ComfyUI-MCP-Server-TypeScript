@@ -18,16 +18,17 @@
 - 🛠️ **自定义执行**
   - 支持执行 AI 自定义的 JSON 管道（高级模式）。
 
-<aside>
-⚠️
+> [!WARNING]
+> **免责声明**
+>
+> 我们目前**没有**官方网站。您在网上看到的任何相关网站均为非官方性质，与本开源项目无关，请自行甄别风险。
+>
+> **并且我们不提供任何收费服务，并且请用户注意TOKEN使用情况，产生任何损失与该组织无关。**
 
-**免责声明**
-
-我们目前**没有**官方网站。您在网上看到的任何相关网站均为非官方性质，与本开源项目无关，请自行甄别风险。
-
-**并且我们不提供任何收费服务，并且请用户注意TOKEN使用情况，产生任何损失与该组织无关。**
-
-</aside>
+> [!NOTE]
+> **特别提示**
+>
+> 如果您喜欢该项目或者觉得项目有帮助，请给项目点一个 `Star✨`。
 
 ## 🎬 演示视频
 
@@ -47,21 +48,17 @@
 
 ## 🚀 快速开始
 
-<aside>
-💡
-
-**提示**
-
-MCP 协议目前定义了两种客户端-服务器通信的标准传输机制：
-
-- STDIO
-- Streamable HTTP
-
-本项目两者皆支持，请根据您的 MCP 客户端能力进行选择。
-
-您有责任确保使用这些服务器符合相关条款，以及适用于您的任何法律、规则、法规、政策或标准。
-
-</aside>
+> [!TIP]
+> **提示**
+>
+> MCP 协议目前定义了两种客户端-服务器通信的标准传输机制：
+>
+> - STDIO
+> - Streamable HTTP
+>
+> 本项目两者皆支持，请根据您的 MCP 客户端能力进行选择。
+>
+> 您有责任确保使用这些服务器符合相关条款，以及适用于您的任何法律、规则、法规、政策或标准。
 
 ### 前置条件
 
@@ -166,159 +163,158 @@ inspector启动成功后，浏览器页面配置参考：
 
 ## ⚙️ 环境配置
 
-<aside>
-💡
+> [!TIP]
+> **注意**
+>
+> 下列是本服务器的全部环境配置参数以及对应的介绍，请优先阅读此。
+>
+> 下列环境配置参数中部分还未启用，未启动的均为后续计划中使用的。
 
-**注意**
+<details open>
+<summary>点击查看完整配置文件说明</summary>
 
-下列是本服务器的全部环境配置参数以及对应的介绍，请优先阅读此。
+```
+# =============================================================================
+# ComfyUI MCP Server - Configuration
+# 配置文件说明：
+#   [User Config]   用户配置 —— 根据您的部署环境修改此区块
+#   [System Config] 系统配置 —— 保持默认即可，无需修改
+# =============================================================================
 
-下列环境配置参数中部分还未启用，未启动的均为后续计划中使用的。
+# =============================================================================
+# [User Config] 用户配置
+# Modify this section based on your deployment environment.
+# 根据您的部署环境修改以下内容。
+# =============================================================================
 
-</aside>
+# Language for MCP tool descriptions.
+# MCP 工具描述的显示语言。可选值：en（英文）| zh（中文）
+LOCALE=en
 
-- 点击查看完整配置文件说明
+# -----------------------------------------------------------------------------
+# ComfyUI Server Connection / ComfyUI 服务器连接
+# -----------------------------------------------------------------------------
 
-  ```
-  # =============================================================================
-  # ComfyUI MCP Server - Configuration
-  # 配置文件说明：
-  #   [User Config]   用户配置 —— 根据您的部署环境修改此区块
-  #   [System Config] 系统配置 —— 保持默认即可，无需修改
-  # =============================================================================
+# Full URL of your ComfyUI server. No trailing slash.
+# ComfyUI 服务器的完整地址，末尾不加斜杠。
+COMFY_UI_SERVER_IP="http://192.168.0.171:8188"
 
-  # =============================================================================
-  # [User Config] 用户配置
-  # Modify this section based on your deployment environment.
-  # 根据您的部署环境修改以下内容。
-  # =============================================================================
+# Host (without protocol) and port. Used separately for WebSocket connections.
+# 主机名（不含协议头）和端口号，WebSocket 连接时单独使用。
+COMFY_UI_SERVER_HOST="192.168.0.171"
+COMFY_UI_SERVER_PORT="8188"
 
-  # Language for MCP tool descriptions.
-  # MCP 工具描述的显示语言。可选值：en（英文）| zh（中文）
-  LOCALE=en
+# -----------------------------------------------------------------------------
+# Sync Mode / 同步模式
+# -----------------------------------------------------------------------------
 
-  # -----------------------------------------------------------------------------
-  # ComfyUI Server Connection / ComfyUI 服务器连接
-  # -----------------------------------------------------------------------------
+# Controls how the server detects workflow updates from ComfyUI.
+# 控制服务器检测 ComfyUI 工作流更新的方式。
+#
+#   timed  — Background loop polls ComfyUI at a fixed interval. (default)
+#             后台循环以固定间隔轮询 ComfyUI。（默认）
+#
+#   push   — ComfyUI plugin sends real-time save events; long fallback poll as safety net.
+#             Requires COMFY_UI_INSTALL_PATH (must be on same machine as ComfyUI).
+#             ComfyUI 插件实时推送保存事件；兜底长轮询作为安全网。
+#             需要配置 COMFY_UI_INSTALL_PATH（需与 ComfyUI 同机部署）。
+#
+#   manual — No background loop. Refresh only when tools are called
+#             (get_workflows_catalog / mount_workflow / queue_prompt).
+#             无后台循环，仅在调用工具时按需刷新
+#             （get_workflows_catalog / mount_workflow / queue_prompt）。
+#
+SYNC_MODE=timed
 
-  # Full URL of your ComfyUI server. No trailing slash.
-  # ComfyUI 服务器的完整地址，末尾不加斜杠。
-  COMFY_UI_SERVER_IP="http://192.168.0.171:8188"
+# Polling interval in seconds for timed mode.
+# timed 模式的轮询间隔（秒）。
+SYNC_POLL_INTERVAL_SECONDS=3
 
-  # Host (without protocol) and port. Used separately for WebSocket connections.
-  # 主机名（不含协议头）和端口号，WebSocket 连接时单独使用。
-  COMFY_UI_SERVER_HOST="192.168.0.171"
-  COMFY_UI_SERVER_PORT="8188"
+# Fallback polling interval in seconds for push mode (safety net for missed events).
+# push 模式的兜底轮询间隔（秒），用于捕捉遗漏的推送事件。
+SYNC_EVENT_FALLBACK_INTERVAL_SECONDS=300
 
-  # -----------------------------------------------------------------------------
-  # Sync Mode / 同步模式
-  # -----------------------------------------------------------------------------
+# Cooldown in seconds between manual mode refreshes.
+# Prevents excessive ComfyUI API calls when tools are called in quick succession.
+# manual 模式两次刷新之间的冷却时间（秒），防止工具短时间内连续调用时频繁请求 ComfyUI API。
+ONDEMAND_REFRESH_COOLDOWN_SECONDS=30
 
-  # Controls how the server detects workflow updates from ComfyUI.
-  # 控制服务器检测 ComfyUI 工作流更新的方式。
-  #
-  #   timed  — Background loop polls ComfyUI at a fixed interval. (default)
-  #             后台循环以固定间隔轮询 ComfyUI。（默认）
-  #
-  #   push   — ComfyUI plugin sends real-time save events; long fallback poll as safety net.
-  #             Requires COMFY_UI_INSTALL_PATH (must be on same machine as ComfyUI).
-  #             ComfyUI 插件实时推送保存事件；兜底长轮询作为安全网。
-  #             需要配置 COMFY_UI_INSTALL_PATH（需与 ComfyUI 同机部署）。
-  #
-  #   manual — No background loop. Refresh only when tools are called
-  #             (get_workflows_catalog / mount_workflow / queue_prompt).
-  #             无后台循环，仅在调用工具时按需刷新
-  #             （get_workflows_catalog / mount_workflow / queue_prompt）。
-  #
-  SYNC_MODE=timed
+# -----------------------------------------------------------------------------
+# Push Mode Plugin / 推送模式插件（仅 SYNC_MODE=push 时需要）
+# -----------------------------------------------------------------------------
 
-  # Polling interval in seconds for timed mode.
-  # timed 模式的轮询间隔（秒）。
-  SYNC_POLL_INTERVAL_SECONDS=3
+# Absolute path to your LOCAL ComfyUI installation root directory.
+# Required when SYNC_MODE=push: MCP Server will automatically deploy a lightweight
+# backend plugin that pushes workflow save events in real-time.
+# Leave blank if ComfyUI runs on a remote machine or if using timed/manual mode.
+#
+# 本地 ComfyUI 安装目录的绝对路径。
+# 使用 SYNC_MODE=push 时必填：MCP Server 会自动部署一个超轻量推送插件，
+# 实现工作流保存后的实时推送通知。
+# 若 ComfyUI 部署在远端机器上，或使用 timed/manual 模式，请留空。
+#
+# Windows 示例 / Example: COMFY_UI_INSTALL_PATH=C:/ComfyUI
+# Linux   示例 / Example: COMFY_UI_INSTALL_PATH=/home/user/ComfyUI
+COMFY_UI_INSTALL_PATH=
 
-  # Fallback polling interval in seconds for push mode (safety net for missed events).
-  # push 模式的兜底轮询间隔（秒），用于捕捉遗漏的推送事件。
-  SYNC_EVENT_FALLBACK_INTERVAL_SECONDS=300
+# -----------------------------------------------------------------------------
+# Workflow Marker Patterns / 工作流标识符正则表达式
+# -----------------------------------------------------------------------------
 
-  # Cooldown in seconds between manual mode refreshes.
-  # Prevents excessive ComfyUI API calls when tools are called in quick succession.
-  # manual 模式两次刷新之间的冷却时间（秒），防止工具短时间内连续调用时频繁请求 ComfyUI API。
-  ONDEMAND_REFRESH_COOLDOWN_SECONDS=30
+# Regex identifying the workflow name node (title of a PrimitiveStringMultiline node).
+# Must contain ONE capture group that extracts the MCP tool name.
+# Default matches titles like "==my_workflow=="
+# 工作流名称节点的标识正则（PrimitiveStringMultiline 节点的 title）。
+# 必须含一个捕获组提取工具名，默认匹配 ==名称== 格式。
+WORKFLOW_NAME_REGEX=^==(.+?)==$
 
-  # -----------------------------------------------------------------------------
-  # Push Mode Plugin / 推送模式插件（仅 SYNC_MODE=push 时需要）
-  # -----------------------------------------------------------------------------
+# Regex identifying configurable parameter nodes.
+# Must contain ONE capture group that extracts the parameter description.
+# Default matches titles like "=>prompt text"
+# 参数节点的标识正则，必须含一个捕获组提取参数描述，默认匹配 =>描述 格式。
+WORKFLOW_PARAM_REGEX=^=>(.+)$
 
-  # Absolute path to your LOCAL ComfyUI installation root directory.
-  # Required when SYNC_MODE=push: MCP Server will automatically deploy a lightweight
-  # backend plugin that pushes workflow save events in real-time.
-  # Leave blank if ComfyUI runs on a remote machine or if using timed/manual mode.
-  #
-  # 本地 ComfyUI 安装目录的绝对路径。
-  # 使用 SYNC_MODE=push 时必填：MCP Server 会自动部署一个超轻量推送插件，
-  # 实现工作流保存后的实时推送通知。
-  # 若 ComfyUI 部署在远端机器上，或使用 timed/manual 模式，请留空。
-  #
-  # Windows 示例 / Example: COMFY_UI_INSTALL_PATH=C:/ComfyUI
-  # Linux   示例 / Example: COMFY_UI_INSTALL_PATH=/home/user/ComfyUI
-  COMFY_UI_INSTALL_PATH=
+# =============================================================================
+# [System Config] 系统配置
+# Internal settings — change only if you know what you are doing.
+# 内部运行参数，通常无需修改。
+# =============================================================================
 
-  # -----------------------------------------------------------------------------
-  # Workflow Marker Patterns / 工作流标识符正则表达式
-  # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# MCP Server / MCP 服务地址
+# -----------------------------------------------------------------------------
 
-  # Regex identifying the workflow name node (title of a PrimitiveStringMultiline node).
-  # Must contain ONE capture group that extracts the MCP tool name.
-  # Default matches titles like "==my_workflow=="
-  # 工作流名称节点的标识正则（PrimitiveStringMultiline 节点的 title）。
-  # 必须含一个捕获组提取工具名，默认匹配 ==名称== 格式。
-  WORKFLOW_NAME_REGEX=^==(.+?)==$
+# MCP server bind address and listening port.
+# MCP 服务器的监听地址和端口（MCP 客户端连接此处）。
+MCP_SERVER_URL="http://192.168.0.192:8189/mcp"
+MCP_SERVER_IP="http://192.168.0.192"
+MCP_SERVER_PORT="8189"
 
-  # Regex identifying configurable parameter nodes.
-  # Must contain ONE capture group that extracts the parameter description.
-  # Default matches titles like "=>prompt text"
-  # 参数节点的标识正则，必须含一个捕获组提取参数描述，默认匹配 =>描述 格式。
-  WORKFLOW_PARAM_REGEX=^=>(.+)$
+# -----------------------------------------------------------------------------
+# Logging / 日志配置
+# -----------------------------------------------------------------------------
 
-  # =============================================================================
-  # [System Config] 系统配置
-  # Internal settings — change only if you know what you are doing.
-  # 内部运行参数，通常无需修改。
-  # =============================================================================
+# Minimum log level written to stderr.
+# 输出到 stderr 的最低日志级别。
+# DEBUG | INFO | WARNING | ERROR  (default: INFO)
+LOG_LEVEL=INFO
 
-  # -----------------------------------------------------------------------------
-  # MCP Server / MCP 服务地址
-  # -----------------------------------------------------------------------------
+# Optional absolute path for a log file.
+# When set, logs are written to BOTH stderr and this file.
+# Leave blank to disable file logging.
+# 可选：日志文件的绝对路径。填写后同时输出到 stderr 和文件。留空则不开启文件日志。
+# LOG_FILE=
 
-  # MCP server bind address and listening port.
-  # MCP 服务器的监听地址和端口（MCP 客户端连接此处）。
-  MCP_SERVER_URL="http://192.168.0.192:8189/mcp"
-  MCP_SERVER_IP="http://192.168.0.192"
-  MCP_SERVER_PORT="8189"
+# Log file rotation size. Default: 10 MB
+# 日志文件切割大小，默认 10 MB。
+# LOG_ROTATE=10 MB
 
-  # -----------------------------------------------------------------------------
-  # Logging / 日志配置
-  # -----------------------------------------------------------------------------
+# Number of rotated log files to retain. Default: 7
+# 保留历史日志文件个数，默认 7。
+# LOG_RETAIN=7
+```
 
-  # Minimum log level written to stderr.
-  # 输出到 stderr 的最低日志级别。
-  # DEBUG | INFO | WARNING | ERROR  (default: INFO)
-  LOG_LEVEL=INFO
-
-  # Optional absolute path for a log file.
-  # When set, logs are written to BOTH stderr and this file.
-  # Leave blank to disable file logging.
-  # 可选：日志文件的绝对路径。填写后同时输出到 stderr 和文件。留空则不开启文件日志。
-  # LOG_FILE=
-
-  # Log file rotation size. Default: 10 MB
-  # 日志文件切割大小，默认 10 MB。
-  # LOG_ROTATE=10 MB
-
-  # Number of rotated log files to retain. Default: 7
-  # 保留历史日志文件个数，默认 7。
-  # LOG_RETAIN=7
-  ```
+</details>
 
 ## 🧰 可用工具集
 
@@ -407,12 +403,10 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
 
 ## 🗺️ 后续计划
 
-<aside>
-💡
-
-我们正积极扩展项目功能，如果您有好的建议，欢迎提交 Issue！
-
-</aside>
+> [!TIP]
+> **注意**
+>
+> 我们正积极扩展项目功能，如果您有好的建议，欢迎提交 Issue！
 
 - [ ] **增强工作流解析**：支持更复杂的嵌套节点与动态参数提取。
 - [ ] **云服务集成**：适配主流 ComfyUI 云端托管平台（鉴权与 API 映射）。
