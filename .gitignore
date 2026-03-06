@@ -30,6 +30,7 @@ docs/.vitepress/cache/*
 
 .vitepress/*
 workflow
+assets
 token.json
 build
 

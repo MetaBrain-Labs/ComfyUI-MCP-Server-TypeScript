@@ -1,5 +1,6 @@
 import { CollectFormatTaskResult, SourceType } from "../types/common";
 import { ComfyPromptConfig, ComfyTaskResponse } from "../types/task";
+import "dotenv/config";
 
 /**
  * @METHOD
@@ -13,6 +14,9 @@ export const formatTask = (
   modifiedWorkflow?: Map<string, number>,
   workflowNames?: Map<string, string>,
 ): CollectFormatTaskResult => {
+  const workflowNameRegex = process.env.WORKFLOW_NAME_REGEX || /==(.+?)==/;
+  const workflowParamRegex = process.env.WORKFLOW_PARAM_REGEX || /^=>/;
+
   const result: CollectFormatTaskResult = {
     last_updated: Date.now(),
     workflows: [],
@@ -28,13 +32,13 @@ export const formatTask = (
     let name: string | null = null;
 
     for (const [nodeId, nodeConfig] of Object.entries(promptConfig)) {
-      const isDesc = nodeConfig._meta?.title?.match(/==(.+?)==/);
-      const isRequired = nodeConfig._meta?.title?.startsWith("=>");
+      const isDesc = nodeConfig._meta?.title?.match(workflowNameRegex);
       if (isDesc) {
         description =
           (nodeConfig.inputs["value"] as string) || "无工作流描述内容";
         name = isDesc[1] || "无工作流名称";
       }
+      const isRequired = nodeConfig._meta?.title?.match(workflowParamRegex);
       if (isRequired) {
         parameters.push(nodeConfig.class_type + nodeConfig._meta?.title);
       }

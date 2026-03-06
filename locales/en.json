@@ -1,115 +1,142 @@
 {
   "common": {},
   "error": {
-    "notTokenError": "The AGENT failed to load SKILL related resources correctly. Please retrieve the default Prompt via the get_core_manual tool. In subsequent conversations, please save the token ({{token}}) in the context for use.",
+    "notTokenError": "The AGENT failed to load SKILL-related resources correctly. Please retrieve the default Prompt via the get_core_manual tool. Save the token ({{token}}) in the context for use in subsequent conversations.",
     "toolAlreadyExistError": "Tool {{workflowName}} already exists, please use another name.",
     "toolNotAlreadyExistError": "Tool {{workflowName}} does not exist.",
-    "getTaskDetailFail": "Failed to retrieve task details.",
+    "getTaskDetailFail": "Failed to get task details.",
     "workflowExecuteFail": "Workflow execution failed: {{error}}",
     "downloadAssetsFail": "Failed to download network resources, HTTP status code: {{status}}",
-    "fileNotExistError": "Local file does not exist, please check if the path is correct: ${fileSource}",
+    "fileNotExistError": "Local file does not exist, please check if the path is correct: {{fileSource}}",
     "uploadFail": "Failed to import ComfyUI Assets: {{message}}",
-    "getWorkflowFormatError": "workflowName must end with .json. Current workflowName is: {{workflowName}}",
-    "notFoundModel": "Corresponding model information not found. Currently available models are: {{models}}"
+    "getWorkflowFormatError": "workflowName must end with .json. The current workflowName is: {{workflowName}}",
+    "notFoundModel": "Could not find model information for the corresponding type. Currently available model types are: {{models}}",
+    "hasExtendName": "The current extension is: {{current}}, but the required extension is: {{need}}",
+    "dirNotExist": "Target directory does not exist: {{destinationDir}}",
+    "notDir": "Target path is not a directory: {{destinationDir}}",
+    "notWritableDir": "Target path is not writable: {{destinationDir}}"
   },
   "tool": {
     "get_core_manual": {
-      "title": "Get project core manual",
-      "description": "High-priority resource. Must be read first during initialization or when involving tool calls. Contains core protocols, error handling, and parameter population strategies.",
+      "title": "Get Core Project Manual",
+      "description": "[System Guide] Core protocols and operation dictionary. Must be read first before initializing or calling other tools to obtain the latest parameter filling strategies and error recovery mechanisms.",
       "inputSchema": {},
-      "success": "Core manual loaded. Please strictly follow the protocols and parameter strategies within it for subsequent operations."
+      "success": "Core manual loaded. Please strictly follow its protocols and parameter strategies for subsequent operations."
     },
     "get_workflows_catalog": {
-      "title": "Get workflows catalog",
-      "description": "Respond to ComfyUI requirements (e.g., 'draw a picture'). Retrieve the best matching workflow. Guessing IDs or names is strictly prohibited; must be based on search results.",
+      "title": "Get Workflows Catalog",
+      "description": "[Catalog Retrieval] Get the list of all workflows supported by the current server. Image generation commands must exactly match this list. Forging or guessing workflow names is strictly prohibited.",
       "inputSchema": {
-        "maxItems": "Maximum number of items per page in paginated queries of historical tasks.",
-        "token": "The token obtained after executing the `generateToken.ts` script once the AGENT has successfully loaded the SKILL.",
+        "maxItems": "Maximum number of items per page in paginated historical task queries.",
+        "token": "The token obtained by executing the `generateToken.ts` script after the AGENT successfully loads the SKILL.",
         "enableWorkflow": "Whether to retrieve the user's workflow information."
       },
-      "success": "Workflow catalog retrieved. Please select the best match strictly based on the results. Guessing IDs or names is prohibited."
+      "success": "Workflow catalog retrieved. Please strictly select the best match based on the results. Guessing IDs or names is prohibited."
     },
     "get_workflow_API": {
-      "title": "Get workflow details",
-      "description": "Used to handle complex workflows or execution errors. Parse the specific meaning and format constraints of parameters via the returned JSON Schema.",
+      "title": "Get Workflow Details",
+      "description": "[Workflow API] Read the full underlying topology JSON of the target workflow. It is large in size and should only be called when execution exceptions require troubleshooting of the lowest-level logic. Strictly prohibited in routine tasks to prevent context pollution.",
       "inputSchema": {
         "workflowName": "Target workflow name (prioritize the workflowName field in the catalog; if unavailable, use the name field and append .json to it)."
       },
       "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
     },
     "cui_get_task_detail": {
-      "title": "Get task details by prompt_id",
-      "description": "Retrieve task details based on prompt_id, including prompt, outputs, status, meta, and other contents.",
+      "title": "Get Task Details by prompt_id",
+      "description": "Get task details based on prompt_id, including prompt, outputs, status, meta, etc.",
       "inputSchema": {
-        "promptId": "The unique ID of a single workflow execution task."
+        "promptId": "The unique ID of a workflow execution task."
       },
-      "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
+      "success": "Task details retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
     },
     "mount_workflow": {
-      "title": "Mount dynamic tool",
-      "description": "Used to dynamically generate dedicated workflow execution functions. Stop generation immediately after a successful call. Wait for the Host to refresh the context, then call the newly generated cui_execute_dynamic_task_{workflow_name} in the next conversation turn.",
+      "title": "Mount Workflow",
+      "description": "[Parameter Mounting] Extract the supported interactive parameter Schema of the target generation task (hiding connection details). Before submitting a workflow task, this interface must be called to obtain a valid table of parameter keys.",
       "inputSchema": {
-        "promptId": "The unique ID of a single workflow execution task.",
-        "workflowName": "Unique tool suffix name (pure English, e.g., flux_dev), used to generate the tool name cui_execute_dynamic_task_{workflow_name}. Can only contain letters, numbers, underscores, and hyphens.",
-        "title": "Optional, the display title of the Tool.",
-        "description": "Optional, the detailed description of the Tool."
+        "promptId": "The unique ID of a workflow execution task.",
+        "workflowName": "Target workflow name."
       },
       "success": "Successfully created dynamic Tool: {{workflowName}}"
     },
     "queue_prompt": {
-      "title": "Execute workflow task (dynamically built tool function)",
-      "description": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
+      "title": "Execute Workflow Task",
+      "description": "[Task Submission] Submit a task Prompt to the queue. The underlying layer automatically schedules computing nodes and synchronizes progress to the Host in real-time. Must ensure all keys have passed mount validation; fabricating keys is strictly prohibited.",
       "inputSchema": {
-        "workflowName": "Dedicated tool to execute {workflow_name}. Only populate user-visible parameters. Map accurately, inventing fields is prohibited.",
+        "workflowName": "Target workflow name.",
         "isAsync": "Whether to execute the task asynchronously. Default is false. Change to true only when explicitly requested by the user.",
-        "params": "Parameters to modify. Key format is nodeId_inputKey. Unprovided parameters will use default values."
+        "params": "Collection of task parameter key-value pairs. Example: {'5_text': 'a cat'}. Must strictly follow the Schema."
       },
       "success": "Successfully executed dynamic Workflow Tool.",
-      "asyncSupplement": "Asynchronous execution selected. Please ask the user to manually visit ComfyUI to check the results after a while. Conversation ends."
+      "asyncSupplement": "Asynchronous execution selected. Please ask the user to manually visit ComfyUI to check the results after a while. Conversation ended."
     },
     "queue_custom_prompt": {
-      "title": "Execute custom workflow",
-      "description": "Restricted tool. Used only for explicitly requested low-level debugging or generation without preset workflow API. Prohibited for normal tasks.",
+      "title": "Execute Custom Workflow",
+      "description": "[Advanced Mode] Submit a complete native ComfyUI API Prompt JSON directly to the queue. Open only for debugging underlying solutions or responding to explicit expert instructions; strictly prohibited for routine tasks.",
       "inputSchema": {
-        "workflowName ": "Name of the custom workflow.",
+        "workflowName ": "Target workflow name.",
         "apiJson": "Complete ComfyUI Prompt format JSON string.",
         "isAsync": "Whether to execute the task asynchronously. Default is false. Change to true only when explicitly requested by the user."
       },
       "success": "Task ({{workflowName}}) successfully added to the task queue (ID: {{promptId}}). Please monitor the progress or wait for the results to be generated."
     },
-    "interrupt_prompt": {
-      "title": "Cancel task",
-      "description": "Cancel a running task.",
+    "save_custom_workflow": {
+      "title": "Save Custom Workflow",
+      "description": "[Save Workflow] Save a custom parameterized workflow to the server's workflow directory, followed by automatic syntax validation and mounting. The submitted JSON must meet specifications (containing at least one ==Name== node that complies with mounting rules), otherwise it will be rejected.",
       "inputSchema": {
-        "promptId": "The unique ID of a single workflow execution task."
+        "filename": "The filename to save as (e.g., my_workflow or my_workflow.json).",
+        "apiJson": "Complete ComfyUI Prompt format JSON object (including node topology)."
       },
-      "success": "Task (ID: {{prompt_id}}) has been cancelled."
+      "success": "Custom workflow saved to {{filePath}}."
+    },
+    "save_task_assets": {
+      "title": "Save Generated Assets",
+      "description": "[Save Generated Assets] Get the execution history of a specified task (prompt_id), download, and save all generated multimedia content (images, videos, GIFs, etc.) to the specified local directory.",
+      "inputSchema": {
+        "promptId": "The prompt_id of the task.",
+        "destinationDir": "Optional. The local path to save the files (if unspecified or invalid, defaults to the assets folder in the project directory).",
+        "overwrite": "Whether to overwrite if the file already exists. Pass true to overwrite, default is false."
+      },
+      "success": "Saved asset {{assetsName}} to {{filePath}}"
+    },
+    "interrupt_prompt": {
+      "title": "Interrupt Task",
+      "description": "[Task Cancellation] Cancel the computing process of a specific `prompt_id` and forcefully remove it from the waiting queue.",
+      "inputSchema": {
+        "promptId": "The unique ID of a workflow execution task."
+      },
+      "success": "Task (ID: {{promptId}}) has been cancelled."
     },
     "get_prompt_result": {
-      "title": "Get task result",
-      "description": "Query task status. If running: report progress and keep waiting. If success: display metadata and media links from the output field.",
+      "title": "Get Task Result",
+      "description": "[Output Snapshot and Assets] Obtain the node snapshot after a specific Prompt finishes execution, extract generated target media files (image/video links), or backtrack Traceback to diagnose errors.",
       "inputSchema": {
-        "promptId": "The unique ID of a single workflow execution task."
+        "promptId": "The unique ID of a workflow execution task."
       },
-      "success": "Task status retrieved. Please report progress or display the final generated media resources based on the returned results."
+      "success": "Task status retrieved (if data is empty, the task might still be processing). Please report the progress or display the final generated media resources based on the returned results."
+    },
+    "get_system_status": {
+      "title": "Get System Status",
+      "description": "[System Monitoring] Collect memory, VRAM, and Python runtime metrics for troubleshooting underlying anomalies like OOM or service deadlocks.",
+      "inputSchema": {},
+      "success": "System status and environment diagnostic data retrieved. Please analyze the load situation or troubleshoot causes based on the returned metrics."
     },
     "list_models": {
-      "title": "Retrieve model files",
-      "description": "List available models. Mandatory rule: Before filling in parameters like ckpt_name, you must call this tool to get the exact file name. Guessing or inventing names is strictly prohibited.",
+      "title": "List Model Files",
+      "description": "[Model Catalog] Poll the local disk model storage area. When parameters involve specific model files, this interface must be called beforehand for enumeration and calibration. Fabricating model filenames out of thin air is strictly prohibited.",
       "inputSchema": {
-        "typeName": "Required model type."
+        "typeName": "Model type. E.g., checkpoints, loras, etc. Defaults to checkpoints."
       },
-      "success": "Available models list retrieved. Please strictly reference the returned exact file names when filling in parameters; guessing is prohibited.",
-      "successButNoModel": "Available model types exist, but no models are available under the selected model type. Please verify that the model file has been uploaded correctly or try using a different model type."
+      "success": "List of available models retrieved. Please strictly reference the exact filenames returned when filling in parameters. Guessing is prohibited.",
+      "successButNoModel": "Available model types exist, but there are no available models under this type. Please check if the model files are uploaded correctly or try other model types."
     },
     "upload_assets": {
-      "title": "Import ComfyUI assets",
-      "description": "Call this tool to upload and process an image when the user provides a local path or a network link.",
+      "title": "Upload ComfyUI Assets",
+      "description": "[Upload File] Upload local files or network URLs to the input directory of the ComfyUI server so they can be applied directly in workflows.",
       "inputSchema": {
-        "fileSource": "Local absolute path or network URL link (http/https) of the image.",
+        "fileSource": "The local absolute path or network URL link (http/https) of the image.",
         "mimeType": "Image type (optional), default is image/png."
       },
-      "success": "Image: {{finalFileName}} has been successfully imported into ComfyUI Assets."
+      "success": "Asset {{finalFileName}} successfully uploaded to the ComfyUI server."
     }
   }
 }
