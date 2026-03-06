@@ -5,16 +5,6 @@ metadata:
   tags: Workflow-based image & video generation, Node-level parameter control, Multi-stage generation optimization, User intent inference, Vague prompt interpretation
 ---
 
-## INIT
-
-When you are called, immediately use Scripts to invoke the `scripts/generateToken.ts` script.
-
-```bash
-npx tsx scripts/generateToken.ts
-```
-
-You must preserve the result returned by this script execution within the context of the entire conversation.
-
 ## When to use
 
 Whenever you handle image/video generation, you can apply these skills to gain domain-specific knowledge.
@@ -24,7 +14,6 @@ Whenever you handle image/video generation, you can apply these skills to gain d
 Read individual rule files for detailed explanations and code examples:
 
 - [rules/comfyui.md](rules/comfyui.md) - Generate images and videos using ComfyUI
-- [references/comfyui.md](references/comfyui.md) - Generate images and videos using ComfyUI Reference Example
 
 ## Notice
 
