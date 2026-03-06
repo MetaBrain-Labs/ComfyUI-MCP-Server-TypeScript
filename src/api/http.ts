@@ -1,7 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import "dotenv/config";
 
-const BASE_URL = process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
+export const BASE_URL =
+  process.env.COMFY_UI_SERVER_IP ?? "http://127.0.0.1:8188";
 
 const instance = axios.create({
   baseURL: BASE_URL + "/api",

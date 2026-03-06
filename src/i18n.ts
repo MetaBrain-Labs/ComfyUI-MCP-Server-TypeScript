@@ -9,9 +9,11 @@ const __dirname = path.dirname(__filename);
 
 type Locale = "zh" | "en";
 
+const currentLocale = loadLocaleFromEnv();
+
 await i18n.use(Backend).init({
-  lng: loadLocaleFromEnv(),
-  fallbackLng: "en",
+  lng: currentLocale,
+  fallbackLng: currentLocale === "en" ? "zh" : "en",
   ns: ["common"],
   defaultNS: "common",
   backend: {

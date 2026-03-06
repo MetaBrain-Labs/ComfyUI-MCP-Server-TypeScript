@@ -6,6 +6,7 @@ import {
   ExecutionResult,
 } from "../types/execute";
 import {
+  ComfyNodeOutput,
   ComfyPromptConfig,
   ComfyTaskItem,
   ComfyTaskResponse,
@@ -140,6 +141,46 @@ export async function fetchTaskByPromptId(
   }
 
   return Object.values(successTasks)[0].prompt[2];
+}
+
+/**
+ * @METHOD
+ * @description 获取成功历史任务的资产信息
+ * @author LaiFQZzr
+ * @date 2026/03/06 10:59
+ */
+export async function fetchAssetsByPromptId(
+  promptId: string,
+): Promise<ComfyNodeOutput[]> {
+  const res = await api.getDetailHistoryTasks(promptId);
+
+  const successTasks = Object.fromEntries(
+    Object.entries(res).filter(([uuid, item]) => {
+      if (item.status.status_str === "success") {
+        return true;
+      } else {
+        const isExecutionInterrupted = item.status.messages.filter((item) => {
+          return item[0] === "execution_interrupted";
+        });
+        return isExecutionInterrupted.length > 0;
+      }
+    }),
+  ) as ComfyTaskResponse;
+
+  if (successTasks === null) {
+    throw new McpError(
+      ErrorCode.InternalError,
+      "Invalid detail tasks response",
+    );
+  }
+
+  const outputs = Object.values(successTasks)[0].outputs;
+
+  if (Object.keys(outputs).length === 0) {
+    throw new McpError(ErrorCode.InternalError, "Invalid outputs response");
+  }
+
+  return Object.values(outputs);
 }
 
 /**

@@ -14,6 +14,8 @@ const SKILLS_RULES_DIR = path.join(SKILLS_DIR, "rules");
 const DEFAULT_RULE_FILE = "comfyui.md";
 const DEFAULT_RULE_PATH = path.join(SKILLS_RULES_DIR, DEFAULT_RULE_FILE);
 
+const ASSETS_DIR = path.join(PROJECT_ROOT, "assets");
+
 export const COMMON = {
   PROJECT_ROOT,
   WORKFLOW_DIR,
@@ -25,4 +27,6 @@ export const COMMON = {
   SKILLS_RULES_DIR,
   DEFAULT_RULE_FILE,
   DEFAULT_RULE_PATH,
+
+  ASSETS_DIR,
 } as const;

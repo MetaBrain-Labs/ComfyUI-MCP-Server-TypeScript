@@ -1,7 +1,12 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import fs from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
+import path from "path";
+import { pipeline } from "stream/promises";
+import { BASE_URL } from "../api/http";
 import { COMMON } from "../constants";
 import { CollectFormatTaskWorkflow, sourcePriority } from "../types/common";
+import { ComfyImage } from "../types/task";
 
 export interface SaveWorkflowOptions {
   dir?: string;
@@ -84,6 +89,86 @@ export async function saveWorkflow(
     throw new McpError(
       ErrorCode.InternalError,
       `保存工作流失败: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
+ * @METHOD
+ * @description 保存自定义工作流到本地
+ * @author LaiFQZzr
+ * @date 2026/03/06 10:22
+ */
+export async function saveCustomWorkflow(
+  filename: string,
+  apiJson: Record<string, any>,
+): Promise<string> {
+  try {
+    const dir = COMMON.WORKFLOW_DIR;
+
+    await mkdir(dir, { recursive: true });
+
+    const filePath = path.join(dir, filename);
+
+    await writeFile(filePath, JSON.stringify(apiJson, null, 2), "utf-8");
+
+    return filePath;
+  } catch (error) {
+    if (error instanceof McpError) {
+      throw error;
+    }
+
+    throw new McpError(
+      ErrorCode.InternalError,
+      `保存自定义工作流失败: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
+ * @METHOD
+ * @description 保存资产到本地
+ * @author LaiFQZzr
+ * @date 2026/03/06 11:17
+ */
+export async function saveAssets(
+  data: ComfyImage,
+  overwrite: boolean,
+  dir: string = COMMON.ASSETS_DIR,
+): Promise<string> {
+  try {
+    const url = `${BASE_URL}/view?filename=${encodeURIComponent(data.filename)}&type=${data.type}&subfolder=${data.subfolder}`;
+
+    const res = await fetch(url);
+
+    if (!res.ok || !res.body) {
+      throw new McpError(ErrorCode.InternalError, `下载资源失败: ${url}`);
+    }
+
+    let filename = data.filename;
+    let savePath = path.join(dir, filename);
+
+    if (!overwrite && fs.existsSync(savePath)) {
+      const ext = path.extname(filename);
+      const name = path.basename(filename, ext);
+
+      const timestamp = Date.now();
+
+      filename = `${name}_${timestamp}${ext}`;
+      savePath = path.join(dir, filename);
+    }
+
+    await pipeline(res.body, fs.createWriteStream(savePath));
+
+    return filename;
+  } catch (error) {
+    if (error instanceof McpError) {
+      throw error;
+    }
+
+    throw new McpError(
+      ErrorCode.InternalError,
+      `保存资产失败: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

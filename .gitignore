@@ -29,7 +29,7 @@ dist-ssr
 docs/.vitepress/cache/*
 
 .vitepress/*
-workflow.json
+workflow
 token.json
 build
 
