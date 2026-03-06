@@ -7,7 +7,7 @@
     "getTaskDetailFail": "获取任务详情失败",
     "workflowExecuteFail": "工作流执行失败: {{error}}",
     "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
-    "fileNotExistError": "本地文件不存在，请检查路径是否正确: ${fileSource}",
+    "fileNotExistError": "本地文件不存在，请检查路径是否正确: {{fileSource}}",
     "uploadFail": "导入ComfyUI Assets失败: {{message}}",
     "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}",
     "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}"
