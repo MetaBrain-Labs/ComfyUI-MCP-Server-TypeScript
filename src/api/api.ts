@@ -6,7 +6,11 @@ import {
 } from "../types/common";
 import { ExecutePromptRequest, ExecutePromptResult } from "../types/execute";
 import { ObjectInfoResponse } from "../types/object-info";
-import { ComfyTaskResponse, WorkflowSimpleData } from "../types/task";
+import {
+  ComfyImage,
+  ComfyTaskResponse,
+  WorkflowSimpleData,
+} from "../types/task";
 import { ComfyUIWorkflow } from "../types/workflow";
 import http from "./http";
 

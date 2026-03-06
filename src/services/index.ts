@@ -1,11 +1,13 @@
+import { COMMON } from "../constants";
 import { ok, Result } from "../types/result";
-import { ComfyPromptConfig } from "../types/task";
+import { ComfyImage, ComfyPromptConfig } from "../types/task";
 import { WorkflowCollectionData } from "../types/workflow";
 import { formatTask } from "../utils/format";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
-import { saveWorkflow } from "./saveWorkflow";
+import { saveAssets, saveWorkflow } from "./saveWorkflow";
 import {
+  fetchAssetsByPromptId,
   fetchHistoryTasks,
   fetchTaskByPromptId,
   fetchUserWorkflow,
@@ -100,6 +102,38 @@ export async function collectAndSaveFormatTaskFromWorkflows(
     },
     executionTime,
   );
+}
+
+/**
+ * @METHOD
+ * @description 根据promptId获取相关资产到本地
+ * @author LaiFQZzr
+ * @date 2026/03/06 10:52
+ */
+export async function saveAssetsByPromptId(
+  promptId: string,
+  overwrite: boolean,
+  destinationDir?: string,
+): Promise<{ assetsNames: string[]; filePath: string }> {
+  const images: ComfyImage[] = [];
+  const assetsNames: string[] = [];
+  const assetsInfo = await fetchAssetsByPromptId(promptId);
+
+  assetsInfo.forEach((item) => {
+    item.images.forEach((item) => {
+      images.push(item);
+    });
+  });
+
+  for (const image of images) {
+    const assetsName = await saveAssets(image, overwrite, destinationDir);
+    assetsNames.push(assetsName);
+  }
+
+  return {
+    assetsNames: assetsNames,
+    filePath: destinationDir || COMMON.ASSETS_DIR,
+  };
 }
 
 /**

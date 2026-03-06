@@ -10,7 +10,11 @@
     "fileNotExistError": "本地文件不存在，请检查路径是否正确: {{fileSource}}",
     "uploadFail": "导入ComfyUI Assets失败: {{message}}",
     "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}",
-    "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}"
+    "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}",
+    "hasExtendName": "当前已有扩展名为：{{current}}，需要扩展名为：{{need}}",
+    "dirNotExist": "目标目录不存在：{{destinationDir}}",
+    "notDir": "目标路径不是一个目录：{{destinationDir}}",
+    "notWritableDir": "目标路径不可写：{{destinationDir}}"
   },
   "tool": {
     "get_core_manual": {
@@ -78,7 +82,7 @@
     "save_custom_workflow": {
       "title": "保存自定义工作流",
       "description": "【保存工作流】将自定义参数化工作流保存到服务器的工作流目录中并随后自动执行语法校验和挂载。提交的 JSON 必须符合规范（至少包含一处符合挂载规则的 ==名称== 节点），否则将被拒绝保存。",
-      "param": {
+      "inputSchema": {
         "filename": "要保存的文件名（如 my_workflow 或 my_workflow.json）。",
         "apiJson": "完整的 ComfyUI Prompt 格式 JSON 对象（包含节点拓扑）。"
       },
@@ -87,7 +91,7 @@
     "save_task_assets": {
       "title": "保存生成资产",
       "description": "【保存生成资产】获取指定任务 (prompt_id) 的执行历史，并将产生的所有多媒体生成物 (图片、视频、GIF等) 下载并保存到指定的本地目录中。",
-      "param": {
+      "inputSchema": {
         "promptId": "任务的 prompt_id。",
         "destinationDir": "可选。文件要保存到的本地路径（如果未指定或路径不合法，将默认存放在项目目录的 assets 文件夹中）。",
         "overwrite": "若文件已存在是否覆盖，传 true 为覆盖，默认为 false。"

@@ -14,6 +14,7 @@ import {
   collectAndSaveFormatTask,
   collectAndSaveFormatTaskFromWorkflows,
   getTaskDetailByPromptId,
+  saveAssetsByPromptId,
 } from "../services";
 import {
   createDynamicWorkflowTool,
@@ -40,6 +41,7 @@ import {
 } from "../utils/mcp-helpers";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
+import { saveCustomWorkflow } from "../services/saveWorkflow";
 
 export class ComfyMcpManager {
   private client: ComfyClient;
@@ -653,6 +655,146 @@ export class ComfyMcpManager {
           );
         },
       ),
+    );
+
+    server.registerTool(
+      "save_custom_workflow",
+      {
+        title: i18n.t("tool.save_custom_workflow.title"),
+        description: i18n.t("tool.save_custom_workflow.description"),
+        inputSchema: {
+          filename: z
+            .string()
+            .describe(i18n.t("tool.save_custom_workflow.inputSchema.filename")),
+          apiJson: z
+            .record(z.string(), z.any())
+            .describe(i18n.t("tool.save_custom_workflow.inputSchema.apiJson")),
+        },
+      },
+      withMcpErrorHandling(async ({ filename, apiJson }) => {
+        const startTime = Date.now();
+
+        const fileInfo = filename.split(".");
+
+        if (fileInfo.length > 1 && !filename.endsWith(".json")) {
+          return ResultToMcpResponse(
+            error(
+              i18n.t("error.hasExtendName", {
+                current: "." + fileInfo[1],
+                need: ".json",
+              }),
+            ),
+          );
+        }
+
+        if (!filename.endsWith(".json")) {
+          filename += ".json";
+        }
+
+        const filePath = await saveCustomWorkflow(filename, apiJson);
+
+        const executionTime = Date.now() - startTime;
+
+        return ResultToMcpResponse(
+          ok(
+            i18n.t("tool.save_custom_workflow.success", {
+              filePath,
+            }),
+            {},
+            {
+              action: "save_custom_workflow",
+            },
+            executionTime,
+          ),
+        );
+      }),
+    );
+
+    server.registerTool(
+      "save_task_assets",
+      {
+        title: i18n.t("tool.save_task_assets.title"),
+        description: i18n.t("tool.save_task_assets.description"),
+        inputSchema: {
+          promptId: z
+            .string()
+            .describe(i18n.t("tool.save_task_assets.inputSchema.promptId")),
+          destinationDir: z
+            .string()
+            .optional()
+            .describe(
+              i18n.t("tool.save_task_assets.inputSchema.destinationDir"),
+            ),
+          overwrite: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(i18n.t("tool.save_task_assets.inputSchema.overwrite")),
+        },
+      },
+      withMcpErrorHandling(async ({ promptId, destinationDir, overwrite }) => {
+        const startTime = Date.now();
+
+        if (destinationDir) {
+          if (!fs.existsSync(destinationDir)) {
+            return ResultToMcpResponse(
+              error(
+                i18n.t("error.dirNotExist", {
+                  destinationDir,
+                }),
+              ),
+            );
+          }
+
+          const stat = fs.statSync(destinationDir);
+
+          if (!stat.isDirectory()) {
+            return ResultToMcpResponse(
+              error(
+                i18n.t("error.notDir", {
+                  destinationDir,
+                }),
+              ),
+            );
+          }
+
+          try {
+            fs.accessSync(destinationDir, fs.constants.W_OK);
+          } catch {
+            return ResultToMcpResponse(
+              error(
+                i18n.t("error.notWritableDir", {
+                  destinationDir,
+                }),
+              ),
+            );
+          }
+        }
+
+        console.error("ss");
+
+        const { assetsNames, filePath } = await saveAssetsByPromptId(
+          promptId,
+          overwrite,
+          destinationDir,
+        );
+
+        const executionTime = Date.now() - startTime;
+
+        return ResultToMcpResponse(
+          ok(
+            i18n.t("tool.save_task_assets.success", {
+              assetsNames,
+              filePath,
+            }),
+            {},
+            {
+              action: "save_task_assets",
+            },
+            executionTime,
+          ),
+        );
+      }),
     );
 
     server.registerTool(
