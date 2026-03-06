@@ -769,9 +769,11 @@ export class ComfyMcpManager {
               ),
             );
           }
+        } else {
+          if (!fs.existsSync(COMMON.ASSETS_DIR)) {
+            fs.mkdirSync(COMMON.ASSETS_DIR, { recursive: true });
+          }
         }
-
-        console.error("ss");
 
         const { assetsNames, filePath } = await saveAssetsByPromptId(
           promptId,
