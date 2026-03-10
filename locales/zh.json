@@ -9,7 +9,7 @@
     "downloadAssetsFail": "无法下载网络资源，HTTP状态码: {{status}}",
     "fileNotExistError": "本地文件不存在，请检查路径是否正确: {{fileSource}}",
     "uploadFail": "导入ComfyUI Assets失败: {{message}}",
-    "getWorkflowFormatError": "workflowName需要以.json结尾，当前workflowName为：{{workflowName}}",
+    "getWorkflowFormatError": "workflowPath需要以.json结尾，当前workflowPath为：{{workflowPath}}",
     "notFoundModel": "没有找到对应类型的模型信息，当前已有模型类型为：{{models}}",
     "hasExtendName": "当前已有扩展名为：{{current}}，需要扩展名为：{{need}}",
     "dirNotExist": "目标目录不存在：{{destinationDir}}",
@@ -37,7 +37,7 @@
       "title": "获取工作流详情",
       "description": "【工作流API】读取目标工作流的全量底层拓扑JSON。体积庞大，仅在执行异常需排查最底层逻辑时调用，严禁在常规业务中使用防污染上下文。",
       "inputSchema": {
-        "workflowName": "目标工作流名称（优先使用目录中的workflowName字段，如果没有使用name字段，并且在name尾部添加.json）"
+        "workflowPath": "目标工作流名称（优先使用目录中的workflowPath字段，如果没有使用name字段，并且在name尾部添加.json）"
       },
       "success": "工作流定义已获取，请利用返回的 JSON Schema 准确解析参数语义并严格遵守格式约束。"
     },
@@ -54,9 +54,9 @@
       "description": "【参数挂载】提取目标生成任务的受支持交互参数Schema（屏蔽连线细节）。提交工作流任务前，必须调用此接口获取合法的参数键名表。",
       "inputSchema": {
         "promptId": "一次 工作流执行任务 的唯一 ID",
-        "workflowName": "目标工作流名称"
+        "toolName": "挂载动态工作流名称"
       },
-      "success": "成功创建动态 Tool: {{workflowName}}"
+      "success": "成功创建动态 Tool: {{toolName}}"
     },
     "queue_prompt": {
       "title": "执行工作流任务",
@@ -93,7 +93,7 @@
       "description": "【保存生成资产】获取指定任务 (prompt_id) 的执行历史，并将产生的所有多媒体生成物 (图片、视频、GIF等) 下载并保存到指定的本地目录中。",
       "inputSchema": {
         "promptId": "任务的 prompt_id。",
-        "destinationDir": "可选。文件要保存到的本地路径（如果未指定或路径不合法，将默认存放在项目目录的 assets 文件夹中）。",
+        "destinationDir": "可选（由用户主动提供，否则使用默认值）。文件要保存到的本地路径（如果未指定或路径不合法，将默认存放在项目目录的 assets 文件夹中）。",
         "overwrite": "若文件已存在是否覆盖，传 true 为覆盖，默认为 false。"
       },
       "success": "已保存资产 {{assetsName}} 到 {{filePath}}"

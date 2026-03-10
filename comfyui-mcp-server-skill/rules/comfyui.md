@@ -46,8 +46,14 @@ Expected output: A JSON array where each entry contains `name` (workflow identif
 After matching the target workflow from the catalog, call the mount interface to retrieve the valid parameter key map.
 
 ```
-mount_workflow(workflowName: "your_workflow_name")
+mount_workflow(workflowName: "your_workflow_name",promptId: "your_prompt_id")
 ```
+
+NOTICE:
+
+1. The `workflowName` must be match regex `/^[a-zA-Z0-9_-]+$/`
+2. The `promptId` must be an `id` from the list obtained via the `get_workflows_catalog()` method.
+3. The `workflowName` cannot use Chinese characters.
 
 Expected output: A JSON object describing configurable parameters, each with `parameter` (key name), `default_value`, and `enum_values` (if applicable).
 
@@ -102,13 +108,13 @@ Expected output: A list of local file paths for all saved assets.
 
 ## Additional Tools Reference
 
-| Tool | Purpose |
-|---|---|
-| `upload_assets(fileSource)` | Upload a local file or HTTP URL to ComfyUI's input directory for use in workflows |
-| `interrupt_prompt(promptId)` | Cancel a running or queued task |
-| `list_models(typeName)` | List available model files (checkpoints / loras / vae / controlnet) |
-| `get_system_status()` | Fetch ComfyUI runtime RAM, VRAM, and queue metrics |
-| `get_workflow_API(workflowName)` | Read the raw workflow topology JSON (for deep debugging only) |
+| Tool                             | Purpose                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `upload_assets(fileSource)`      | Upload a local file or HTTP URL to ComfyUI's input directory for use in workflows |
+| `interrupt_prompt(promptId)`     | Cancel a running or queued task                                                   |
+| `list_models(typeName)`          | List available model files (checkpoints / loras / vae / controlnet)               |
+| `get_system_status()`            | Fetch ComfyUI runtime RAM, VRAM, and queue metrics                                |
+| `get_workflow_API(workflowName)` | Read the raw workflow topology JSON (for deep debugging only)                     |
 
 ---
 
