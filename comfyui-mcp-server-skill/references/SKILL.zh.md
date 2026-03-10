@@ -102,13 +102,13 @@ save_task_assets(
 
 ## 附加工具参考
 
-| 工具 | 用途 |
-|---|---|
-| `upload_assets(fileSource)` | 上传本地文件或 URL 图片至 ComfyUI 输入目录，供工作流读取 |
-| `interrupt_prompt(promptId)` | 取消正在运行或排队中的任务 |
-| `list_models(typeName)` | 查询可用模型文件列表（checkpoints / loras / vae 等） |
-| `get_system_status()` | 获取 ComfyUI 运行时内存、显存及队列状态 |
-| `get_workflow_API(workflowName)` | 读取工作流原始拓扑 JSON（仅调试异常时使用） |
+| 工具                             | 用途                                                     |
+| -------------------------------- | -------------------------------------------------------- |
+| `upload_assets(fileSource)`      | 上传本地文件或 URL 图片至 ComfyUI 输入目录，供工作流读取 |
+| `interrupt_prompt(promptId)`     | 取消正在运行或排队中的任务                               |
+| `list_models(typeName)`          | 查询可用模型文件列表（checkpoints / loras / vae 等）     |
+| `get_system_status()`            | 获取 ComfyUI 运行时内存、显存及队列状态                  |
+| `get_workflow_API(workflowName)` | 读取工作流原始拓扑 JSON（仅调试异常时使用）              |
 
 ---
 

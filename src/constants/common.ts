@@ -9,7 +9,7 @@ const WORKFLOW_DIR = path.join(PROJECT_ROOT, "workflow");
 const WORKFLOW_FILE = "workflow.json";
 const WORKFLOW_PATH = path.join(WORKFLOW_DIR, WORKFLOW_FILE);
 
-const SKILLS_DIR = path.join(PROJECT_ROOT, "skills");
+const SKILLS_DIR = path.join(PROJECT_ROOT, "comfyui-mcp-server-skill");
 const SKILLS_RULES_DIR = path.join(SKILLS_DIR, "rules");
 const DEFAULT_RULE_FILE = "comfyui.md";
 const DEFAULT_RULE_PATH = path.join(SKILLS_RULES_DIR, DEFAULT_RULE_FILE);

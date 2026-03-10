@@ -78,7 +78,7 @@ export const formatTask = (
       last_updated: timestamp,
       inspection_status: sourceType,
       userdata_modified: modified,
-      workflowName,
+      workflowPath: workflowName,
     });
   }
 

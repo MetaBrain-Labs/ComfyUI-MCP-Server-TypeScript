@@ -9,7 +9,10 @@ import {
 } from "../../services/dynamic-tool";
 import { DynamicWorkflowToolData } from "../../types/dynamic-tool";
 import { error, ok } from "../../types/result";
-import { ResultToMcpResponse, withMcpErrorHandling } from "../../utils/mcp-helpers";
+import {
+  ResultToMcpResponse,
+  withMcpErrorHandling,
+} from "../../utils/mcp-helpers";
 
 export function registerMountWorkflow(server: McpServer) {
   server.registerTool(
@@ -21,16 +24,19 @@ export function registerMountWorkflow(server: McpServer) {
         promptId: z
           .string()
           .describe(i18n.t("tool.mount_workflow.inputSchema.promptId")),
-        workflowName: z
+        toolName: z
           .string()
-          .regex(/^[a-zA-Z0-9_-]+$/, "Tool 名称只能包含字母、数字、下划线、连字符")
-          .describe(i18n.t("tool.mount_workflow.inputSchema.workflowName")),
+          .regex(
+            /^[a-zA-Z0-9_-]+$/,
+            "Tool 名称只能包含字母、数字、下划线、连字符",
+          )
+          .describe(i18n.t("tool.mount_workflow.inputSchema.toolName")),
       },
     },
-    withMcpErrorHandling(async ({ promptId, workflowName }) => {
-      if (hasDynamicTool(workflowName)) {
+    withMcpErrorHandling(async ({ promptId, toolName }) => {
+      if (hasDynamicTool(toolName)) {
         return ResultToMcpResponse(
-          error(i18n.t("error.toolAlreadyExistError", { workflowName })),
+          error(i18n.t("error.toolAlreadyExistError", { toolName })),
         );
       }
 
@@ -42,7 +48,7 @@ export function registerMountWorkflow(server: McpServer) {
       }
 
       const workflow = result.detail.data;
-      const tool = createDynamicWorkflowTool(workflowName, promptId, workflow);
+      const tool = createDynamicWorkflowTool(toolName, promptId, workflow);
 
       const response: DynamicWorkflowToolData = {
         name: tool.name,
@@ -71,7 +77,7 @@ export function registerMountWorkflow(server: McpServer) {
 
       return ResultToMcpResponse(
         ok(
-          i18n.t("tool.mount_workflow.success", { workflowName }),
+          i18n.t("tool.mount_workflow.success", { toolName }),
           response,
           { action: "mount_workflow" },
           executionTime,

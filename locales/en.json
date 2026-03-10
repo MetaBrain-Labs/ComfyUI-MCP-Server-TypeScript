@@ -9,7 +9,7 @@
     "downloadAssetsFail": "Failed to download network resources, HTTP status code: {{status}}",
     "fileNotExistError": "Local file does not exist, please check if the path is correct: {{fileSource}}",
     "uploadFail": "Failed to import ComfyUI Assets: {{message}}",
-    "getWorkflowFormatError": "workflowName must end with .json. The current workflowName is: {{workflowName}}",
+    "getWorkflowFormatError": "workflowPath must end with .json. The current workflowPath is: {{workflowPath}}",
     "notFoundModel": "Could not find model information for the corresponding type. Currently available model types are: {{models}}",
     "hasExtendName": "The current extension is: {{current}}, but the required extension is: {{need}}",
     "dirNotExist": "Target directory does not exist: {{destinationDir}}",
@@ -37,7 +37,7 @@
       "title": "Get Workflow Details",
       "description": "[Workflow API] Read the full underlying topology JSON of the target workflow. It is large in size and should only be called when execution exceptions require troubleshooting of the lowest-level logic. Strictly prohibited in routine tasks to prevent context pollution.",
       "inputSchema": {
-        "workflowName": "Target workflow name (prioritize the workflowName field in the catalog; if unavailable, use the name field and append .json to it)."
+        "workflowPath": "Target workflow name (prioritize the workflowPath field in the catalog; if unavailable, use the name field and append .json to it)."
       },
       "success": "Workflow definition retrieved. Please use the returned JSON Schema to accurately parse parameter semantics and strictly abide by format constraints."
     },
@@ -54,9 +54,9 @@
       "description": "[Parameter Mounting] Extract the supported interactive parameter Schema of the target generation task (hiding connection details). Before submitting a workflow task, this interface must be called to obtain a valid table of parameter keys.",
       "inputSchema": {
         "promptId": "The unique ID of a workflow execution task.",
-        "workflowName": "Target workflow name."
+        "toolName": "Mount Dynamic Workflow Name"
       },
-      "success": "Successfully created dynamic Tool: {{workflowName}}"
+      "success": "Successfully created dynamic Tool: {{toolName}}"
     },
     "queue_prompt": {
       "title": "Execute Workflow Task",
@@ -93,7 +93,7 @@
       "description": "[Save Generated Assets] Get the execution history of a specified task (prompt_id), download, and save all generated multimedia content (images, videos, GIFs, etc.) to the specified local directory.",
       "inputSchema": {
         "promptId": "The prompt_id of the task.",
-        "destinationDir": "Optional. The local path to save the files (if unspecified or invalid, defaults to the assets folder in the project directory).",
+        "destinationDir": "Optional(Provided by the user; otherwise, the default value is used). The local path to save the files (if unspecified or invalid, defaults to the assets folder in the project directory).",
         "overwrite": "Whether to overwrite if the file already exists. Pass true to overwrite, default is false."
       },
       "success": "Saved asset {{assetsName}} to {{filePath}}"
