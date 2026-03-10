@@ -14,8 +14,12 @@ export const formatTask = (
   modifiedWorkflow?: Map<string, number>,
   workflowNames?: Map<string, string>,
 ): CollectFormatTaskResult => {
-  const workflowNameRegex = process.env.WORKFLOW_NAME_REGEX || /==(.+?)==/;
-  const workflowParamRegex = process.env.WORKFLOW_PARAM_REGEX || /^=>/;
+  const workflowNameRegexString =
+    process.env.WORKFLOW_NAME_REGEX || "==(.+?)==";
+  const workflowParamRegexString = process.env.WORKFLOW_PARAM_REGEX || "^=>";
+
+  const workflowNameRegex = new RegExp(workflowNameRegexString);
+  const workflowParamRegex = new RegExp(workflowParamRegexString);
 
   const result: CollectFormatTaskResult = {
     last_updated: Date.now(),

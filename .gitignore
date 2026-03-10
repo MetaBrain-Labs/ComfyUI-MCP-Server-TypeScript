@@ -29,8 +29,8 @@ dist-ssr
 docs/.vitepress/cache/*
 
 .vitepress/*
-workflow
-assets
+/workflow
+/assets
 token.json
 build
 

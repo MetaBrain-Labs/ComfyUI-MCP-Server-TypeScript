@@ -1,162 +1,19 @@
-import { COMMON } from "../constants";
-import { ok, Result } from "../types/result";
-import { ComfyImage, ComfyPromptConfig } from "../types/task";
-import { WorkflowCollectionData } from "../types/workflow";
-import { formatTask } from "../utils/format";
-import { WorkflowConverter } from "../utils/workflow-converter";
-import { ComfyClient } from "../utils/ws";
-import { saveAssets, saveWorkflow } from "./saveWorkflow";
-import {
-  fetchAssetsByPromptId,
-  fetchHistoryTasks,
-  fetchTaskByPromptId,
-  fetchUserWorkflow,
-} from "./tasks";
-import { executeWorkflowTask } from "./workflow-executor";
-
 /**
- * @METHOD
- * @description 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
- * @author LaiFQZzr
- * @date 2026/01/20 11:50
+ * 服务层统一导出
+ * 按功能域组织：task, workflow, storage, common
  */
-export async function collectAndSaveFormatTask(params: {
-  maxItems: number;
-  offset: number;
-  append: boolean;
-}): Promise<Result<WorkflowCollectionData>> {
-  const startTime = Date.now();
 
-  const data = await fetchHistoryTasks(params);
+// 任务相关服务
+export * from "./task";
 
-  const formatData = formatTask(data.successTasks, "CompleteInspection");
+// 工作流相关服务
+export * from "./workflow";
 
-  const result = await saveWorkflow(formatData.workflows, {
-    append: params?.append,
-  });
+// 存储相关服务
+export * from "./storage";
 
-  const executionTime = Date.now() - startTime;
+// 动态工具管理（保持原位置）
+export * from "./dynamic-tool";
 
-  return ok<WorkflowCollectionData>(
-    `已从偏移量 ${params.offset} 处收集并保存 ${data.total - data.fail} 条工作流，模式：${params.append ? "追加" : "覆盖"}`,
-    {
-      savedPath: result.filePath,
-      itemsRequested: params.maxItems,
-      itemsCollected: data.total,
-      failedTasks: data.fail,
-      offset: params.offset,
-      pagination: {
-        hasNextPage: data.total === params.maxItems,
-        nextOffset:
-          data.total === params.maxItems
-            ? params.offset + params.maxItems
-            : null,
-        currentOffset: params.offset,
-        requestedItems: params.maxItems,
-        returnedItems: data.total,
-      },
-    },
-    {
-      action: "collect_workflow",
-      mode: params.append ? "append" : "overwrite",
-    },
-    executionTime,
-  );
-}
-
-/**
- * @METHOD
- * @description 从工作流中获取一遍工作流
- * @author LaiFQZzr
- * @date 2026/02/10 15:46
- */
-export async function collectAndSaveFormatTaskFromWorkflows(
-  client: ComfyClient,
-  converter: WorkflowConverter,
-) {
-  const startTime = Date.now();
-
-  const { availableWorkflow, modifiedWorkflow, workflowNames } =
-    await executeWorkflowTask(client, converter);
-
-  const data = await fetchUserWorkflow(availableWorkflow);
-
-  const formatData = formatTask(
-    data,
-    "InitialInspection",
-    modifiedWorkflow,
-    workflowNames,
-  );
-
-  const result = await saveWorkflow(formatData.workflows, {
-    append: true,
-  });
-
-  const executionTime = Date.now() - startTime;
-
-  return ok(
-    "从原始工作流中获取历史任务，并保存到本地缓存文件中",
-    { filePath: result.filePath },
-    {
-      action: "collect_origin_workflow",
-    },
-    executionTime,
-  );
-}
-
-/**
- * @METHOD
- * @description 根据promptId获取相关资产到本地
- * @author LaiFQZzr
- * @date 2026/03/06 10:52
- */
-export async function saveAssetsByPromptId(
-  promptId: string,
-  overwrite: boolean,
-  destinationDir?: string,
-): Promise<{ assetsNames: string[]; filePath: string }> {
-  const images: ComfyImage[] = [];
-  const assetsNames: string[] = [];
-  const assetsInfo = await fetchAssetsByPromptId(promptId);
-
-  assetsInfo.forEach((item) => {
-    item.images.forEach((item) => {
-      images.push(item);
-    });
-  });
-
-  for (const image of images) {
-    const assetsName = await saveAssets(image, overwrite, destinationDir);
-    assetsNames.push(assetsName);
-  }
-
-  return {
-    assetsNames: assetsNames,
-    filePath: destinationDir || COMMON.ASSETS_DIR,
-  };
-}
-
-/**
- * @METHOD
- * @description 提供给server调用，用于根据prompt_id获取Tasks详细信息
- * @author LaiFQZzr
- * @date 2026/02/03 11:30
- */
-export async function getTaskDetailByPromptId(params: {
-  promptId: string;
-}): Promise<Result<ComfyPromptConfig>> {
-  const startTime = Date.now();
-
-  const data = await fetchTaskByPromptId(params);
-
-  const executionTime = Date.now() - startTime;
-
-  return ok<ComfyPromptConfig>(
-    "根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容",
-    data,
-    {
-      action: "cui_get_task_detail",
-    },
-    executionTime,
-  );
-}
+// 业务逻辑层（组合服务）
+export * from "./business";

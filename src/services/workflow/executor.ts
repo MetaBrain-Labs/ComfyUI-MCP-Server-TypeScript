@@ -1,16 +1,13 @@
 import axios from "axios";
-import { api } from "../api/api";
-import { ExecutePromptRequest } from "../types/execute";
-import { ComfyPromptConfig } from "../types/task";
-import { WorkflowConverter } from "../utils/workflow-converter";
-import { ComfyClient } from "../utils/ws";
-import { waitForExecutionInterrupt, waitForExecutionStart } from "./tasks";
+import { api } from "../../api/api";
+import { ExecutePromptRequest } from "../../types/execute";
+import { ComfyPromptConfig } from "../../types/task";
+import { WorkflowConverter } from "../../utils/workflow-converter";
+import { ComfyClient } from "../../utils/ws";
+import { waitForExecutionInterrupt, waitForExecutionStart } from "../task/wait";
 
 /**
- * @METHOD
- * @description 从工作流列表中获取工作流
- * @author LaiFQZzr
- * @date 2026/01/20 11:50
+ * 从工作流列表中获取工作流
  */
 export async function executeWorkflowTask(
   client: ComfyClient,
@@ -28,7 +25,6 @@ export async function executeWorkflowTask(
 
   for (const item of res) {
     const workflowRes = await api.getDetailUserData(item.path);
-
     const output = converter.convert(workflowRes);
 
     try {
@@ -45,7 +41,6 @@ export async function executeWorkflowTask(
 
       modifiedWorkflow.set(promptId, item.modified * 1000);
       workflowNames.set(promptId, item.path);
-
       availableWorkflow.push(promptId);
 
       const startResult = await waitForExecutionStart({
@@ -80,6 +75,7 @@ export async function executeWorkflowTask(
           `Skip workflow ${item.path}: bad request (400):\n` +
             JSON.stringify(e.response.data, null, 2),
         );
+        console.error("output", JSON.stringify(output, null, 2));
       }
     }
   }
