@@ -114,7 +114,6 @@ app.post("/mcp", async (req: Request, res: Response) => {
 
       // 监听transport关闭事件
       transport.onclose = () => {
-        console.error(`Transport关闭,清理会话: ${transport.sessionId}`);
         if (transport.sessionId) {
           const session = sessions.get(transport.sessionId);
           if (session) {

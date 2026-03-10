@@ -38,6 +38,7 @@ export class WorkflowConverter {
    */
   convert(workflow: ComfyUIWorkflow): ComfyPromptConfig {
     const output: ComfyPromptConfig = {};
+    const workflowId = workflow?.id || "";
 
     // 1. 创建所有节点的映射，过滤掉不需要的节点
     const validNodes = workflow.nodes.filter((node: ComfyNode) => {
@@ -108,7 +109,7 @@ export class WorkflowConverter {
       inputNames.forEach((inputName: string) => {
         for (let i = 0; i < node.inputs.length; i++) {
           if (inputName === node.inputs[i].name) {
-            if (node.inputs[i].link !== null) {
+            if (node.inputs[i].link !== null && !node.inputs[i].widget) {
               inputs[inputName] =
                 linksMap.get(`${node.inputs[i].link}:${node.inputs[i].type}`) ||
                 [];

@@ -12,6 +12,8 @@ async function main() {
 
   const currentServer = mcpManager.createSessionServer();
 
+  await mcpManager.initialize();
+
   await currentServer.connect(transport);
 
   console.error("MCP Stdio Server is running");
