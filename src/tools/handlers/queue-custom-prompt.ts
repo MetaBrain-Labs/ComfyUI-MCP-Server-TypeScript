@@ -1,5 +1,5 @@
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import i18n from "../../i18n";
 import {
@@ -7,12 +7,18 @@ import {
   ExecutionProgress,
 } from "../../services/task/execution";
 import { waitForExecutionCompletion } from "../../services/task/wait";
-import { error, errorWithDetail, ok } from "../../types/result";
-import { buildComfyViewUrls } from "../../utils/mcp-helpers";
-import { ResultToMcpResponse, withMcpErrorHandling } from "../../utils/mcp-helpers";
+import { errorWithDetail, ok } from "../../types/result";
+import {
+  buildComfyViewUrls,
+  ResultToMcpResponse,
+  withMcpErrorHandling,
+} from "../../utils/mcp-helpers";
 import { ComfyClient } from "../../utils/ws";
 
-export function registerQueueCustomPrompt(server: McpServer, client: ComfyClient) {
+export function registerQueueCustomPrompt(
+  server: McpServer,
+  client: ComfyClient,
+) {
   server.registerTool(
     "queue_custom_prompt",
     {
@@ -21,7 +27,9 @@ export function registerQueueCustomPrompt(server: McpServer, client: ComfyClient
       inputSchema: {
         workflowName: z
           .string()
-          .describe(i18n.t("tool.queue_custom_prompt.inputSchema.workflowName ")),
+          .describe(
+            i18n.t("tool.queue_custom_prompt.inputSchema.workflowName "),
+          ),
         isAsync: z
           .boolean()
           .default(false)
@@ -40,7 +48,10 @@ export function registerQueueCustomPrompt(server: McpServer, client: ComfyClient
           await client.connect();
         }
         if (!client.isConnected()) {
-          throw new McpError(ErrorCode.InternalError, "WebSocket NOT CONNECTED");
+          throw new McpError(
+            ErrorCode.InternalError,
+            "WebSocket NOT CONNECTED",
+          );
         }
 
         const clientId = client.getClientId();

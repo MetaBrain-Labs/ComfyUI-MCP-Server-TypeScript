@@ -72,7 +72,7 @@ export class ComfyMcpManager {
     registerMountWorkflow(server);
     registerQueuePrompt(server, this.client);
     registerQueueCustomPrompt(server, this.client);
-    registerSaveCustomWorkflow(server);
+    registerSaveCustomWorkflow(server, this.client);
     registerSaveTaskAssets(server);
     registerInterruptPrompt(server);
     registerGetPromptResult(server);

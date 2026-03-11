@@ -1,11 +1,18 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import i18n from "../../i18n";
-import { saveCustomWorkflow } from "../../services/storage/workflow-storage";
+import { collectAndSaveFormatTaskFromExternal } from "../../services";
 import { error, ok } from "../../types/result";
-import { ResultToMcpResponse, withMcpErrorHandling } from "../../utils/mcp-helpers";
+import {
+  ResultToMcpResponse,
+  withMcpErrorHandling,
+} from "../../utils/mcp-helpers";
+import { ComfyClient } from "../../utils/ws";
 
-export function registerSaveCustomWorkflow(server: McpServer) {
+export function registerSaveCustomWorkflow(
+  server: McpServer,
+  client: ComfyClient,
+) {
   server.registerTool(
     "save_custom_workflow",
     {
@@ -39,13 +46,18 @@ export function registerSaveCustomWorkflow(server: McpServer) {
         filename += ".json";
       }
 
-      const filePath = await saveCustomWorkflow(filename, apiJson);
+      const { filePath, promptId } = await collectAndSaveFormatTaskFromExternal(
+        filename,
+        apiJson,
+        client,
+      );
+
       const executionTime = Date.now() - startTime;
 
       return ResultToMcpResponse(
         ok(
           i18n.t("tool.save_custom_workflow.success", { filePath }),
-          {},
+          { filePath, promptId },
           { action: "save_custom_workflow" },
           executionTime,
         ),

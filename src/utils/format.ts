@@ -84,3 +84,53 @@ export const formatTask = (
 
   return result;
 };
+
+export const formatTaskFromApiJson = (
+  apiJson: Record<string, any>,
+  promptId: string,
+): CollectFormatTaskResult => {
+  const workflowNameRegexString =
+    process.env.WORKFLOW_NAME_REGEX || "==(.+?)==";
+  const workflowParamRegexString = process.env.WORKFLOW_PARAM_REGEX || "^=>";
+
+  const workflowNameRegex = new RegExp(workflowNameRegexString);
+  const workflowParamRegex = new RegExp(workflowParamRegexString);
+
+  const result: CollectFormatTaskResult = {
+    last_updated: Date.now(),
+    workflows: [],
+  };
+
+  const parameters: string[] = [];
+  let description: string | null = null;
+  let name: string | null = null;
+
+  for (const [nodeId, nodeConfig] of Object.entries(apiJson)) {
+    const isDesc = nodeConfig._meta?.title?.match(workflowNameRegex);
+    if (isDesc) {
+      description =
+        (nodeConfig.inputs["value"] as string) || "无工作流描述内容";
+      name = isDesc[1] || "无工作流名称";
+    }
+    const isRequired = nodeConfig._meta?.title?.match(workflowParamRegex);
+    if (isRequired) {
+      parameters.push(nodeConfig.class_type + nodeConfig._meta?.title);
+    }
+  }
+
+  // 如果name为null或者description为null的时候则不纳入列表
+  if (!name || !description) {
+    throw new Error("Invalid workflow name or description");
+  }
+
+  result.workflows.push({
+    name: name,
+    id: promptId,
+    description: description,
+    parameters: parameters,
+    last_updated: Date.now(),
+    inspection_status: "External",
+  });
+
+  return result;
+};

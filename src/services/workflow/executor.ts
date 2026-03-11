@@ -82,3 +82,53 @@ export async function executeWorkflowTask(
 
   return { availableWorkflow, modifiedWorkflow, workflowNames };
 }
+
+/**
+ * 从API_JSON中获取工作流
+ */
+export async function executeWorkflowTaskByApiJson(
+  apiJson: Record<string, any>,
+  client: ComfyClient,
+): Promise<string> {
+  try {
+    const data: ExecutePromptRequest = {
+      client_id: client.getClientId(),
+      prompt: apiJson as ComfyPromptConfig,
+    };
+    const promptRes = await api.prompt(data);
+
+    const promptId = promptRes.prompt_id;
+
+    const startResult = await waitForExecutionStart({
+      client,
+      promptId,
+    });
+
+    if (startResult.success) {
+      console.error(`Start workflow ${promptId} success`);
+      await api.interrupt(promptId);
+
+      const executionResult = await waitForExecutionInterrupt({
+        client,
+        promptId,
+      });
+
+      if (executionResult.success) {
+        console.error(`Interrupt workflow ${promptId} success`);
+      } else {
+        console.error(
+          `Interrupt workflow task ${promptId} failed: ${executionResult.error}`,
+        );
+      }
+    } else {
+      console.error(
+        `Start workflow task ${promptId} failed: ${startResult.error}`,
+      );
+    }
+    return promptId;
+  } catch (e) {
+    throw new Error(
+      `API_JSON execute workflow fail.\n` + JSON.stringify(e, null, 2),
+    );
+  }
+}
