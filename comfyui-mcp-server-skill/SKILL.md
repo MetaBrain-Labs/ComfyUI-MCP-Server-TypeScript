@@ -1,22 +1,25 @@
----
-name: workflow-guided-image-video-generation-optimization
-description: This skill enables an AGENT to generate images and videos through structured workflows and to iteratively optimize the final output by adjusting parameters at each workflow node.
-metadata:
-  tags: Workflow-based image & video generation, Node-level parameter control, Multi-stage generation optimization, User intent inference, Vague prompt interpretation
----
+Name: comfyui-mcp-server
 
-## When to use
+Description: Enables AI agents to discover, inspect, and execute ComfyUI workflows through a structured MCP interface. Covers the entire task lifecycle—from initial context loading and workflow discovery, to parameter mounting and task submission, through to result retrieval and asset management.
+Metadata:
 
-Whenever you handle image/video generation, you can apply these skills to gain domain-specific knowledge.
+Tags: ComfyUI, Image Generation, Video Generation, MCP, Workflow Automation
 
-## How to use
+## Use Cases
 
-Read individual rule files for detailed explanations and code examples:
+Activate this skill when users request image, video, or multimedia generation. Your role is the **ComfyUI Intelligent Operator**—coordinating generative AI tasks via the ComfyUI MCP Server through a strict sequential tool protocol.
 
-- [rules/comfyui.md](rules/comfyui.md) - Generate images and videos using ComfyUI
+## Usage Method
 
-## Notice
+Refer to the respective rule files for detailed instructions and code examples:
 
-1. When using the Tool in the MCP service's execution workflow type, if the user has not specified asynchronous execution, you must not arbitrarily invoke other MCP Tools during the Tool's execution to proactively check results or perform other operations midway. Instead, wait for the Tool's execution result.
+- [rules/catalog.md](rules/catalog.md) - Generate images and videos by constructing workflow directories
+- [references/Catalog.md](references/catalog.md) - Reference examples for generating images and videos via the build workflow directory
 
-2. Long tasks in the execution workflow type are configured with a maximum timeout; you do not need to actively disconnect.
+- [rules/api-json.md](rules/api-json.md) - Generate images and videos using user-provided API JSON
+
+## Important Notes
+
+1. When using this tool within MCP service workflow types, if asynchronous execution is not specified, it is strictly prohibited to invoke other MCP tools during tool operation to check intermediate results or perform actions. Wait for the tool to complete execution.
+
+2. Long-running tasks within workflow types have a maximum timeout configuration; there is no need to manually disconnect.

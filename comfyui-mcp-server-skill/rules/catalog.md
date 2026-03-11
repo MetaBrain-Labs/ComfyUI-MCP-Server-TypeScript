@@ -1,19 +1,5 @@
 # ComfyUI MCP Server
 
-## Use Case
-
-Activate this skill when users request image, video, or multimedia generation. Your role is the **ComfyUI Intelligent Operator**—coordinating generative AI tasks via the ComfyUI MCP Server through a strict sequential tool protocol.
-
-## Key Steps: Initialize Context (Required at the start of every session)
-
-Call the core manual tool to retrieve the latest operational rules, parameter-filling strategies, and error recovery mechanisms.
-
-```
-get_core_manual()
-```
-
-Expected output: A complete operations manual document. Use its contents as the governing ruleset for all subsequent tool calls.
-
 ## Operational Guide — Workflow Catalog Construction Method
 
 **This is the default method. When users submit requests without explicitly specifying another approach, this method is used to produce images/videos.**
@@ -42,57 +28,6 @@ Important Notes:
 
 1. `workflowName` can be customized but must match the regular expression `/^[a-zA-Z0-9_-]+$/`.
 2. `promptId` must be an `id` from the list obtained via the `get_workflows_catalog()` method.
-3. `workflowName` cannot contain Chinese characters.
-
-Expected Output: A JSON object describing configurable parameters, where each parameter includes `parameter` (key name), `default_value`, and `enum_values` (if applicable).
-
-> All parameter keys must be derived entirely from this response. **Do not** fabricate or guess key names.
-
-### Step 3: Submit the Task
-
-Map the user request into parameter key-value pairs and submit the workflow task.
-
-```
-queue_prompt(
-  workflowName: “your_workflow_name”,
-  parameters: { “nodeId_inputKey”: “user_value”, ... },
-  isAsync: false   // false = wait for result; true = return prompt ID immediately (for batch tasks)
-
-```
-
-Expected Output (Synchronous): A task execution snapshot containing the output node media file URL (image, video, etc.).
-
-Expected Output (Asynchronous): `{ “prompt_id”: “...” }` — Use `get_prompt_result` to query the result later.
-
-## Operational Guide — API JSON Construction Method
-
-**This is a non-default approach. When users explicitly request API JSON usage and provide the JSON, this method is employed to generate images/videos.**
-
-### Step 1: Execute Custom Workflow
-
-Directly submit the complete native ComfyUI API Prompt JSON to the workflow execution queue.
-
-```
-save_custom_workflow(
-  filename: “saved name”,
-  api_json: { “nodeId_inputKey”: “user_value”, ... },
-
-```
-
-Expected Output (Synchronous): The local address of the workflow directory item formatted in API_JSON file format and its corresponding promptId.
-
-### Step 2: Mount Workflow — Retrieve Parameter Structure
-
-After matching the target workflow from the catalog, call the mount interface to obtain a valid parameter key mapping.
-
-```
-mount_workflow()
-```
-
-Important Notes:
-
-1. `workflowName` can be customized but must match the regular expression `/^[a-zA-Z0-9_-]+$/`.
-2. `promptId` must be an `id` from the list obtained via the `save_custom_workflow()` method.
 3. `workflowName` cannot contain Chinese characters.
 
 Expected Output: A JSON object describing configurable parameters, where each parameter includes `parameter` (key name), `default_value`, and `enum_values` (if applicable).
