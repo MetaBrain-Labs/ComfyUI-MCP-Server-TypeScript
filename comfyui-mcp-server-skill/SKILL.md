@@ -1,9 +1,11 @@
-Name: comfyui-mcp-server
+---
+name: comfyui-mcp-server
 
-Description: Enables AI agents to discover, inspect, and execute ComfyUI workflows through a structured MCP interface. Covers the entire task lifecycle—from initial context loading and workflow discovery, to parameter mounting and task submission, through to result retrieval and asset management.
+description: Enables AI agents to discover, inspect, and execute ComfyUI workflows through a structured MCP interface. Covers the entire task lifecycle—from initial context loading and workflow discovery, to parameter mounting and task submission, through to result retrieval and asset management.
 Metadata:
 
-Tags: ComfyUI, Image Generation, Video Generation, MCP, Workflow Automation
+tags: ComfyUI, Image Generation, Video Generation, MCP, Workflow Automation
+---
 
 ## Use Cases
 
