@@ -13,10 +13,17 @@ Activate this skill when users request image, video, or multimedia generation. Y
 
 Refer to the respective rule files for detailed instructions and code examples:
 
+---
+
 - [rules/catalog.md](rules/catalog.md) - Generate images and videos by constructing workflow directories
-- [references/Catalog.md](references/catalog.md) - Reference examples for generating images and videos via the build workflow directory
+- [references/catalog.md](references/catalog.md) - Reference examples for generating images and videos via the build workflow directory
+
+---
 
 - [rules/api-json.md](rules/api-json.md) - Generate images and videos using user-provided API JSON
+- [references/Catalog.md](references/api-json.md) - Reference examples for generating images and videos using user-provided API JSON
+
+---
 
 ## Important Notes
 
