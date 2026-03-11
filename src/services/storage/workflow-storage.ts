@@ -103,6 +103,10 @@ export async function saveCustomWorkflow(
 
 /**
  * 根据 name 去重，保留最新的项
+ * 规则：
+ * 1. External 与 非External 重名时，优先保留 非External
+ * 2. 同类型时，保留 last_updated 最新的
+ * 3. InitialInspection 与 CompleteInspection 重名时，根据 userdata_modified 判断
  */
 function deduplicateWorkflows(
   workflows: CollectFormatTaskWorkflow[],
@@ -125,15 +129,35 @@ function deduplicateWorkflows(
 
 /**
  * 判断是否应该替换工作流
+ * 优先级规则：
+ * 1. External 与 非External 重名时，优先保留 非External（External 被抛弃）
+ * 2. InitialInspection 与 CompleteInspection 重名时，根据 userdata_modified 判断
+ * 3. 同类型时，保留 last_updated 最新的
  */
 function shouldReplaceWorkflow(
   existing: CollectFormatTaskWorkflow,
   candidate: CollectFormatTaskWorkflow,
 ): boolean {
+  // 规则1: External 与 非External 重名时，优先保留 非External
+  const existingIsExternal = existing.inspection_status === "External";
+  const candidateIsExternal = candidate.inspection_status === "External";
+  
+  if (existingIsExternal && !candidateIsExternal) {
+    // existing 是 External，candidate 不是，用 candidate 替换 existing
+    return true;
+  }
+  
+  if (!existingIsExternal && candidateIsExternal) {
+    // existing 不是 External，candidate 是，保留 existing
+    return false;
+  }
+
+  // 规则2: 同类型时，保留 last_updated 最新的
   if (existing.inspection_status === candidate.inspection_status) {
     return candidate.last_updated > existing.last_updated;
   }
 
+  // 规则3: InitialInspection 与 CompleteInspection 重名时，根据 userdata_modified 判断
   const isInitialVsComplete =
     (existing.inspection_status === "InitialInspection" &&
       candidate.inspection_status === "CompleteInspection") ||
@@ -156,6 +180,7 @@ function shouldReplaceWorkflow(
     }
   }
 
+  // 其他情况（理论上不会走到这里，因为目前只有三种类型），按优先级处理
   const existingPriority = sourcePriority[existing.inspection_status] ?? -1;
   const candidatePriority = sourcePriority[candidate.inspection_status] ?? -1;
 

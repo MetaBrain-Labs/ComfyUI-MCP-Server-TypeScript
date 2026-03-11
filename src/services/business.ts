@@ -18,6 +18,9 @@ import {
   fetchUserWorkflow,
 } from "./task/fetch";
 import { saveAssets, saveCustomWorkflow, saveWorkflow } from "./storage";
+import { readdir, readFile } from "fs/promises";
+import path from "path";
+import { CollectFormatTaskWorkflow } from "../types/common";
 
 /**
  * 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
@@ -170,5 +173,89 @@ export async function getTaskDetailByPromptId(params: {
       action: "cui_get_task_detail",
     },
     executionTime,
+  );
+}
+
+/**
+ * 从本地 workflow 目录读取 JSON 文件作为 External 类型工作流
+ */
+export async function collectExternalWorkflowsFromDirectory(): Promise<
+  Result<CollectFormatTaskWorkflow[]>
+> {
+  const startTime = Date.now();
+  const externalWorkflows: CollectFormatTaskWorkflow[] = [];
+
+  try {
+    const workflowDir = COMMON.WORKFLOW_DIR;
+    const files = await readdir(workflowDir);
+    const jsonFiles = files.filter(
+      (file) => file.endsWith(".json") && file !== COMMON.WORKFLOW_FILE,
+    );
+
+    for (const file of jsonFiles) {
+      try {
+        const filePath = path.join(workflowDir, file);
+        const content = await readFile(filePath, "utf-8");
+        const workflows = JSON.parse(content);
+
+        if (Array.isArray(workflows)) {
+          // 文件内容是数组，解析为 External 类型
+          for (const workflow of workflows) {
+            if (isValidWorkflow(workflow)) {
+              externalWorkflows.push({
+                ...workflow,
+                inspection_status: "External",
+                id: workflow.id || `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                last_updated: workflow.last_updated || Date.now(),
+              });
+            }
+          }
+        } else if (isValidWorkflow(workflows)) {
+          // 单个工作流对象
+          externalWorkflows.push({
+            ...workflows,
+            inspection_status: "External",
+            id: workflows.id || `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            last_updated: workflows.last_updated || Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error(`读取 workflow 文件 ${file} 失败:`, error);
+      }
+    }
+
+    const executionTime = Date.now() - startTime;
+
+    return ok<CollectFormatTaskWorkflow[]>(
+      `从本地 workflow 目录读取了 ${externalWorkflows.length} 个 External 类型工作流`,
+      externalWorkflows,
+      {
+        action: "collect_external_workflows",
+      },
+      executionTime,
+    );
+  } catch (error) {
+    // 如果目录不存在，返回空数组
+    return ok<CollectFormatTaskWorkflow[]>(
+      "本地 workflow 目录不存在或无法读取",
+      [],
+      {
+        action: "collect_external_workflows",
+      },
+      Date.now() - startTime,
+    );
+  }
+}
+
+/**
+ * 验证工作流对象是否有效
+ */
+function isValidWorkflow(obj: any): obj is CollectFormatTaskWorkflow {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    typeof obj.name === "string" &&
+    typeof obj.description === "string" &&
+    Array.isArray(obj.parameters)
   );
 }
