@@ -3,24 +3,22 @@
  * 组合底层服务（task, storage, workflow）提供高层业务功能
  */
 
+import { readdir, readFile } from "fs/promises";
+import path from "path";
 import { COMMON } from "../constants";
-import { ok, Result } from "../types/result";
+import { CollectFormatTaskWorkflow } from "../types/common";
 import { ComfyImage, ComfyPromptConfig } from "../types/task";
-import { WorkflowCollectionData } from "../types/workflow";
 import { formatTask, formatTaskFromApiJson } from "../utils/format";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
-import { executeWorkflowTask, executeWorkflowTaskByApiJson } from "./workflow";
+import { saveAssets, saveCustomWorkflow, saveWorkflow } from "./storage";
 import {
   fetchAssetsByPromptId,
-  fetchTaskByPromptId,
   fetchHistoryTasks,
+  fetchTaskByPromptId,
   fetchUserWorkflow,
 } from "./task/fetch";
-import { saveAssets, saveCustomWorkflow, saveWorkflow } from "./storage";
-import { readdir, readFile } from "fs/promises";
-import path from "path";
-import { CollectFormatTaskWorkflow } from "../types/common";
+import { executeWorkflowTask, executeWorkflowTaskByApiJson } from "./workflow";
 
 /**
  * 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
@@ -29,43 +27,15 @@ export async function collectAndSaveFormatTask(params: {
   maxItems: number;
   offset: number;
   append: boolean;
-}): Promise<Result<WorkflowCollectionData>> {
-  const startTime = Date.now();
-
+}): Promise<boolean> {
   const data = await fetchHistoryTasks(params);
   const formatData = formatTask(data.successTasks, "CompleteInspection");
 
-  const result = await saveWorkflow(formatData.workflows, {
+  await saveWorkflow(formatData.workflows, {
     append: params?.append,
   });
 
-  const executionTime = Date.now() - startTime;
-
-  return ok<WorkflowCollectionData>(
-    `已从偏移量 ${params.offset} 处收集并保存 ${data.total - data.fail} 条工作流，模式：${params.append ? "追加" : "覆盖"}`,
-    {
-      savedPath: result.filePath,
-      itemsRequested: params.maxItems,
-      itemsCollected: data.total,
-      failedTasks: data.fail,
-      offset: params.offset,
-      pagination: {
-        hasNextPage: data.total === params.maxItems,
-        nextOffset:
-          data.total === params.maxItems
-            ? params.offset + params.maxItems
-            : null,
-        currentOffset: params.offset,
-        requestedItems: params.maxItems,
-        returnedItems: data.total,
-      },
-    },
-    {
-      action: "collect_workflow",
-      mode: params.append ? "append" : "overwrite",
-    },
-    executionTime,
-  );
+  return data.total === params.maxItems;
 }
 
 /**
@@ -75,8 +45,6 @@ export async function collectAndSaveFormatTaskFromWorkflows(
   client: ComfyClient,
   converter: WorkflowConverter,
 ) {
-  const startTime = Date.now();
-
   const { availableWorkflow, modifiedWorkflow, workflowNames } =
     await executeWorkflowTask(client, converter);
 
@@ -93,16 +61,7 @@ export async function collectAndSaveFormatTaskFromWorkflows(
     append: true,
   });
 
-  const executionTime = Date.now() - startTime;
-
-  return ok(
-    "从原始工作流中获取历史任务，并保存到本地缓存文件中",
-    { filePath: result.filePath },
-    {
-      action: "collect_origin_workflow",
-    },
-    executionTime,
-  );
+  return result.filePath;
 }
 
 /**
@@ -159,30 +118,16 @@ export async function saveAssetsByPromptId(
  */
 export async function getTaskDetailByPromptId(params: {
   promptId: string;
-}): Promise<Result<ComfyPromptConfig>> {
-  const startTime = Date.now();
-
-  const data = await fetchTaskByPromptId(params);
-
-  const executionTime = Date.now() - startTime;
-
-  return ok<ComfyPromptConfig>(
-    "根据prompt_id获取任务详情，包括prompt、outputs、status、meta等项内容",
-    data,
-    {
-      action: "cui_get_task_detail",
-    },
-    executionTime,
-  );
+}): Promise<ComfyPromptConfig> {
+  return await fetchTaskByPromptId(params);
 }
 
 /**
  * 从本地 workflow 目录读取 JSON 文件作为 External 类型工作流
  */
 export async function collectExternalWorkflowsFromDirectory(): Promise<
-  Result<CollectFormatTaskWorkflow[]>
+  CollectFormatTaskWorkflow[]
 > {
-  const startTime = Date.now();
   const externalWorkflows: CollectFormatTaskWorkflow[] = [];
 
   try {
@@ -205,7 +150,9 @@ export async function collectExternalWorkflowsFromDirectory(): Promise<
               externalWorkflows.push({
                 ...workflow,
                 inspection_status: "External",
-                id: workflow.id || `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                id:
+                  workflow.id ||
+                  `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 last_updated: workflow.last_updated || Date.now(),
               });
             }
@@ -215,7 +162,9 @@ export async function collectExternalWorkflowsFromDirectory(): Promise<
           externalWorkflows.push({
             ...workflows,
             inspection_status: "External",
-            id: workflows.id || `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id:
+              workflows.id ||
+              `external-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             last_updated: workflows.last_updated || Date.now(),
           });
         }
@@ -224,26 +173,10 @@ export async function collectExternalWorkflowsFromDirectory(): Promise<
       }
     }
 
-    const executionTime = Date.now() - startTime;
-
-    return ok<CollectFormatTaskWorkflow[]>(
-      `从本地 workflow 目录读取了 ${externalWorkflows.length} 个 External 类型工作流`,
-      externalWorkflows,
-      {
-        action: "collect_external_workflows",
-      },
-      executionTime,
-    );
+    return externalWorkflows;
   } catch (error) {
     // 如果目录不存在，返回空数组
-    return ok<CollectFormatTaskWorkflow[]>(
-      "本地 workflow 目录不存在或无法读取",
-      [],
-      {
-        action: "collect_external_workflows",
-      },
-      Date.now() - startTime,
-    );
+    return [];
   }
 }
 

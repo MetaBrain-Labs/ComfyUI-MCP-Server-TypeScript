@@ -96,7 +96,7 @@
         "destinationDir": "可选（由用户主动提供，否则使用默认值）。文件要保存到的本地路径（如果未指定或路径不合法，将默认存放在项目目录的 assets 文件夹中）。",
         "overwrite": "若文件已存在是否覆盖，传 true 为覆盖，默认为 false。"
       },
-      "success": "已保存资产 {{assetsName}} 到 {{filePath}}"
+      "success": "已保存资产 {{assetsNames}} 到 {{filePath}}"
     },
     "interrupt_prompt": {
       "title": "取消任务",

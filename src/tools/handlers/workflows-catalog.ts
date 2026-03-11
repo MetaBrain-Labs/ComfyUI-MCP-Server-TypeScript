@@ -41,12 +41,11 @@ export function registerGetWorkflowsCatalog(
 
       // 1. 收集历史任务（CompleteInspection）
       for (let i = 0; hasMore; i++) {
-        const result = await collectAndSaveFormatTask({
+        hasMore = await collectAndSaveFormatTask({
           maxItems,
           offset: i * maxItems,
           append: i > 0,
         });
-        hasMore = result.detail.data?.pagination?.hasNextPage || false;
       }
 
       // 2. 收集用户工作流（InitialInspection）
@@ -55,7 +54,7 @@ export function registerGetWorkflowsCatalog(
       // 3. 收集本地 workflow 目录的 External 类型工作流
       // 由于去重逻辑优先保留非 External 类型，External 只作为补充
       const externalResult = await collectExternalWorkflowsFromDirectory();
-      const externalWorkflows = externalResult.detail.data || [];
+      const externalWorkflows = externalResult || [];
 
       // 只有当有 External 工作流时才保存
       if (externalWorkflows.length > 0) {

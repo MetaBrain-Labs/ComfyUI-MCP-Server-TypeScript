@@ -43,11 +43,11 @@ export function registerMountWorkflow(server: McpServer) {
       const startTime = Date.now();
       const result = await getTaskDetailByPromptId({ promptId });
 
-      if (!result.success || !result.detail.data) {
+      if (!result) {
         return ResultToMcpResponse(error(i18n.t("error.getTaskDetailFail")));
       }
 
-      const workflow = result.detail.data;
+      const workflow = result;
       const tool = createDynamicWorkflowTool(toolName, promptId, workflow);
 
       const response: DynamicWorkflowToolData = {
