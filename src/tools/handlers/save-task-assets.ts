@@ -5,7 +5,10 @@ import { COMMON } from "../../constants";
 import i18n from "../../i18n";
 import { saveAssetsByPromptId } from "../../services";
 import { error, ok } from "../../types/result";
-import { ResultToMcpResponse, withMcpErrorHandling } from "../../utils/mcp-helpers";
+import {
+  ResultToMcpResponse,
+  withMcpErrorHandling,
+} from "../../utils/mcp-helpers";
 
 export function registerSaveTaskAssets(server: McpServer) {
   server.registerTool(

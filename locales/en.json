@@ -96,7 +96,7 @@
         "destinationDir": "Optional(Provided by the user; otherwise, the default value is used). The local path to save the files (if unspecified or invalid, defaults to the assets folder in the project directory).",
         "overwrite": "Whether to overwrite if the file already exists. Pass true to overwrite, default is false."
       },
-      "success": "Saved asset {{assetsName}} to {{filePath}}"
+      "success": "Saved asset {{assetsNames}} to {{filePath}}"
     },
     "interrupt_prompt": {
       "title": "Interrupt Task",
