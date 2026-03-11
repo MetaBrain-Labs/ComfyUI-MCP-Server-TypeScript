@@ -77,15 +77,18 @@ export async function saveWorkflow(
  * 保存自定义工作流到本地
  */
 export async function saveCustomWorkflow(
-  filename: string,
-  apiJson: Record<string, any>,
+  data: CollectFormatTaskWorkflow[],
+  options: SaveWorkflowOptions = {},
 ): Promise<string> {
   try {
     const dir = COMMON.WORKFLOW_DIR;
+    const fileName = options.fileName!;
+
     await mkdir(dir, { recursive: true });
 
-    const filePath = path.join(dir, filename);
-    await writeFile(filePath, JSON.stringify(apiJson, null, 2), "utf-8");
+    const filePath = path.join(dir, fileName);
+
+    await writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
     return filePath;
   } catch (error) {
     if (error instanceof McpError) {

@@ -7,17 +7,17 @@ import { COMMON } from "../constants";
 import { ok, Result } from "../types/result";
 import { ComfyImage, ComfyPromptConfig } from "../types/task";
 import { WorkflowCollectionData } from "../types/workflow";
-import { formatTask } from "../utils/format";
+import { formatTask, formatTaskFromApiJson } from "../utils/format";
 import { WorkflowConverter } from "../utils/workflow-converter";
 import { ComfyClient } from "../utils/ws";
-import { executeWorkflowTask } from "./workflow";
+import { executeWorkflowTask, executeWorkflowTaskByApiJson } from "./workflow";
 import {
   fetchAssetsByPromptId,
   fetchTaskByPromptId,
   fetchHistoryTasks,
   fetchUserWorkflow,
 } from "./task/fetch";
-import { saveAssets, saveWorkflow } from "./storage";
+import { saveAssets, saveCustomWorkflow, saveWorkflow } from "./storage";
 
 /**
  * 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
@@ -100,6 +100,26 @@ export async function collectAndSaveFormatTaskFromWorkflows(
     },
     executionTime,
   );
+}
+
+/**
+ * 提供给server调用，用于收集和格式化任务并且将格式化信息保存到本地缓存文件中
+ */
+export async function collectAndSaveFormatTaskFromExternal(
+  finalName: string,
+  apiJson: Record<string, any>,
+  client: ComfyClient,
+) {
+  // 运行一次工作流
+  const promptId = await executeWorkflowTaskByApiJson(apiJson, client);
+
+  const formatData = formatTaskFromApiJson(apiJson, promptId);
+
+  const filePath = await saveCustomWorkflow(formatData.workflows, {
+    fileName: finalName,
+  });
+
+  return { filePath, promptId };
 }
 
 /**
