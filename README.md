@@ -10,61 +10,40 @@
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
 [![Static Badge](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
 
-**ComfyUI-MCP-Server 是一个基于 MCP（Model Context Protocol / 模型上下文协议）的服务器实现，它将 ComfyUI 的工作流无缝转化为可供 AI 代理（Agents）调用的工具。**
+**ComfyUI-MCP-Server 是一个基于 MCP（Model Context Protocol / 模型上下文协议）的服务器实现，将 ComfyUI 中用户定义的工作流转化为参数可配置的 MCP 工具，供 AI 代理（Agents）直接使用。**
 
-通过本项目，您可以赋予 AI 助手（如 `Claude Desktop`、`Trae`、`Dify` 等）强大的图像与视频生成能力。完全通过自然语言交互，AI 即可实现：
+> 本项目提供 **Python** 与 **TypeScript** 两个独立语言版本，功能基本对等，可按需选用：
+> 
+> [![Python Version](https://img.shields.io/badge/ComfyUIMCPServer-Server?logo=python&label=Python)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-Python)
+> [![Typescript Version](https://img.shields.io/badge/ComfyUIMCPServer-Server?logo=typescript&label=TypeScript)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
+> 
+> 注：Python 版本带有更多实验性功能，TypeScript 版本则更稳定。
 
-- 🎨 **生成图像/视频**
-  - 调用历史任务或初始工作流生成媒体内容。
-  - 主动修改节点参数（受限/允许的参数范围内）以微调生成结果。
-  - 自动化批量生成：同一工作流，不同风格呈现。
-- 🔄 **触发与复用**
-  - 触发新的工作流，或一键重用历史成功任务。
-- 🛠️ **自定义执行**
-  - 支持执行 AI 自定义的 JSON 管道（高级模式）。
+## 📋 项目功能
 
-> [!WARNING]
-> **免责声明**
->
-> 我们目前**没有**官方网站。您在网上看到的任何相关网站均为非官方性质，与本开源项目无关，请自行甄别风险。
->
-> **并且我们不提供任何收费服务，并且请用户注意TOKEN使用情况，产生任何损失与该组织无关。**
+通过本项目，您可以通过连接ComfyUI从而赋予 AI 助手（如 `Claude Desktop`、`Trae`、`Dify` 等）强大的多媒体生成能力：
 
-> [!IMPORTANT]
-> **为什么选择我们**
->
-> 详细可参考 [为什么选择我们](./docs/md/why-us.md)
->
-> | 特性            | ComfyUI MCP Server | 其他类似项目          |
-> | --------------- | ------------------ | --------------------- |
-> | 自定义参数暴露  | ✅ 支持            | ❌ 有限支持或不支持   |
-> | 无需修改ComfyUI | ✅ 完全支持        | ❌ 通常需要修改或插件 |
-> | 自然语言交互    | ✅ 支持            | ❌ 通常需要API调用    |
-> | 实时进度通知    | ✅ 支持            | ❌ 有限支持           |
-> | 多传输方式      | ✅ STDIO + HTTP    | ❌ 通常仅支持一种     |
-> | 国际化支持      | ✅ 内置            | ❌ 通常仅支持英文     |
-> | 会话管理        | ✅ 完善            | ❌ 基本或无           |
+| 能力 | 说明 |
+| --- | --- |
+| **图像/视频生成** | 通过使用用户自定义工作流，驱动 AI 助手生成图像、视频等多媒体文件；支持 AI 修改由用户公布的节点参数以微调结果。 |
+| **自定义工作流导入** | 可手动将 ComfyUI API 格式的 JSON 文件导入服务器工作流目录，自动完成校验与挂载后即刻可用。 |
+| **生成资产管理** | 生成完成后，自动将多媒体文件下载并保存至本地指定目录。 |
+| **高级自定义执行** | 支持由 AI 自行提供完整 API JSON 直接调度 ComfyUI（高级模式）。 |
+| **素材导入** | 支持从本地路径或 HTTP URL 将图片/视频素材上传至 ComfyUI 输入目录，供工作流直接调用。 |
 
-> [!NOTE]
-> **特别提示**
->
-> 如果您喜欢该项目或者觉得项目有帮助，请给项目点一个 `Star✨`。
+## ✨ 项目特色
 
-## 🎬 演示视频
-
-演示视频文件待补充…
-
-## ✨ 核心能力
-
-- 🔌 **工作流即工具**：将 ComfyUI 的节点图完美抽象为标准 MCP 工具。
-- 🕰️ **历史任务复用模式**：高成功率的生成策略，复用已知成功的状态。
-- 🛡️ **初始工作流验证**：在生成前进行节点连通性预检。
-- 🧩 **标准 MCP 适配**：全面支持 STDIO 与 Streamable HTTP 通信。
-- ⚡ **流式与进度支持**：支持生成进度报告（需 Client/Host 支持）。
-- 🌍 **国际化双语支持**：内置中英文（zh/en）国际化。
-- 🔬 **Skills 支持**：针对支持 Skills 的 AI 助手通过Skills进行深度优化。
+- 🔌 **工作流即工具**：将 ComfyUI 的节点图抽象为可供Agent使用的工具。
+- 🎛️ **自定义参数暴露**：可在工作流中精确定义哪些参数对外可见，限定 AI 在暴露范围内操作，防止模型幻觉与误操作。
+- 🔧 **零侵入接入**：无需修改 ComfyUI 本体或安装任何必要插件，部署即连，开箱即用。
+- 📥 **自定义工作流导入**：可手动导入 API 格式的工作流 JSON 文件，通过校验后即刻对 Agent 可用，无需重启服务。
 - 📂 **资产管理**：支持从本地路径或网络 URL 自动上传资源至 ComfyUI。
-- 🔄 **自动会话管理**：智能处理会话生命周期（当前主要针对 StreamHTTP）。
+- ⚡ **流式与进度支持**：支持生成进度报告（需 Client/Host 支持）。
+- 🌍 **国际化双语支持**：内置中英文（zh-CN/en）国际化。
+- 🧩 **标准 MCP 适配**：全面支持 STDIO 与 Streamable HTTP 通信协议。
+- 🔬 **Skills 支持**：包含项目技能手册SKILL.md，针对支持 Skills 的 AI 助手通过 Skills 进行深度优化。
+
+更多详情可查阅 [为什么选择我们](./docs/zh-CN/md/why-us.md)
 
 ## 🧰 可用工具集
 
@@ -86,10 +65,57 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
 | `list_models`           | 检索模型文件     | 【模型目录】轮询本地磁盘模型存放区。参数涉及具体模型文件时，必须前置调用此接口枚举校准，严禁凭空伪造模型文件名。                                                                   |
 | `upload_assets`         | ComfyUI导入资产  | 【上传文件】将本地文件或网络 URL 上传至 ComfyUI 服务器的 input 目录，以便在工作流中直接应用。                                                                                      |
 
+## 🎬 演示视频
+
+演示视频文件待补充…
+
+> [!NOTE]
+> **特别提示**
+>
+> 如果您喜欢该项目或者觉得项目有帮助，请给项目点一个 `Star✨`。
+
 ## 🚀 快速开始
 
+仅需两步，快速启动项目。
+> 提醒：安装启动项目后，还需查阅[[使用教程](#usage)]，否则无法使用工作流相关功能。
+
+### 准备工作（必需）
+在启动本项目之前，请确保您的系统中已安装以下软件
+- Node.js 18+      [[官方链接](https://node.org.cn/en)]
+- ComfyUI 0.9.1+    [[官方链接](https://github.com/comfyanonymous/ComfyUI)]
+- MCP 客户端/AI Agent，例如Claude Desktop、Cursor等
+
+---
+
+### 第一步：安装项目与依赖
+
+**1. 克隆本项目**
+在终端中执行以下命令：
+```bash
+git clone https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript.git
+```
+**2. 移动到项目目录**
+```bash
+cd ComfyUI-MCP-Server-TypeScript
+```
+**3. 安装依赖**
+```bash
+npm install
+```
+
+---
+
+### 第二步：配置环境与启动项目
+
+#### 1. 项目环境配置
+进入项目根目录，根据系统实际情况修改 .env 文件中的配置。
+详细配置说明请查阅：[[环境变量](#config)]
+
+#### 2. 连接并运行项目
+根据您的需求选择传输方式以启动项目：
+
 > [!TIP]
-> **提示**
+> **MCP传输机制**
 >
 > MCP 协议目前定义了两种客户端-服务器通信的标准传输机制：
 >
@@ -100,21 +126,16 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
 >
 > 您有责任确保使用这些服务器符合相关条款，以及适用于您的任何法律、规则、法规、政策或标准。
 
-### 前置条件
-
-- Node.js 18+
-- ComfyUI 运行中
-
-### 模式一：STDIO 连接 (推荐用于 Claude Desktop 等本地客户端)
-
-- 克隆项目
-- 安装依赖
-  ```bash
-  npm install
-  ```
-- 配置环境变量：
-  - 仅需要在MCP Client/Host中配置下述json文件即可。
-  - STDIO的全局变量需要在下述mcpServers中手动配置。
+**模式一：STDIO 连接 (推荐用于 Claude Desktop 等本地客户端)**
+- **MCP客户端启动：**
+  复制下述 JSON 文件，在 MCP 客户端的 MCP 配置中粘贴并修改即可。
+  > [!NOTE]
+  > 
+  > 部分 MCP 客户端配置 MCP Server 的方法请查阅：[[示例](#examples)]
+  >
+  > 其他项目设置请在环境变量中修改，参数详情请查阅：[[环境变量](#config)]
+  >
+  > 如果 ComfyUI 在云端运行，请将 "SYNC_MODE" 设置为 "manual"
   ```json
   {
     "mcpServers": {
@@ -122,15 +143,15 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
         "command": "npx",
         "args": [
           "tsx",
-          "E:\\comfyui-mcp\\ComfyUI-MCP-Server-1\\src\\server-stdio.ts"
+          "<项目根目录绝对路径，如 D:/ComfyUI-MCP-Server-TypeScript>"
         ],
         "env": {
           "LOCALE": "en",
-          "MCP_SERVER_URL": "http://192.168.0.192:8189/mcp",
-          "MCP_SERVER_IP": "http://192.168.0.192",
+          "MCP_SERVER_URL": "http://127.0.0.1:8189/mcp",
+          "MCP_SERVER_IP": "127.0.0.1",
           "MCP_SERVER_PORT": "8189",
-          "COMFY_UI_SERVER_IP": "http://192.168.0.171:8188",
-          "COMFY_UI_SERVER_HOST": "192.168.0.171",
+          "COMFY_UI_SERVER_IP": "http://127.0.0.1:8188",
+          "COMFY_UI_SERVER_HOST": "127.0.0.1",
           "COMFY_UI_SERVER_PORT": "8188",
           "SYNC_MODE": "timed",
           "SYNC_POLL_INTERVAL_SECONDS": "3",
@@ -145,30 +166,38 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
     }
   }
   ```
-
-### 模式二：StreamHTTP 连接 (推荐用于网络化/分布式部署)
-
-- 克隆项目
-- 安装依赖
+- **终端启动：**
   ```bash
-  npm install
+  # 终端连接启动方式无需配置json，直接在项目根目录下执行：
+  npm run dev
   ```
-- 配置环境变量：
-  - StreamHTTP的全局变量由[.env](./env)中指定，无需再下述mcpServers中配置全局变量。
-  - 目前支持StreamHTTP的MCP Client/Host较少，应根据需求使用。
+
+**模式二：StreamHTTP 连接 (推荐用于网络化/分布式部署)**
+- **MCP客户端启动：**
+  StreamHTTP 的项目设置在 [[.env](./.env)] 中指定，无需在下述 JSON 中配置。
+  > [!NOTE]
+  > 
+  > 部分 MCP 客户端配置 MCP Server 的方法请查阅：[[示例](#examples)]
+  > 
+  > 目前支持 StreamHTTP 的 MCP Client/Host 较少，请根据需求使用。
+  > 
+  > 如果 ComfyUI 在云端运行，请在 [[.env](./.env)] 中将 "SYNC_MODE" 设置为 "manual"
   ```json
   {
     "mcpServers": {
-      "comfy-ui-advanced-http": {
-        "url": "http://192.168.0.192:8189/mcp"
-      }
+    "comfy-ui-advanced-http": {
+        "url": "http://127.0.0.1:8189/mcp"
+        }
     }
   }
   ```
-- 启动StreamHTTP连接方式的Server
+- **终端启动：**
   ```bash
+  # 启动 Streamable HTTP
   npm run dev
   ```
+
+至此，项目部署且启动完成。若您需要调试工具，请继续阅读下文，否则请直接跳转至[[使用教程](#usage)]。
 
 ### 调试工具 (MCP Inspector)
 
@@ -199,8 +228,83 @@ http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=d66fcf6cbbb3723c60bfef51f020e5e96811
 
 inspector启动成功后，浏览器页面配置参考：
 
-![inspector配置示例](./docs/content/public/inspector-example.png)
+![inspector配置示例](./docs/zh-CN/content/public/inspector-example.png)
 
+<a id="usage"></a>
+## 📖 使用教程
+
+本项目需要对 ComfyUI 工作流进行简单的特定标记，以使 AI Agent 能够准确识别和调用，可以通过以下两种方式添加可用工作流：
+
+### 标记规则（必须了解）
+无论使用哪种方式添加可用工作流，都必须在其工作流中添加以下标记节点：
+
+#### 1. 定义工具名称与功能描述（必须）
+- 新建一个 `PrimitiveNode` (基础节点) 或 `PrimitiveStringMultiline` (多行字符串节点)，**无需与任何节点连线**。
+- 双击修改节点标题为 `==您的工作流名称==`（例：`==生图-文生图==`）。**注意：这是 AI Agent 将看到的工具名，必须确保唯一。**
+- 在该节点的文本输入框中，写下这段工作流的**功能描述**（例："这是一个基础文生图流程，适合生成二次元图片"）。**描述越清晰，AI 越能准确判断何时调用。**
+
+> [!TIP]
+> **自动过滤：** 本项目会自动忽略没有 `==Workflow Name==` 格式的工作流，确保 AI 只在划定的安全范围内操作，避免模型幻觉。
+
+![工作流示例](./docs/zh-CN/content/public/workflow_name_example.png)
+
+#### 2. 暴露可自主修改的参数（可选）
+- 如果您希望 AI 可以动态修改某些节点属性（例如：正向提示词、长宽尺寸、随机种子），需要暴露其参数。
+- 找到目标节点（如：`CLIP Text Encode (Prompt)` 节点）。
+- 双击修改其标题为 `=>参数描述`（例：`=>正向提示词` 或 `=>生成的图片宽度`）。
+- 保存后，本服务器会自动将其解析为 MCP 工具的可变参数，AI 调用时将能按需填入值。
+
+> [!TIP]
+> **自动过滤：** 本项目会自动忽略没有 `=>` 标题前缀的其它全部常规节点参数及节点连接相关参数，确保 AI 只在划定的安全范围内操作，避免模型幻觉。<br>
+> 
+
+![参数示例](./docs/zh-CN/content/public/workflow_parameter_example.png)
+
+---
+
+### 方式一：在 ComfyUI 画布中设置（推荐）
+适用于正在运行 ComfyUI 且支持新版工作流保存机制的用户：
+1. 在 ComfyUI 中按照上述**标记规则**整理好节点。
+2. 点击 ComfyUI 面板上的 **Save (保存)** 按钮。
+   > 建议在保存后，先自行点击一次 **Queue Prompt (运行)** 测试，确保工作流能够正常跑通。
+3. 工作流将被保存至 ComfyUI 的用户数据目录（通常为 `userdata/workflows/`）。
+4. **工作流生效时间视 `SYNC_MODE` 配置而定**：
+   - `timed` 模式（默认）：MCP 服务器会在后台定时轮询，自动发现新保存的工作流，并在自动校验通过后立即挂载成 AI Agent 可用的工具。
+   - `manual` 模式：仅当 AI Agent 尝试调用工具库时才触发一次按需扫描。
+   - `push` 模式（实验性功能）：需配合 ComfyUI 插件，可实现保存后实时主动推送到服务器。
+
+### 方式二：手动导入 API 格式 JSON 文件
+适用于外部导入工作流或直接编写纯 API 格式（API Format）的工作流文件：
+1. 准备好您的 ComfyUI API 格式 JSON 文件。
+2. 使用文本编辑器打开该 JSON 文件，添加以下内容以符合**核心标记规则**：
+   - **工具名称：** 在任意位置添加以下内容：
+   ```json
+    "99": {
+      "inputs": {
+        "value": "**功能描述**"
+      },
+      "class_type": "PrimitiveStringMultiline",
+      "_meta": {
+        "title": "==工作流名称=="
+      }
+    }
+   ```
+   > "99" 仅为示例，实际使用时请使用未被占用的节点 ID。<br>
+   > 添加完毕后请检查json格式是否正确，每个节点后都需添加逗号，否则将导致工作流无法使用。
+
+   - **暴露参数：** 找到需要让 AI 修改的参数所在的节点，添加或修改 `_meta` 对象中的 `"title": "=>参数描述"`。
+3. 将修改后的 JSON 文件直接放入本项目的 `workflow/` 目录下（如果该目录不存在，请手动创建）。
+4. **工作流生效机制与上述相同**，依据 `SYNC_MODE` 模式：
+   - `timed` 模式（默认）：MCP 服务器将定时扫描该目录，自动解析参数并完成挂载。
+   - `manual` / `push` 模式：工作流将在 AI Agent 下次请求工作流或执行工具时按需加载生效。
+
+> [!NOTE] 
+>
+> **关于任务队列中出现错误/失败任务的说明**
+> 
+> 在使用本项目期间，ComfyUI 任务队列（Queue）中可能会偶尔出现报错红框或提示失败的任务。这是因为本 MCP 服务器需要在后台通过 ComfyUI 引擎静默校验您的工作流拓扑及节点合法性，以验证其是否适合供 AI 调用。**这属于正常现象，完全不会影响其他绘图和 AI 的正常工作，请放心忽略。**
+
+<a id="config"></a>
 ## ⚙️ 环境配置
 
 > [!TIP]
@@ -254,9 +358,9 @@ COMFY_UI_SERVER_PORT="8188"
 #   timed  — Background loop polls ComfyUI at a fixed interval. (default)
 #             后台循环以固定间隔轮询 ComfyUI。（默认）
 #
-#   push   — ComfyUI plugin sends real-time save events; long fallback poll as safety net.
+#   push   — [Experiments] ComfyUI plugin sends real-time save events; long fallback poll as safety net.
 #             Requires COMFY_UI_INSTALL_PATH (must be on same machine as ComfyUI).
-#             ComfyUI 插件实时推送保存事件；兜底长轮询作为安全网。
+#            [实验性功能] ComfyUI 插件实时推送保存事件；兜底长轮询作为安全网。
 #             需要配置 COMFY_UI_INSTALL_PATH（需与 ComfyUI 同机部署）。
 #
 #   manual — No background loop. Refresh only when tools are called
@@ -356,6 +460,7 @@ LOG_LEVEL=INFO
 
 </details>
 
+<a id="examples"></a>
 ## 示例
 
 ### Cluade Desktop
@@ -407,18 +512,16 @@ LOG_LEVEL=INFO
 - **安全验证**：当前版本未实现强鉴权机制（Token/Auth），请**不要**将其暴露在公网环境下运行。建议在生产环境中配置 HTTPS 以及额外的网关层访问控制。
 - **资源消耗**：高并发调用可能导致 ComfyUI 宿主机显存溢出（OOM），请在 AI 系统提示词中限制其并发请求频率。
 
-### **图片生成模式**
-
-- 通过历史任务生成图片：根据**已执行完毕且执行结果为SUCCESS**的历史任务生成图片。
+### **工作流校验准确性**
+本项目将工作流校验准确性分为三种模式：
+- 通过历史任务：根据**已执行完毕且执行结果为SUCCESS**的历史任务校验。
   - 此方式可确保在模型等核心不受影响的情况下，保证工作流执行的成功率。
-- 通过初始工作流生成图片：根据**无历史任务或历史任务的执行时间在其对应工作流最新修改时间之前**的工作流生成图片。
+- 仅通过初始工作流：根据**无历史任务或历史任务的执行时间在其对应工作流最新修改时间之前**的工作流校验。
   - 此方式仅会针对工作流进行初步校验——保证结点间联通无异常，但并不保证工作流完整流程运行成功。
-  - 如需保证生成图片的成功率，可考虑手动运行相关工作流。在工作流完整流程运行成功之后，历史任务中会产生对应的任务记录，后续AI工具即可使用历史任务生成图片的方式。
-- AI工具自定义生成图片：**AI工具自行提供API JSON文件**并调用执行自定义工作流工具生成图片。
+  - 为保证生成图片的成功率，可考虑手动运行相关工作流。在工作流完整流程运行成功之后，历史任务中会产生对应的任务记录，后续AI工具即可识别为通过历史任务校验。
+- 外部导入：**AI/用户自行提供的 API JSON 文件**，在执行工作流前，无任何校验，不保证工作流完整流程运行成功。
   - 此方式不会进行任何校验，一切校验交由ComfyUI后端进行，如API JSON文件格式、结点以及参数范围有问题，ComfyUI后端会进行拦截，并返回相应报错信息。
-  - 此方式为兜底生成图片措施，在上述历史任务生成图片、初始工作流生成图片都无法使用的情况下使用，除此之外，用户应该避免使用该方式。
-
-为希望将 AI 工具与 ComfyUI 强大的图片/视频生成工作流连接的开发者打造，涵盖从简单的自然语言查询到复杂的多步代理工作流。
+  - 此方式为兜底生成图片措施，在上述历史任务生成图片、初始工作流生成图片都无法使用的情况下使用。
 
 ## 🗺️ 后续计划
 
@@ -431,6 +534,7 @@ LOG_LEVEL=INFO
 - [ ] **云服务集成**：适配主流 ComfyUI 云端托管平台（鉴权与 API 映射）。
 - [ ] **连接优化**：完善 StreamHTTP 下的断线重连机制与状态保持。
 - [ ] **性能面板**：增加可视化的资源占用与任务排队监控状态反馈。
+- [ ] **ComfyUI 插件**：开发 ComfyUI 插件，实现与 MCP 服务的无缝集成。
 
 ## 🤝 贡献
 
@@ -471,3 +575,11 @@ _(注：因工作原因，邮件可能无法及时回复，请优先使用 GitHu
 [OldDeer(q1498823915@outlook.com)](mailto:q1498823915@outlook.com)
 
 [![Static Badge](https://img.shields.io/badge/OldDeer-User?logo=github&label=GitHub)](https://github.com/OldDeer00)
+
+## 免责声明
+> [!WARNING]
+> **免责声明**
+>
+> 我们目前**没有**官方网站。您在网上看到的任何相关网站均为非官方性质，与本开源项目无关，请自行甄别风险。
+>
+> **并且我们不提供任何收费服务，并且请用户注意TOKEN使用情况，产生任何损失与该组织无关。**
