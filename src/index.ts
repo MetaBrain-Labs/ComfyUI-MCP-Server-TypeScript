@@ -260,7 +260,7 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
-const ip = process.env.MCP_SERVER_IP || "http://127.0.0.1";
+const ip = process.env.MCP_SERVER_IP || "127.0.0.1";
 const port = process.env.MCP_SERVER_PORT || 8189;
 
 async function bootstrap() {
@@ -268,8 +268,8 @@ async function bootstrap() {
     await mcpManager.initialize();
 
     app.listen(port, () => {
-      console.error(`MCP服务器运行在 ${ip}:${port}/mcp`);
-      console.error(`健康检查: ${ip}:${port}/health`);
+      console.error(`MCP服务器运行在 http://${ip}:${port}/mcp`);
+      console.error(`健康检查: http://${ip}:${port}/health`);
     });
   } catch (error) {
     console.error("服务器启动失败:", error);
