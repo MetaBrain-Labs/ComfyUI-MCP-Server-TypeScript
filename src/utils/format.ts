@@ -112,7 +112,7 @@ export const formatTaskFromApiJson = (
         (nodeConfig.inputs["value"] as string) || "无工作流描述内容";
       name = isDesc[1] || "无工作流名称";
     }
-    const isRequired = nodeConfig._meta?.title?.match(workflowParamRegex);
+    const isRequired = workflowParamRegex.test(nodeConfig._meta?.title);
     if (isRequired) {
       parameters.push(nodeConfig.class_type + nodeConfig._meta?.title);
     }
