@@ -1,12 +1,9 @@
+import "dotenv/config";
 import { z } from "zod";
 import { ConfigurableParam, DynamicWorkflowTool } from "../types/dynamic-tool";
 import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
+import { handleKey, isSupportedKey } from "../utils/special-node-handler";
 import { ComfyClient } from "../utils/ws";
-import {
-  generateSeed32,
-  handleKey,
-  isSupportedKey,
-} from "../utils/special-node-handler";
 
 /**
  * 动态 Tool 存储
@@ -144,6 +141,9 @@ function extractConfigurableParams(
 ): ConfigurableParam[] {
   const params: ConfigurableParam[] = [];
 
+  const workflowParamRegexString = process.env.WORKFLOW_PARAM_REGEX || "^=>";
+  const workflowParamRegex = new RegExp(workflowParamRegexString);
+
   for (const [nodeId, nodeConfig] of Object.entries(workflow)) {
     const { inputs, class_type, _meta } = nodeConfig;
 
@@ -158,7 +158,7 @@ function extractConfigurableParams(
 
       // 检测节点标题是否以 "=>" 开头 - 表示 AGENT 必须填充
       const nodeTitle = _meta?.title || "";
-      const isRequired = nodeTitle.startsWith("=>");
+      const isRequired = workflowParamRegex.test(nodeTitle);
 
       let description = "";
 
