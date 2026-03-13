@@ -67,12 +67,12 @@ export class ComfyMcpManager {
     // 注册所有工具
     registerGetCoreManual(server);
     registerGetWorkflowsCatalog(server, this.client, this.converter);
-    registerGetWorkflowAPI(server);
-    registerGetTaskDetail(server);
     registerMountWorkflow(server);
     registerQueuePrompt(server, this.client);
     registerQueueCustomPrompt(server, this.client);
     registerSaveCustomWorkflow(server, this.client);
+    registerGetWorkflowAPI(server);
+    registerGetTaskDetail(server);
     registerSaveTaskAssets(server);
     registerInterruptPrompt(server);
     registerGetPromptResult(server);

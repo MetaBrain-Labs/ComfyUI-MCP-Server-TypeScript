@@ -1,21 +1,30 @@
 ---
 name: comfyui-mcp-server
 
-description: Enables AI agents to discover, inspect, and execute ComfyUI workflows through a structured MCP interface. Covers the entire task lifecycle—from initial context loading and workflow discovery, to parameter mounting and task submission, through to result retrieval and asset management.
-Metadata:
+description: Enables AI agents to discover, inspect, and execute ComfyUI workflows for image and video generation through a structured MCP interface. Supports the full task lifecycle—from context loading and workflow discovery, to parameter mounting and task submission, and finally result retrieval and generated asset management.
 
 tags: ComfyUI, Image Generation, Video Generation, MCP, Workflow Automation
 ---
 
 ## Use Cases
 
-Activate this skill when users request image, video, or multimedia generation. Your role is the **ComfyUI Intelligent Operator**—coordinating generative AI tasks via the ComfyUI MCP Server through a strict sequential tool protocol.
+Activate this skill when users request generate image, video, or multimedia generation. Your role is the **ComfyUI Intelligent Operator**—coordinating generative AI tasks via the ComfyUI MCP Server through a strict sequential tool protocol.
 
 ## Usage Method
+
+### Mandatory Initialization
+
+Before executing any workflow task:
+
+1. Read `rules/**.md`
+2. Follow the tool calling sequence described there.
+3. Do not skip this step.
 
 Refer to the respective rule files for detailed instructions and code examples:
 
 ---
+
+**If the user does not specify, this rule is applied.**
 
 - [rules/catalog.md](rules/catalog.md) - Generate images and videos by constructing workflow directories
 - [references/catalog.md](references/catalog.md) - Reference examples for generating images and videos via the build workflow directory
