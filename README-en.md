@@ -57,8 +57,8 @@ Through this project, you can empower AI assistants (such as `Claude Desktop`, `
 Click the image below to watch the demo video.
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=Aqi7yK7pPag">
-    <img src="https://img.youtube.com/vi/Aqi7yK7pPag/0.jpg" width="700">
+  <a href="https://www.youtube.com/watch?v=MaMiSkvrL64">
+    <img src="https://img.youtube.com/vi/MaMiSkvrL64/0.jpg" width="700">
   </a>
 </p>
 
@@ -67,8 +67,8 @@ Click the image below to watch the demo video.
 Click the image below to watch the demo video.
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=fGEUCbfrqK8">
-    <img src="https://img.youtube.com/vi/fGEUCbfrqK8/0.jpg" width="700">
+  <a href="https://www.youtube.com/watch?v=4RpmZb8FpMU">
+    <img src="https://img.youtube.com/vi/4RpmZb8FpMU/0.jpg" width="700">
   </a>
 </p>
 
@@ -356,8 +356,8 @@ LOG_LEVEL=INFO
 Click the image below to watch the demo video.
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=gC78RJ8wTRU">
-    <img src="https://img.youtube.com/vi/gC78RJ8wTRU/0.jpg" width="700">
+  <a href="https://www.youtube.com/watch?v=xtsD4egnH6Y">
+    <img src="https://img.youtube.com/vi/xtsD4egnH6Y/0.jpg" width="700">
   </a>
 </p>
 
@@ -366,8 +366,8 @@ Click the image below to watch the demo video.
 Click the image below to watch the demo video.
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=V-c_FrojPt0">
-    <img src="https://img.youtube.com/vi/V-c_FrojPt0/0.jpg" width="700">
+  <a href="https://www.youtube.com/watch?v=nxP-I8n2VzU">
+    <img src="https://img.youtube.com/vi/nxP-I8n2VzU/0.jpg" width="700">
   </a>
 </p>
 
