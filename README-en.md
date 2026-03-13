@@ -52,7 +52,25 @@ Through this project, you can empower AI assistants (such as `Claude Desktop`, `
 
 ## 🎬 Demo Video
 
-Demo video file to be added...
+### 默认方式
+
+Click the image below to watch the demo video.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=Aqi7yK7pPag">
+    <img src="https://img.youtube.com/vi/Aqi7yK7pPag/0.jpg" width="700">
+  </a>
+</p>
+
+### API_JSON方式
+
+Click the image below to watch the demo video.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=fGEUCbfrqK8">
+    <img src="https://img.youtube.com/vi/fGEUCbfrqK8/0.jpg" width="700">
+  </a>
+</p>
 
 ## ✨ Core Features
 
@@ -129,7 +147,7 @@ _(Note: The `upload_assets` tool handles both local file paths and network links
         "env": {
           "LOCALE": "en",
           "MCP_SERVER_URL": "http://192.168.0.192:8189/mcp",
-          "MCP_SERVER_IP": "http://192.168.0.192",
+          "MCP_SERVER_IP": "192.168.0.192",
           "MCP_SERVER_PORT": "8189",
           "COMFY_UI_SERVER_IP": "http://192.168.0.171:8188",
           "COMFY_UI_SERVER_HOST": "192.168.0.171",
@@ -306,7 +324,7 @@ WORKFLOW_PARAM_REGEX=^=>(.+)$
 
 # MCP server bind address and listening port (where the MCP client connects).
 MCP_SERVER_URL="http://192.168.0.192:8189/mcp"
-MCP_SERVER_IP="http://192.168.0.192"
+MCP_SERVER_IP="192.168.0.192"
 MCP_SERVER_PORT="8189"
 
 # -----------------------------------------------------------------------------
@@ -333,13 +351,25 @@ LOG_LEVEL=INFO
 
 ## Examples
 
-### Claude Desktop
+### Cluade Desktop
 
-To be added...
+Click the image below to watch the demo video.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=gC78RJ8wTRU">
+    <img src="https://img.youtube.com/vi/gC78RJ8wTRU/0.jpg" width="700">
+  </a>
+</p>
 
 ### Trae
 
-To be added...
+Click the image below to watch the demo video.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=V-c_FrojPt0">
+    <img src="https://img.youtube.com/vi/V-c_FrojPt0/0.jpg" width="700">
+  </a>
+</p>
 
 ## 🛠️ Troubleshooting
 
