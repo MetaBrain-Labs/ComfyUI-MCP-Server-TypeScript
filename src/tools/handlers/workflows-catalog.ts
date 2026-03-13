@@ -16,7 +16,6 @@ import {
   withMcpErrorHandling,
 } from "../../utils/mcp-helpers";
 
-// TODO 后续考虑加入新的inputSchema参数，决定是否直接使用当前已有workflow.json的内容来运行。
 export function registerGetWorkflowsCatalog(
   server: McpServer,
   client: ComfyClient,
@@ -35,9 +34,20 @@ export function registerGetWorkflowsCatalog(
           .optional()
           .default(10)
           .describe(i18n.t("tool.get_workflows_catalog.inputSchema.maxItems")),
+        useExistingCatalog: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe(i18n.t("tool.get_workflows_catalog.inputSchema.useExistingCatalog")),
       },
     },
-    withMcpErrorHandling(async ({ maxItems }) => {
+    withMcpErrorHandling(async ({ maxItems, useExistingCatalog }) => {
+      // 如果 useExistingCatalog 为 true，直接返回已有的 workflow.json
+      if (useExistingCatalog) {
+        const content = await readFile(COMMON.WORKFLOW_PATH, "utf-8");
+        return ResultToMcpStringResponse(content);
+      }
+
       let hasMore: boolean = true;
 
       // 1. 收集历史任务（CompleteInspection）
