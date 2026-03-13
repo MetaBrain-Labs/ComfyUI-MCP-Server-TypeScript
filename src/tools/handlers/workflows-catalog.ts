@@ -16,6 +16,7 @@ import {
   withMcpErrorHandling,
 } from "../../utils/mcp-helpers";
 
+// TODO 后续考虑加入新的inputSchema参数，决定是否直接使用当前已有workflow.json的内容来运行。
 export function registerGetWorkflowsCatalog(
   server: McpServer,
   client: ComfyClient,
