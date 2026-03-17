@@ -9,6 +9,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-success)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
 [![Static Badge](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
 
 **ComfyUI-MCP-Server is an MCP (Model Context Protocol) based server implementation that seamlessly transforms ComfyUI workflows into tools that AI Agents can call.**
 
@@ -52,7 +53,7 @@ Through this project, you can empower AI assistants (such as `Claude Desktop`, `
 
 ## 🎬 Demo Video
 
-### 默认方式
+### Default Way
 
 Click the image below to watch the demo video.
 
@@ -62,7 +63,7 @@ Click the image below to watch the demo video.
   </a>
 </p>
 
-### API_JSON方式
+### API_JSON Way
 
 Click the image below to watch the demo video.
 
