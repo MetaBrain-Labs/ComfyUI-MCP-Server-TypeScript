@@ -43,7 +43,7 @@ Through this project, you can empower AI assistants (such as `Claude Desktop`, `
 - 🧩 **Standard MCP Adaptation**: Fully supports STDIO and Streamable HTTP communication protocols.
 - 🔬 **Skills Support**: Includes project skills manual SKILL.md, deeply optimized for AI assistants supporting Skills.
 
-For more details, please check [Why Choose Us](./docs/zh-CN/md/why-us.md)
+For more details, please check [Why Choose Us](./docs/en/md/why-us.md)
 
 ## 🧰 Available Tools
 
@@ -260,7 +260,7 @@ http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=d66fcf6cbbb3723c...
 
 After Inspector starts successfully, refer to the browser page configuration:
 
-![Inspector Configuration Example](./docs/zh-CN/content/public/inspector-example.png)
+![Inspector Configuration Example](./docs/en/content/public/inspector-example.png)
 
 <a id="usage"></a>
 
@@ -281,7 +281,7 @@ Regardless of the method used to add available workflows, the following marker n
 > [!TIP]
 > **Automatic Filtering:** This project will automatically ignore workflows missing a `==Workflow Name==` format to ensure the AI only operates within safe predefined bounds, preventing model hallucinations.
 
-![Workflow Example](./docs/zh-CN/content/public/workflow_name_example.png)
+![Workflow Example](./docs/en/content/public/workflow_name_example.png)
 
 #### 2. Expose Modifiable Parameters (Optional)
 
@@ -293,7 +293,7 @@ Regardless of the method used to add available workflows, the following marker n
 > [!TIP]
 > **Automatic Filtering:** This project automatically ignores all other regular node parameters and node-connection parameters without the `=>` title prefix to ensure the AI only operates within the defined safe scope.
 
-![Parameter Example](./docs/zh-CN/content/public/workflow_parameter_example.png)
+![Parameter Example](./docs/en/content/public/workflow_parameter_example.png)
 
 ---
 
