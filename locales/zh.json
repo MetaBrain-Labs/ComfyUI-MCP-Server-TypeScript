@@ -138,6 +138,13 @@
         "mimeType": "图片类型(可选)，默认 image/png"
       },
       "success": "资产 {{finalFileName}} 成功上传到 ComfyUI 服务器。"
+    },
+    "get_prompts": {
+      "title": "根据注入状态获取相关信息",
+      "description": "根据注入状态（External、CompleteInspection、InitialInspection）获取可使用Tools以及相关prompt",
+      "inputSchema": {
+        "inspection_status": "注入状态"
+      }
     }
   }
 }

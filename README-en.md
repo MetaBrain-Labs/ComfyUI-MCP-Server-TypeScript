@@ -9,6 +9,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-success)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
 [![Static Badge](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
 
 **ComfyUI-MCP-Server is an MCP (Model Context Protocol) based server implementation that transforms user-defined workflows in ComfyUI into parameter-configurable MCP tools, allowing AI Agents to use them directly.**
 
@@ -23,13 +24,13 @@
 
 Through this project, you can empower AI assistants (such as `Claude Desktop`, `Trae`, `Dify`, etc.) with powerful multimedia generation capabilities by connecting to ComfyUI:
 
-| Feature | Description |
-| --- | --- |
-| **Image/Video Generation** | Drives AI assistants to generate multimedia files like images and videos using custom user workflows; allows AI to modify user-exposed node parameters to fine-tune results. |
-| **Custom Workflow Import** | Supports manually importing ComfyUI API format JSON files into the server's workflow directory. Automatically validated and mounted for immediate use. |
-| **Asset Management** | Automatically downloads and saves generated multimedia files to a specified local directory after completion. |
-| **Advanced Custom Execution** | Allows AI to directly provide the complete API JSON to schedule ComfyUI (Advanced Mode). |
-| **Asset Uploading** | Supports uploading image/video assets from local paths or HTTP URLs to ComfyUI's input directory for direct workflow usage. |
+| Feature                       | Description                                                                                                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Image/Video Generation**    | Drives AI assistants to generate multimedia files like images and videos using custom user workflows; allows AI to modify user-exposed node parameters to fine-tune results. |
+| **Custom Workflow Import**    | Supports manually importing ComfyUI API format JSON files into the server's workflow directory. Automatically validated and mounted for immediate use.                       |
+| **Asset Management**          | Automatically downloads and saves generated multimedia files to a specified local directory after completion.                                                                |
+| **Advanced Custom Execution** | Allows AI to directly provide the complete API JSON to schedule ComfyUI (Advanced Mode).                                                                                     |
+| **Asset Uploading**           | Supports uploading image/video assets from local paths or HTTP URLs to ComfyUI's input directory for direct workflow usage.                                                  |
 
 ## ✨ Project Highlights
 
@@ -49,21 +50,21 @@ For more details, please check [Why Choose Us](./docs/en/md/why-us.md)
 
 AI agents can call the following built-in tools via the MCP protocol:
 
-| Tool | Tool Name | Description |
-| --- | --- | --- |
-| `get_core_manual` | Get Core Manual | [System Guide] Core protocol and operation dictionary. Must be read before initializing or calling other tools to get the latest parameter filling strategies and error recovery mechanisms. |
-| `get_workflows_catalog` | Get Workflow Catalog | [Directory Search] Retrieve a list of all workflows supported by the current server. Commands involving image generation must exactly match this list. Forging or guessing workflow names is strictly prohibited. |
-| `get_workflow_API` | Get Workflow Details | [Workflow API] Read the full underlying topology JSON of the target workflow. Large volume, only invoked when troubleshooting abnormal execution of underlying logic. Strictly prohibited in routine business context to prevent context pollution. |
-| `mount_workflow` | Mount Workflow | [Parameter Mounting] Extract the supported interaction parameter Schema for the target generation task (hiding connection details). Before submitting a workflow task, this interface must be called to obtain a valid parameter key name table. |
-| `queue_prompt` | Execute Workflow Task | [Task Submission] Submit a task Prompt to the queue. Deeply automatically schedules computing nodes and synchronizes progress in real-time with the Host. Must ensure all key names have passed mount validation; forging key names is strictly prohibited. |
-| `queue_custom_prompt` | Execute Custom Workflow | [Advanced Mode] Submit the complete native ComfyUI API Prompt JSON directly to the queue. Only open for debugging underlying solutions or responding to clear expert instructions. Strictly prohibited for regular tasks. |
-| `save_custom_workflow` | Save Custom Workflow | [Save Workflow] Save a custom parameterized workflow to the server's workflow directory, subsequently automatically performing syntax validation and mounting. The submitted JSON must conform to the specification (contains at least one valid ==name== node for mounting), otherwise the save will be rejected. |
-| `save_task_assets` | Save Task Assets | [Save Generated Assets] Get the execution history for a specified task (prompt_id), and download/save all generated multimedia artifacts (images, videos, GIFs, etc.) to a specified local directory. |
-| `interrupt_prompt` | Cancel Task | [Task Cancellation] Cancel the computation process of a specific `prompt_id` and forcefully remove the waiting item in the queue. |
-| `get_prompt_result` | Get Task Result | [Output Snapshot & Assets] Get a snapshot of the nodes after a specific Prompt execution finishes, extract generated target media files (image/video links), or backtrack Traceback for error diagnosis. |
-| `get_system_status` | Get System Status | [System Monitoring] Collect memory, VRAM, and Python runtime metrics to troubleshoot underlying abnormalities such as OOM or service deadlocks. |
-| `list_models` | Retrieve Model Files | [Model Directory] Poll the local disk model storage area. When parameters involve specific model files, this interface must be called first to enumerate calibration. Fabricating model filenames out of thin air is strictly prohibited. |
-| `upload_assets` | Upload Assets to ComfyUI | [Upload Files] Upload a local file or network URL to the ComfyUI server's input directory so it can be directly applied in the workflow. |
+| Tool                    | Tool Name                | Description                                                                                                                                                                                                                                                                                                        |
+| ----------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `get_core_manual`       | Get Core Manual          | [System Guide] Core protocol and operation dictionary. Must be read before initializing or calling other tools to get the latest parameter filling strategies and error recovery mechanisms.                                                                                                                       |
+| `get_workflows_catalog` | Get Workflow Catalog     | [Directory Search] Retrieve a list of all workflows supported by the current server. Commands involving image generation must exactly match this list. Forging or guessing workflow names is strictly prohibited.                                                                                                  |
+| `get_workflow_API`      | Get Workflow Details     | [Workflow API] Read the full underlying topology JSON of the target workflow. Large volume, only invoked when troubleshooting abnormal execution of underlying logic. Strictly prohibited in routine business context to prevent context pollution.                                                                |
+| `mount_workflow`        | Mount Workflow           | [Parameter Mounting] Extract the supported interaction parameter Schema for the target generation task (hiding connection details). Before submitting a workflow task, this interface must be called to obtain a valid parameter key name table.                                                                   |
+| `queue_prompt`          | Execute Workflow Task    | [Task Submission] Submit a task Prompt to the queue. Deeply automatically schedules computing nodes and synchronizes progress in real-time with the Host. Must ensure all key names have passed mount validation; forging key names is strictly prohibited.                                                        |
+| `queue_custom_prompt`   | Execute Custom Workflow  | [Advanced Mode] Submit the complete native ComfyUI API Prompt JSON directly to the queue. Only open for debugging underlying solutions or responding to clear expert instructions. Strictly prohibited for regular tasks.                                                                                          |
+| `save_custom_workflow`  | Save Custom Workflow     | [Save Workflow] Save a custom parameterized workflow to the server's workflow directory, subsequently automatically performing syntax validation and mounting. The submitted JSON must conform to the specification (contains at least one valid ==name== node for mounting), otherwise the save will be rejected. |
+| `save_task_assets`      | Save Task Assets         | [Save Generated Assets] Get the execution history for a specified task (prompt_id), and download/save all generated multimedia artifacts (images, videos, GIFs, etc.) to a specified local directory.                                                                                                              |
+| `interrupt_prompt`      | Cancel Task              | [Task Cancellation] Cancel the computation process of a specific `prompt_id` and forcefully remove the waiting item in the queue.                                                                                                                                                                                  |
+| `get_prompt_result`     | Get Task Result          | [Output Snapshot & Assets] Get a snapshot of the nodes after a specific Prompt execution finishes, extract generated target media files (image/video links), or backtrack Traceback for error diagnosis.                                                                                                           |
+| `get_system_status`     | Get System Status        | [System Monitoring] Collect memory, VRAM, and Python runtime metrics to troubleshoot underlying abnormalities such as OOM or service deadlocks.                                                                                                                                                                    |
+| `list_models`           | Retrieve Model Files     | [Model Directory] Poll the local disk model storage area. When parameters involve specific model files, this interface must be called first to enumerate calibration. Fabricating model filenames out of thin air is strictly prohibited.                                                                          |
+| `upload_assets`         | Upload Assets to ComfyUI | [Upload Files] Upload a local file or network URL to the ComfyUI server's input directory so it can be directly applied in the workflow.                                                                                                                                                                           |
 
 ## 🎬 Demo Videos
 
@@ -158,6 +159,7 @@ Choose a transport method according to your requirements to start the project:
 
 - **MCP Client Startup:**
   Copy the following JSON and paste/modify it in your MCP client's configuration.
+
   > [!NOTE]
   >
   > For methods to configure the MCP Server in some MCP clients, see: [[Examples](#examples)]
@@ -165,7 +167,7 @@ Choose a transport method according to your requirements to start the project:
   > For other project settings, please modify them in the environment variables. For parameter details, check: [[Environment Variables](#config)]
   >
   > If ComfyUI is running in the cloud, please set "SYNC_MODE" to "manual".
-  
+
   ```json
   {
     "mcpServers": {
@@ -196,6 +198,7 @@ Choose a transport method according to your requirements to start the project:
     }
   }
   ```
+
 - **Terminal Startup:**
   ```bash
   # For starting via terminal connection, no JSON config is required. Directly execute in the root directory:
@@ -206,6 +209,7 @@ Choose a transport method according to your requirements to start the project:
 
 - **MCP Client Startup:**
   StreamHTTP project settings are specified in [[.env](./.env)], no need to configure them in the JSON below.
+
   > [!NOTE]
   >
   > For methods to configure the MCP Server in some MCP clients, see: [[Examples](#examples)]
@@ -213,7 +217,7 @@ Choose a transport method according to your requirements to start the project:
   > Currently, few MCP Client/Hosts support StreamHTTP, use it based on your needs.
   >
   > If ComfyUI is running in the cloud, please set "SYNC_MODE" to "manual" in [[.env](./.env)].
-  
+
   ```json
   {
     "mcpServers": {
@@ -223,6 +227,7 @@ Choose a transport method according to your requirements to start the project:
     }
   }
   ```
+
 - **Terminal Startup:**
   ```bash
   # Start Streamable HTTP

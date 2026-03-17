@@ -8,7 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-success)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
-[![Static Badge](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
+[![Github](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
 
 **ComfyUI-MCP-Server 是一个基于 MCP（Model Context Protocol / 模型上下文协议）的服务器实现，将 ComfyUI 中用户定义的工作流转化为参数可配置的 MCP 工具，供 AI 代理（Agents）直接使用。**
 
