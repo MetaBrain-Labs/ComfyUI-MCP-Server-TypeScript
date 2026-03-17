@@ -29,7 +29,8 @@
       "inputSchema": {
         "maxItems": "分页查询历史任务中每页最多条数",
         "token": "AGENT正确加载SKILL后执行`generateToken.ts`脚本后获得的token",
-        "enableWorkflow": "是否获取用户的工作流信息"
+        "enableWorkflow": "是否获取用户的工作流信息",
+        "useExistingCatalog": "是否使用已存在的目录文件，如果为true则直接返回workflow目录下的workflow.json，跳过收集过程"
       },
       "success": "工作流目录已检索，请严格基于结果选择最佳匹配项，禁止猜测 ID 或名称。"
     },

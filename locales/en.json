@@ -29,7 +29,8 @@
       "inputSchema": {
         "maxItems": "Maximum number of items per page in paginated historical task queries.",
         "token": "The token obtained by executing the `generateToken.ts` script after the AGENT successfully loads the SKILL.",
-        "enableWorkflow": "Whether to retrieve the user's workflow information."
+        "enableWorkflow": "Whether to retrieve the user's workflow information.",
+        "useExistingCatalog": "Whether to use the existing catalog file. If true, directly returns the workflow.json in the workflow directory, skipping the collection process."
       },
       "success": "Workflow catalog retrieved. Please strictly select the best match based on the results. Guessing IDs or names is prohibited."
     },
