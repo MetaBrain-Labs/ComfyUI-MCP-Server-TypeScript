@@ -3,6 +3,8 @@
  * 所有工具注册函数都从此文件导出
  */
 
+export { toolInspectionStatusMap } from "./tool-status-map";
+
 export { registerGetCoreManual } from "./core-manual";
 export { registerGetWorkflowsCatalog } from "./workflows-catalog";
 export { registerGetWorkflowAPI } from "./workflow-api";

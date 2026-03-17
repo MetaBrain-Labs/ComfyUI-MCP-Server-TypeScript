@@ -138,6 +138,13 @@
         "mimeType": "Image type (optional), default is image/png."
       },
       "success": "Asset {{finalFileName}} successfully uploaded to the ComfyUI server."
+    },
+    "get_prompts": {
+      "title": "Get info based on injection status",
+      "description": "Get available Tools and related prompts based on injection status (External, CompleteInspection, InitialInspection)",
+      "inputSchema": {
+        "inspection_status": "Injection status"
+      }
     }
   }
 }
