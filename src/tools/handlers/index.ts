@@ -17,3 +17,4 @@ export { registerGetPromptResult } from "./prompt-result";
 export { registerGetSystemStatus } from "./system-status";
 export { registerListModels } from "./list-models";
 export { registerUploadAssets } from "./upload-assets";
+export { registerPrompts } from "./prompts";

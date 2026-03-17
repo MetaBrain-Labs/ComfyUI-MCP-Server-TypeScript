@@ -12,7 +12,11 @@ const WORKFLOW_PATH = path.join(WORKFLOW_DIR, WORKFLOW_FILE);
 const SKILLS_DIR = path.join(PROJECT_ROOT, "comfyui-mcp-server-skill");
 const SKILLS_RULES_DIR = path.join(SKILLS_DIR, "rules");
 const DEFAULT_RULE_FILE = "comfyui.md";
+const EXTERNAL_RULE_FILE = "api-json.md";
+const CATALOG_RULE_FILE = "catalog.md";
 const DEFAULT_RULE_PATH = path.join(SKILLS_RULES_DIR, DEFAULT_RULE_FILE);
+const EXTERNAL_RULE_PATH = path.join(SKILLS_RULES_DIR, EXTERNAL_RULE_FILE);
+const CATALOG_RULE_PATH = path.join(SKILLS_RULES_DIR, CATALOG_RULE_FILE);
 
 const ASSETS_DIR = path.join(PROJECT_ROOT, "assets");
 
@@ -27,6 +31,8 @@ export const COMMON = {
   SKILLS_RULES_DIR,
   DEFAULT_RULE_FILE,
   DEFAULT_RULE_PATH,
+  EXTERNAL_RULE_PATH,
+  CATALOG_RULE_PATH,
 
   ASSETS_DIR,
 } as const;

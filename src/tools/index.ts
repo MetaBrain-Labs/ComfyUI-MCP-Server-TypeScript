@@ -18,6 +18,7 @@ import {
   registerGetSystemStatus,
   registerListModels,
   registerUploadAssets,
+  registerPrompts,
 } from "./handlers";
 
 export class ComfyMcpManager {
@@ -60,6 +61,7 @@ export class ComfyMcpManager {
         capabilities: {
           tools: { listChanged: true },
           resources: { listChanged: true, subscribe: true },
+          prompts: { listChanged: true },
         },
       },
     );
@@ -79,6 +81,7 @@ export class ComfyMcpManager {
     registerGetSystemStatus(server);
     registerListModels(server);
     registerUploadAssets(server);
+    registerPrompts(server);
 
     return server;
   }
