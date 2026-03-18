@@ -18,8 +18,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 加载图的节点对象定义
-   * @author LaiFQZzr
-   * @date 2026/02/13 11:53
    */
   async getNodeDefs(): Promise<ObjectInfoResponse> {
     return await http.get<ObjectInfoResponse>("/object_info");
@@ -28,8 +26,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 分页获取历史任务
-   * @author LaiFQZzr
-   * @date 2026/02/24 15:09
    */
   async pageHistoryTasks(
     max_items: number = 10,
@@ -43,8 +39,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 获取历史任务详情
-   * @author LaiFQZzr
-   * @date 2026/02/24 15:09
    */
   async getDetailHistoryTasks(promptId: string): Promise<ComfyTaskResponse> {
     return await http.get<ComfyTaskResponse>(`/history/${promptId}`);
@@ -53,8 +47,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 执行工作流
-   * @author LaiFQZzr
-   * @date 2026/02/24 15:09
    */
   async prompt(data: ExecutePromptRequest): Promise<ExecutePromptResult> {
     return await http.post<ExecutePromptResult>(`/prompt`, data);
@@ -63,8 +55,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 中断工作流
-   * @author LaiFQZzr
-   * @date 2026/02/25 11:34
    */
   async interrupt(promptId: string): Promise<ComfyTaskResponse> {
     return await http.post<ComfyTaskResponse>(`/interrupt`, {
@@ -75,8 +65,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 获取用户当前拥有工作流
-   * @author LaiFQZzr
-   * @date 2026/02/24 15:09
    */
   async getUserData(dir: string = "workflows"): Promise<WorkflowSimpleData[]> {
     return await http.get<WorkflowSimpleData[]>(
@@ -87,8 +75,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 获取用户当前工作流具体信息
-   * @author LaiFQZzr
-   * @date 2026/02/24 15:09
    */
   async getDetailUserData(workflowPath: string): Promise<ComfyUIWorkflow> {
     return await http.get<ComfyUIWorkflow>(
@@ -110,8 +96,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 获取模型类型列表
-   * @author LaiFQZzr
-   * @date 2026/02/28 15:00
    */
   async getModelType(): Promise<ModelTypeResponse[]> {
     return await http.get<ModelTypeResponse[]>(`/experiment/models`);
@@ -120,8 +104,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 模型
-   * @author LaiFQZzr
-   * @date 2026/02/28 15:00
    */
   async getDetailModel(typeName: string): Promise<DetailModelResponse[]> {
     return await http.get<DetailModelResponse[]>(
@@ -132,8 +114,6 @@ export class ComfyApi {
   /**
    * @METHOD
    * @description 获取系统状态
-   * @author LaiFQZzr
-   * @date 2026/02/28 15:00
    */
   async getSystemStatus(): Promise<SystemStatus> {
     return await http.get<SystemStatus>(`/system_stats`);

@@ -10,8 +10,6 @@ interface ResultDetail<T = any> {
 /**
  * @METHOD
  * @description 结构化返回结果
- * @author LaiFQZzr
- * @date 2026/01/27 14:22
  */
 export interface Result<T = any> {
   success: boolean;
@@ -33,8 +31,6 @@ export interface Result<T = any> {
 /**
  * @METHOD
  * @description 正常成功返回
- * @author LaiFQZzr
- * @date 2026/01/27 11:33
  */
 export function ok<T>(
   message: string,
@@ -58,8 +54,6 @@ export function ok<T>(
 /**
  * @METHOD
  * @description 错误返回
- * @author LaiFQZzr
- * @date 2026/01/27 14:00
  */
 export function error<T>(
   message: string,
@@ -82,8 +76,6 @@ export function error<T>(
 /**
  * @METHOD
  * @description 携 TOKEN 错误返回
- * @author LaiFQZzr
- * @date 2026/01/27 14:00
  */
 export function errorWithToken<T>(
   message: string,
@@ -110,8 +102,6 @@ export function errorWithToken<T>(
 /**
  * @METHOD
  * @description 带非结构化详细错误的错误返回
- * @author LaiFQZzr
- * @date 2026/02/03 15:37
  */
 export function errorWithDetail<T>(
   message: string,

@@ -31,8 +31,6 @@ const CLEANUP_INTERVAL = 5 * 60 * 1000;
 /**
  * @METHOD
  * @description 判断是否为initialize请求
- * @author LaiFQZzr
- * @date 2026/01/20 17:08
  */
 function isInitializeRequest(body: any): boolean {
   return body?.method === "initialize";
@@ -41,8 +39,6 @@ function isInitializeRequest(body: any): boolean {
 /**
  * @METHOD
  * @description 定期清理过期会话
- * @author LaiFQZzr
- * @date 2026/01/20 17:08
  */
 setInterval(() => {
   const now = Date.now();
@@ -74,8 +70,6 @@ setInterval(() => {
 /**
  * @METHOD
  * @description 处理客户端发起的POST请求（For /mcp HTTP API）
- * @author LaiFQZzr
- * @date 2026/01/20 17:09
  */
 app.post("/mcp", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
@@ -167,8 +161,6 @@ app.post("/mcp", async (req: Request, res: Response) => {
 /**
  * @METHOD
  * @description 处理GET/DELETE请求
- * @author LaiFQZzr
- * @date 2026/01/20 17:13
  */
 const handleSessionRequest = async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
@@ -228,8 +220,6 @@ app.delete("/mcp", handleSessionRequest);
 /**
  * @METHOD
  * @description 检查服务端的健康状态
- * @author LaiFQZzr
- * @date 2026/01/20 17:15
  */
 app.get("/health", (req: Request, res: Response) => {
   res.json({
@@ -242,8 +232,6 @@ app.get("/health", (req: Request, res: Response) => {
 /**
  * @METHOD
  * @description 关闭所有会话
- * @author LaiFQZzr
- * @date 2026/01/20 17:16
  */
 process.on("SIGTERM", async () => {
   const closePromises = Array.from(sessions.values()).map((session) => {

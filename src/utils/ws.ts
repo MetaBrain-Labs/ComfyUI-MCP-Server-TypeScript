@@ -24,8 +24,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 连接到 ComfyUI WebSocket 服务器
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:06
    */
   public async connect(): Promise<void> {
     const serverIp = process.env.COMFY_UI_SERVER_IP || "http://127.0.0.1:8188";
@@ -79,8 +77,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 自动重连逻辑
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:07
    */
   private attemptReconnect(): void {
     this.reconnectAttempts++;
@@ -98,8 +94,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 处理接收到的消息
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:07
    */
   private handleMessage(rawData: WebSocket.RawData): void {
     try {
@@ -117,8 +111,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 消息分发逻辑
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:08
    */
   private dispatchMessage(type: string, data: any): void {
     switch (type) {
@@ -164,8 +156,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 发送 JSON 消息
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:08
    */
   public sendJson(data: any): boolean {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -187,8 +177,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 发送文本消息
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:08
    */
   public sendText(text: string): boolean {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -204,8 +192,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 手动关闭连接
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:08
    */
   public close(code: number = 1000, reason: string = "Manual close"): void {
     this.isManualClose = true;
@@ -218,8 +204,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 检查连接状态
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:08
    */
   public isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
@@ -228,8 +212,6 @@ export class ComfyClient {
   /**
    * @METHOD
    * @description 获取客户端 ID
-   * @author LaiFQZzr
-   * @date 2026/01/28 16:09
    */
   public getClientId(): string {
     return this.clientId;

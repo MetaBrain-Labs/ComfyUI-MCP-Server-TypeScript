@@ -13,8 +13,6 @@ const instance = axios.create({
 /**
  * @METHOD
  * @description 请求拦截器 —— 预留后续接入cloud使用
- * @author LaiFQZzr
- * @date 2026/02/24 14:45
  */
 // http.interceptors.request.use(
 //   (config) => {
@@ -34,8 +32,6 @@ const instance = axios.create({
 /**
  * @METHOD
  * @description 响应拦截器 —— 全局错误处理
- * @author LaiFQZzr
- * @date 2026/02/24 14:56
  */
 instance.interceptors.response.use(
   (response) => response.data,

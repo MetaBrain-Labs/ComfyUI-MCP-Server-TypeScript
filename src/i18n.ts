@@ -23,9 +23,7 @@ await i18n.use(Backend).init({
 
 /**
  * @METHOD
- * @description
- * @author LaiFQZzr
- * @date 2026/02/25 17:53
+ * @description 从环境变量加载语言设置
  */
 function loadLocaleFromEnv(): Locale {
   const envLocale = process.env.LOCALE?.toLowerCase();
