@@ -13,8 +13,6 @@ const dynamicTools = new Map<string, DynamicWorkflowTool>();
 /**
  * @METHOD
  * @description 获取动态 Tool
- * @author LaiFQZzr
- * @date 2026/02/03 17:26
  */
 export function getDynamicTool(name: string): DynamicWorkflowTool | undefined {
   return dynamicTools.get(name);
@@ -23,8 +21,6 @@ export function getDynamicTool(name: string): DynamicWorkflowTool | undefined {
 /**
  * @METHOD
  * @description 获取所有动态 Tools
- * @author LaiFQZzr
- * @date 2026/02/03 17:26
  */
 export function getAllDynamicTools(): DynamicWorkflowTool[] {
   return Array.from(dynamicTools.values());
@@ -33,8 +29,6 @@ export function getAllDynamicTools(): DynamicWorkflowTool[] {
 /**
  * @METHOD
  * @description 删除动态 Tool
- * @author LaiFQZzr
- * @date 2026/02/03 17:26
  */
 export function deleteDynamicTool(name: string): boolean {
   return dynamicTools.delete(name);
@@ -43,8 +37,6 @@ export function deleteDynamicTool(name: string): boolean {
 /**
  * @METHOD
  * @description 检查 Tool 是否存在
- * @author LaiFQZzr
- * @date 2026/02/03 17:27
  */
 export function hasDynamicTool(name: string): boolean {
   return dynamicTools.has(name);
@@ -53,8 +45,6 @@ export function hasDynamicTool(name: string): boolean {
 /**
  * @METHOD
  * @description 判断值是否为连接引用（不能作为可配置参数） —— 连接引用格式：[nodeId, slotIndex] 或更复杂的嵌套数组
- * @author LaiFQZzr
- * @date 2026/02/03 16:53
  */
 function isConnectionReference(value: ComfyInputValue): boolean {
   if (!Array.isArray(value)) return false;
@@ -77,8 +67,6 @@ function isConnectionReference(value: ComfyInputValue): boolean {
 /**
  * @METHOD
  * @description 获取参数类型
- * @author LaiFQZzr
- * @date 2026/02/03 16:59
  */
 function getValueType(value: ComfyInputValue): ConfigurableParam["type"] {
   if (typeof value === "string") return "string";
@@ -91,8 +79,6 @@ function getValueType(value: ComfyInputValue): ConfigurableParam["type"] {
 /**
  * @METHOD
  * @description 将值转换为 Zod Schema
- * @author LaiFQZzr
- * @date 2026/02/03 17:00
  */
 function valueToZodSchema(
   value: ComfyInputValue,
@@ -127,15 +113,13 @@ function valueToZodSchema(
 }
 
 /**
-* @METHOD
-* @description 从 workflow 中提取可配置参数
-                提取规则：
-                  1. 排除连接引用（数组形式的连接）
-                  2. 提取基础类型值（string, number, boolean）
-                  3. 某些特定类型的节点输入可以被智能识别（如种子、提示词等）
-* @author LaiFQZzr
-* @date 2026/02/03 17:09
-*/
+ * @METHOD
+ * @description 从 workflow 中提取可配置参数
+ *              提取规则：
+ *                1. 排除连接引用（数组形式的连接）
+ *                2. 提取基础类型值（string, number, boolean）
+ *                3. 某些特定类型的节点输入可以被智能识别（如种子、提示词等）
+ */
 function extractConfigurableParams(
   workflow: ComfyPromptConfig,
 ): ConfigurableParam[] {
@@ -188,8 +172,6 @@ function extractConfigurableParams(
 /**
  * @METHOD
  * @description 根据可配置参数生成 Zod Schema
- * @author LaiFQZzr
- * @date 2026/02/03 17:14
  */
 export function generateZodSchema(
   params: ConfigurableParam[],
@@ -207,8 +189,6 @@ export function generateZodSchema(
 /**
  * @METHOD
  * @description 将AGENT修改的输入合并到 workflow 模板
- * @author LaiFQZzr
- * @date 2026/02/03 17:16
  */
 export function mergeParamsToWorkflow(
   template: ComfyPromptConfig,
@@ -245,8 +225,6 @@ export function mergeParamsToWorkflow(
 /**
  * @METHOD
  * @description 创建动态 Workflow Tool
- * @author LaiFQZzr
- * @date 2026/02/03 17:18
  */
 export function createDynamicWorkflowTool(
   name: string,
@@ -286,8 +264,6 @@ export function createDynamicWorkflowTool(
 /**
  * @METHOD
  * @description 执行动态 Workflow Tool
- * @author LaiFQZzr
- * @date 2026/02/03 17:27
  */
 export async function executeDynamicWorkflowTool(
   workflowName: string,
@@ -312,8 +288,6 @@ export async function executeDynamicWorkflowTool(
 /**
  * @METHOD
  * @description 生成动态 Tool 的参数示例
- * @author LaiFQZzr
- * @date 2026/02/03 17:24
  */
 export function generateToolExampleParams(
   tool: DynamicWorkflowTool,

@@ -12,8 +12,6 @@ import { api } from "../api/api";
 /**
  * @METHOD
  * @description 根据 ComfyUI 规则，将从原始工作流中获取的信息（ComfyUIWorkflow）格式化为执行工作流需要用到的信息（ComfyPromptConfig）
- * @author LaiFQZzr
- * @date 2026/02/13 11:24
  */
 export class WorkflowConverter {
   private objectInfo: ObjectInfoResponse = {};
@@ -21,8 +19,6 @@ export class WorkflowConverter {
   /**
    * @METHOD
    * @description 初始化，加载图的节点对象定义
-   * @author LaiFQZzr
-   * @date 2026/02/13 11:24
    */
   async init(): Promise<void> {
     this.objectInfo = await api.getNodeDefs();
@@ -33,8 +29,6 @@ export class WorkflowConverter {
    * @description 格式化核心方法 —— 将 ComfyUIWorkflow 转换为 ComfyPromptConfig
    * @param workflow ComfyUIWorkflow 数据
    * @returns ComfyPromptConfig 对象，可直接用于 /prompt 接口
-   * @author LaiFQZzr
-   * @date 2026/02/13 11:32
    */
   convert(workflow: ComfyUIWorkflow): ComfyPromptConfig {
     const output: ComfyPromptConfig = {};

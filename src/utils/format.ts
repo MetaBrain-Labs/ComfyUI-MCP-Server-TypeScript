@@ -5,8 +5,6 @@ import "dotenv/config";
 /**
  * @METHOD
  * @description 格式化工作流任务数据
- * @author LaiFQZzr
- * @date 2026/01/30 10:51
  */
 export const formatTask = (
   data: ComfyTaskResponse,

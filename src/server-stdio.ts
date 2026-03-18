@@ -4,8 +4,6 @@ import { mcpManager } from "./tools";
 /**
  * @METHOD
  * @description 提供给Claude Desktop使用的通道
- * @author LaiFQZzr
- * @date 2026/01/20 15:41
  */
 async function main() {
   const transport = new StdioServerTransport();
