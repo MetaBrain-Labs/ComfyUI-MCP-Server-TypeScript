@@ -1,6 +1,10 @@
 // 顶层结构：以 UUID 为键的映射
 export type ComfyTaskResponse = Record<string, ComfyTaskItem>;
 
+// Import workflow types from workflow.ts to avoid duplication
+import type { ComfyUIWorkflow, ComfyNode, ComfyLink } from "./workflow";
+export type { ComfyUIWorkflow, ComfyNode, ComfyLink };
+
 export type PromptType = [
   number,
   string,
@@ -68,46 +72,12 @@ export interface ComfyExtraInfo {
   create_time: number;
 }
 
-/** ComfyUI 前端图表结构 (UI 保存的结构) */
-export interface ComfyUIWorkflow {
-  id: string;
-  revision: number;
-  last_node_id: number;
-  last_link_id: number;
-  nodes: ComfyUINode[];
-  links: ComfyUILink[];
-  groups?: any[];
-  config?: Record<string, any>;
-  extra?: any;
-  version: number;
-}
-
-export interface ComfyUINode {
-  id: number;
-  type: string;
-  pos: [number, number];
-  size: [number, number] | { 0: number; 1: number };
-  flags: any;
-  order: number;
-  mode: number;
-  inputs?: Array<{ name: string; type: string; link: number | null }>;
-  outputs?: Array<{ name: string; type: string; links: number[] | null }>;
-  properties?: Record<string, any>;
-  widgets_values?: Array<string | number | boolean>;
-  title?: string;
-  color?: string;
-  bgcolor?: string;
-}
-
-/** [id, sourceNodeId, sourceSlot, targetNodeId, targetSlot, type] */
-export type ComfyUILink = [number, number, number, number, number, string];
-//#endregion
-
 //#region  --- 输出结果部分 (outputs) ---
 export interface ComfyNodeOutput {
   images: ComfyImage[];
 }
 
+/** 图片输出结构 - 用于 task 输出和 ws 消息 */
 export interface ComfyImage {
   filename: string;
   subfolder: string;

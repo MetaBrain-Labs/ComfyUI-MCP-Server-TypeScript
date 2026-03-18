@@ -71,15 +71,10 @@ export interface ComfyNodeProgressState {
   real_node_id: string; // 实际执行的节点 ID
 }
 
+import { ComfyImage } from "./task";
+
 /** 节点执行结果输出 (通常包含 images, 但也可能有 tags, text 等) */
 export interface ComfyNodeOutputData {
-  images?: ComfyImageOutput[];
+  images?: ComfyImage[];
   [key: string]: any; // 允许其他类型的输出（如 text, gifs 等）
-}
-
-/** 图片输出结构 */
-export interface ComfyImageOutput {
-  filename: string;
-  subfolder: string;
-  type: "temp" | "output" | "input";
 }
