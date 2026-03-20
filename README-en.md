@@ -10,6 +10,11 @@
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
 [![Static Badge](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
+[![GitHub stars](https://img.shields.io/github/stars/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript?style=social)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript?style=social)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript/network)
+
+> [!NOTE]
+> **⭐ If you like this project or find it helpful, please give it a Star. Your support is our motivation for continuous improvement!**
 
 **ComfyUI-MCP-Server is an MCP (Model Context Protocol) based server implementation that transforms user-defined workflows in ComfyUI into parameter-configurable MCP tools, allowing AI Agents to use them directly.**
 
@@ -66,9 +71,23 @@ AI agents can call the following built-in tools via the MCP protocol:
 | `list_models`           | Retrieve Model Files     | [Model Directory] Poll the local disk model storage area. When parameters involve specific model files, this interface must be called first to enumerate calibration. Fabricating model filenames out of thin air is strictly prohibited.                                                                          |
 | `upload_assets`         | Upload Assets to ComfyUI | [Upload Files] Upload a local file or network URL to the ComfyUI server's input directory so it can be directly applied in the workflow.                                                                                                                                                                           |
 
+## 🏆 Why Choose Us?
+
+| Feature | ComfyUI MCP Server | Other Similar Projects |
+| --------------- | ------------------ | --------------------- |
+| Custom Parameter Exposure | ✅ Supported | ❌ Limited or not supported |
+| No ComfyUI Modification Required | ✅ Fully supported | ❌ Usually requires modification or plugin |
+| Natural Language Interaction | ✅ Supported | ❌ Usually requires API calls |
+| Real-Time Progress Notification | ✅ Supported | ❌ Limited support |
+| Multiple Transport Modes | ✅ STDIO + HTTP | ❌ Usually only one mode |
+| Internationalization Support | ✅ Built-in | ❌ Usually English only |
+| Session Management | ✅ Robust | ❌ Basic or none |
+
+For more details, please check [Why Choose Us](./docs/en/md/Project-Advantages.md)
+
 ## 🎬 Demo Videos
 
-### Default Method
+### Default Mode
 
 Click the image below to watch the demo video.
 
@@ -78,7 +97,7 @@ Click the image below to watch the demo video.
   </a>
 </p>
 
-### API_JSON Method
+### API JSON Mode
 
 Click the image below to watch the demo video.
 
@@ -87,11 +106,6 @@ Click the image below to watch the demo video.
     <img src="https://img.youtube.com/vi/fGEUCbfrqK8/0.jpg" width="700">
   </a>
 </p>
-
-> [!NOTE]
-> **Special Note**
->
-> If you like this project or find it helpful, please give it a `Star✨`.
 
 ## 🚀 Quick Start
 
