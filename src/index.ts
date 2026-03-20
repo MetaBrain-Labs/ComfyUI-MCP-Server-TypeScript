@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import { mcpManager } from "./tools";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 const app = express();
 app.use(express.json());

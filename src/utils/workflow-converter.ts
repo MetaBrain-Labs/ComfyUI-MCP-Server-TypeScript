@@ -1,4 +1,4 @@
-import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { ObjectInfoResponse } from "../types/object-info";
 import { ComfyInputValue, ComfyPromptConfig } from "../types/task";
 import {
