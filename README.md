@@ -10,6 +10,11 @@
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP-purple)](https://modelcontextprotocol.io/)
 [![Github](https://img.shields.io/badge/MetaBrainLabs-Org?logo=github&label=GitHub)](https://github.com/orgs/MetaBrain-Labs)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript)
+[![GitHub stars](https://img.shields.io/github/stars/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript?style=social)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript?style=social)](https://github.com/MetaBrain-Labs/ComfyUI-MCP-Server-TypeScript/network)
+
+> [!NOTE]
+> **⭐ 如果您喜欢该项目或觉得有帮助，请给项目点一个 Star，您的支持是我们持续改进的动力！**
 
 **ComfyUI-MCP-Server 是一个基于 MCP（Model Context Protocol / 模型上下文协议）的服务器实现，将 ComfyUI 中用户定义的工作流转化为参数可配置的 MCP 工具，供 AI 代理（Agents）直接使用。**
 
@@ -66,6 +71,20 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
 | `list_models`           | 检索模型文件     | 【模型目录】轮询本地磁盘模型存放区。参数涉及具体模型文件时，必须前置调用此接口枚举校准，严禁凭空伪造模型文件名。                                                                   |
 | `upload_assets`         | ComfyUI导入资产  | 【上传文件】将本地文件或网络 URL 上传至 ComfyUI 服务器的 input 目录，以便在工作流中直接应用。                                                                                      |
 
+## 🏆 为什么选择我们？
+
+| 特性 | ComfyUI MCP Server | 其他类似项目 |
+| ---------------- | ------------------ | --------------------- |
+| 自定义参数暴露 | ✅ 支持 | ❌ 有限支持或不支持 |
+| 无需修改 ComfyUI | ✅ 完全支持 | ❌ 通常需要修改或插件 |
+| 自然语言交互 | ✅ 支持 | ❌ 通常需要 API 调用 |
+| 实时进度通知 | ✅ 支持 | ❌ 有限支持 |
+| 多传输方式 | ✅ STDIO + HTTP | ❌ 通常仅支持一种 |
+| 国际化支持 | ✅ 内置 | ❌ 通常仅支持英文 |
+| 会话管理 | ✅ 完善 | ❌ 基本或无 |
+
+更多详情可查阅 [为什么选择我们](./docs/zh-CN/md/why-us.md)
+
 ## 🎬 演示视频
 
 ### 默认方式
@@ -78,7 +97,7 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
   </a>
 </p>
 
-### API_JSON方式
+### API_JSON 方式
 
 点击下方图片观看演示视频。
 
@@ -87,11 +106,6 @@ AI 代理可以通过 MCP 协议调用以下内置工具：
     <img src="https://img.youtube.com/vi/fGEUCbfrqK8/0.jpg" width="700">
   </a>
 </p>
-
-> [!NOTE]
-> **特别提示**
->
-> 如果您喜欢该项目或者觉得项目有帮助，请给项目点一个 `Star✨`。
 
 ## 🚀 快速开始
 
