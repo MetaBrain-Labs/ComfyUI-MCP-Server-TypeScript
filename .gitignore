@@ -34,6 +34,7 @@ docs/.vitepress/cache/*
 /assets
 token.json
 build
+coverage
 
 /skills/**.zip
 /skills/**.skill
