@@ -6,9 +6,8 @@
     "dev": "npx tsx ./src/index.ts",
     "dev:stdio": "npx tsx ./src/server-stdio.ts",
     "inspector": "npx @modelcontextprotocol/inspector --config ./configs/inspector/dev.json --server default-server",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "jest",
+    "test:coverage": "jest --coverage --collectCoverage"
   },
   "keywords": [
     "mcp",
@@ -19,13 +18,14 @@
   "description": "",
   "devDependencies": {
     "@types/i18next": "^12.1.0",
+    "@types/jest": "^29.5.12",
     "@types/node": "^22.19.3",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.0.17",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
